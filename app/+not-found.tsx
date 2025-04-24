@@ -2,7 +2,7 @@ import { Link, Stack } from 'expo-router';
 import { Text, View } from 'react-native';
 import { TailwindProvider } from 'tailwindcss-react-native';
 
-export default function NotFoundScreen() {
+export default function NotFoundScreen(): JSX.Element {
   return (
     <TailwindProvider platform="native">
       <>

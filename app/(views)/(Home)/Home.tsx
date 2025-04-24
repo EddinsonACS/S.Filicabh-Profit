@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TailwindProvider } from 'tailwindcss-react-native';
 
-const HomeScreen = () => {
+const HomeScreen = (): JSX.Element => {
   return (
     <TailwindProvider platform="native">
       <SafeAreaView className="flex-1 bg-[#F9F8FD]">
