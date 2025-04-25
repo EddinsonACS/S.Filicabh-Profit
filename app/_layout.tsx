@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';;
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TailwindProvider } from "tailwindcss-react-native";
 import AppLayout from './AppLayouts';
 
@@ -31,7 +31,7 @@ export default function RootLayout() {
 
   return (
     <TailwindProvider platform="native">
-      <SafeAreaView className="flex-1 bg-gray-100">
+      <SafeAreaProvider>
         <AppLayout>
           <Stack screenOptions={{
             headerShown: false,
@@ -42,7 +42,7 @@ export default function RootLayout() {
           </Stack>
         </AppLayout>
         <StatusBar style="auto" />
-      </SafeAreaView>
+      </SafeAreaProvider>
     </TailwindProvider>
   );
 }

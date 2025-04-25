@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import NavBar from '../components/NavBar';
-import SideMenu from '../components/SideMenu';
+import Animated, { FadeIn, Layout } from 'react-native-reanimated';
 
 type AppLayoutProps = {
   children: React.ReactNode;
@@ -62,12 +60,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               >
                 <Ionicons name="menu-outline" size={22} color="#082276FF" />
               </TouchableOpacity>
-
-              <Text className="text-lg font-semibold text-gray-800">
-                {getPageTitle()}
-              </Text>
+              <Animated.View>
+                <Text className="text-lg font-semibold text-gray-800">
+                  {getPageTitle()}
+                </Text>
+              </Animated.View>
             </View>
-
             <View className="flex-row items-center">
               <TouchableOpacity
                 className="w-10 h-10 rounded-lg items-center justify-center relative"
@@ -80,25 +78,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </View>
         </View>
       )}
-
+      
       {/* Contenido principal */}
       <Animated.View
         entering={FadeIn.duration(250)}
+        layout={Layout.springify()}
         className="flex-1"
       >
         {children}
       </Animated.View>
-
-      {/* Barra de navegación - solo mostrar si estamos en una ruta autenticada */}
-      {showHeaderAndNav && <NavBar />}
-
-      {/* Menú lateral - solo mostrar si estamos en una ruta autenticada */}
-      {showHeaderAndNav && (
-        <SideMenu
-          isVisible={isSideMenuVisible}
-          onClose={() => setSideMenuVisible(false)}
-        />
-      )}
     </View>
   );
 }
