@@ -128,7 +128,7 @@ const PinInput: React.FC<PinInputProps> = ({ onPinComplete = () => {} }) => {
   );
 
   return (
-    <View className="items-center p-5">
+    <View className="items-center p-5 bg-[#F9F8FD]">
       {!isPinSuccess && <Text className="text-lg text-blue-800 mb-6">{message}</Text>}
       <View className="flex-row mb-8">{renderPinDots()}</View>
       <View className="flex-row flex-wrap w-[280px] justify-center">{numbers.map(renderNumberButton)}</View>

@@ -92,11 +92,11 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-[#F9F8FD]">
       <StatusBar style="dark" />
 
       {/* Saltar */}
-      <View className="flex-row justify-end pt-12 px-4">
+      <View className="flex-row justify-end pt-6 px-4">
         <TouchableOpacity onPress={skipOnboarding}>
           <Text className="text-blue-800 font-medium text-base">Saltar</Text>
         </TouchableOpacity>

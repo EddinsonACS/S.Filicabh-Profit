@@ -58,7 +58,7 @@ export const useEnterprise = () => {
 
       if (selected) {
         setSelectedEnterprise(selected);
-        await router.replace('/(views)/(home)/Home');
+        await router.replace('/Home');
       } else {
         throw 'Empresa no encontrada';
       }

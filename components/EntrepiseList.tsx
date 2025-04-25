@@ -56,7 +56,7 @@ export default function EntrepiseList() {
   }
 
   return (
-    <View className="flex-1 w-full bg-gray-100">
+    <View className="flex-1 w-full bg-[#F9F8FD]">
       {/* Header */}
       <Animated.View
         entering={SlideInUp.duration(500)}

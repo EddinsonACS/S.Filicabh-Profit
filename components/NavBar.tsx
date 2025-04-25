@@ -1,10 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  FadeIn
-} from 'react-native-reanimated';
+import { usePathname, useRouter } from 'expo-router';
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 const AnimatedTouch = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -25,18 +23,23 @@ const tabs: TabItem[] = [
 
 export default function NavBar() {
   const router = useRouter();
-  const currentPath = usePathname();
+  const currentPath = usePathname() || '';
 
-  // Navegar a la ruta seleccionada
+  // Manejar errores en la navegación
   const navigateTo = (route: string) => {
-    router.push(route as any);
+    try {
+      router.push(route as any);
+    } catch (error) {
+      console.log('Error navigating to:', route, error);
+    }
   };
 
   return (
-    <View className="bg-gray-100 border-t border-gray-300">
-      <View className="flex-row pt-2 px-4 mb-1">
+    <View className="bg-[#F9F8FD] border-t border-gray-300">
+      <View className="flex-row pt-2 px-4 mb-2">
         {tabs.map((tab, index) => {
-          const isActive = currentPath.includes(tab.route);
+          // Verificar primero si currentPath es null o undefined
+          const isActive = currentPath ? currentPath.includes(tab.route) : false;
 
           return (
             <AnimatedTouch
@@ -59,8 +62,7 @@ export default function NavBar() {
                   />
                 </Animated.View>
                 <Text
-                  className={`text-xs mt-1 ${isActive ? 'text-blue-800 font-medium' : 'text-gray-600'
-                    }`}
+                  className={`text-xs mt-1 ${isActive ? 'text-blue-800 font-medium' : 'text-gray-600'}`}
                 >
                   {tab.name}
                 </Text>

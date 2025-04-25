@@ -15,7 +15,7 @@ export default function MethodAuth() {
   return (
     <Animated.View
       entering={FadeIn.duration(600)}
-      className="flex-1 bg-gray-100 px-4 py-6"
+      className="flex-1 bg-[#F9F8FD] px-4 py-6"
     >
       {/* Main container */}
       <View className="flex-1 justify-center items-center w-full">

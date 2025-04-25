@@ -144,7 +144,7 @@ export default function ForgetPassword() {
   };
 
   return (
-    <Pressable onPress={Keyboard.dismiss} className="flex-1 w-full bg-gray-100">
+    <Pressable onPress={Keyboard.dismiss} className="flex-1 w-full bg-[#F9F8FD]">
       {/* Decoraciones de fondo */}
       <View className="absolute -right-20 -bottom-20 w-64 h-64 rounded-full bg-blue-200 opacity-20 z-0" />
       <View className="absolute -left-20 -top-20 w-48 h-48 rounded-full bg-blue-400 opacity-20 z-0" />
@@ -157,7 +157,7 @@ export default function ForgetPassword() {
           {/* Botón Volver */}
           <TouchableOpacity
             onPress={handleGoBack}
-            className="absolute top-12 left-6 z-20"
+            className="absolute top-6 left-6 z-20"
           >
             <Ionicons name="arrow-back" size={28} color="#1e3a8a" />
           </TouchableOpacity>

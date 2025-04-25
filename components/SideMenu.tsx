@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Dimensions, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
+  Easing,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
-  Easing,
-  FadeIn
+  withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -36,17 +36,24 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  // Obtener dimensiones de la pantalla incluyendo áreas como la barra de estado
-  const windowDimensions = Dimensions.get('window');
-  const screenDimensions = Dimensions.get('screen');
+  // Obtener dimensiones de la pantalla de manera más segura
+  const windowHeight = Dimensions.get('window').height;
   
-  // Calcular altura total para asegurar cobertura completa
-  // En algunos dispositivos, especialmente iOS, screen y window pueden ser diferentes
-  const fullHeight = Math.max(windowDimensions.height, screenDimensions.height) + 50; // Añadimos un margen extra
-
-  // Valores animados
+  // Valores animados con valores iniciales seguros
   const translateX = useSharedValue(-300);
   const overlayOpacity = useSharedValue(0);
+
+  // Manejar errores en la navegación
+  const navigateTo = (route: string) => {
+    try {
+      onClose();
+      setTimeout(() => {
+        router.push(route as any);
+      }, 100);
+    } catch (error) {
+      console.log('Error navigating to:', route, error);
+    }
+  };
 
   // Controlar animaciones de apertura/cierre
   useEffect(() => {
@@ -68,9 +75,7 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
   // Estilos animados
   const menuStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-    height: fullHeight,
-    top: -insets.top, // Ajuste para compensar el SafeAreaView
-    bottom: 0,
+    height: windowHeight,
     position: 'absolute',
     left: 0,
     width: 300,
@@ -81,19 +86,17 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
     opacity: overlayOpacity.value,
     display: overlayOpacity.value === 0 ? 'none' : 'flex',
     position: 'absolute',
-    top: -insets.top, // Ajuste para compensar el SafeAreaView
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    height: fullHeight,
+    height: windowHeight,
     zIndex: 40,
   }));
 
-  // Navegación
-  const navigateTo = (route: string) => {
-    onClose();
-    router.push(route as any);
-  };
+  // Simplificamos el uso de SafeAreaInsets para evitar problemas
+  const topPadding = Platform.OS === 'ios' ? insets.top : 30;
+  const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 20;
 
   return (
     <>
@@ -111,7 +114,10 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
         className="bg-gray-100 shadow-xl"
       >
         {/* Cabecera */}
-        <View className="bg-blue-800 px-6" style={{ paddingTop: insets.top + 28, paddingBottom: 10 }}>
+        <View 
+          className="bg-blue-800 px-6" 
+          style={{ paddingTop: topPadding, paddingBottom: 10 }}
+        >
           <View className="flex-row items-center mb-2">
             <View className="h-14 w-14 rounded-full bg-white/20 items-center justify-center mr-4">
               <Text className="text-white text-lg font-bold">US</Text>
@@ -126,7 +132,7 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
           <TouchableOpacity
             onPress={onClose}
             className="absolute right-4"
-            style={{ top: insets.top + 8 }}
+            style={{ top: topPadding }}
           >
             <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
@@ -137,7 +143,7 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
           className="flex-1 pt-2"
           bounces={false}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 80 }} // Espacio para el botón de cerrar sesión
+          contentContainerStyle={{ paddingBottom: 80 }}
         >
           {menuItems.map((item, index) => (
             <Animated.View
@@ -168,13 +174,11 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
         {/* Pie con botón de cerrar sesión */}
         <View 
           className="px-8 py-4 bg-gray-100 border-t border-gray-200 absolute left-0 right-0 bottom-0" 
-          style={{ 
-            paddingBottom: insets.bottom > 0 ? insets.bottom + 60 : 70
-          }}
+          style={{ paddingBottom: bottomPadding > 0 ? bottomPadding + 40 : 50 }}
         >
           <TouchableOpacity
-            onPress={() => navigateTo('/(views)/logout')}
-            className="flex-row items-center py-2"
+            onPress={() => navigateTo('/(views)/Login')}
+            className="flex-row items-center py-2 mb-8"
           >
             <Text className="text-red-600 font-medium">Cerrar sesión</Text>
             <View className="w-9 h-9 rounded-full bg-red-100 items-center justify-center ml-2">

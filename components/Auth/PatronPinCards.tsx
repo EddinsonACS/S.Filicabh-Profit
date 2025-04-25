@@ -41,7 +41,7 @@ export default function PatronPinCards({ currentPage }: PatronPinCardsProps) {
   return (
     <Animated.View 
       entering={FadeIn.duration(400)}
-      className="flex-1 w-full"
+      className="flex-1 w-full bg-[#F9F8FD]"
     >
       <Text className="text-center text-2xl text-blue-800 mt-20 font-semibold">
         {pageInfo.title}

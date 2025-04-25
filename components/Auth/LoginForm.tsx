@@ -132,7 +132,7 @@ export default function LoginForm() {
   };
 
   return (
-    <Pressable onPress={Keyboard.dismiss} className="flex-1 w-full bg-gray-100">
+    <Pressable onPress={Keyboard.dismiss} className="flex-1 w-full bg-[#F9F8FD]">
       {/* Decoraciones de fondo */}
       <View className="absolute -right-20 -bottom-20 w-64 h-64 rounded-full bg-blue-200 opacity-20 z-0" />
       <View className="absolute -left-20 -top-20 w-48 h-48 rounded-full bg-blue-400 opacity-20 z-0" />
