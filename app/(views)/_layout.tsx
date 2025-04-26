@@ -1,15 +1,20 @@
-import { Stack } from "expo-router";
-import React from "react";
+import { Stack } from 'expo-router';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TailwindProvider } from "tailwindcss-react-native";
+import { AppProvider } from '../../components/AppContext';
+import AppWrapper from '../../components/AppWrapper';
 
-export default function RootLayout(): JSX.Element {
+export default function ViewsLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="Splash" options={{ headerShown: false }} />
-      <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="Entrepise" options={{ headerShown: false }} />
-      <Stack.Screen name="(Home)" options={{ headerShown: false }} />
-      <Stack.Screen name="(Auth)" options={{ headerShown: false }} />
-    </Stack>
+    <TailwindProvider platform="native">
+      <AppProvider>
+        <SafeAreaView className="flex-1 bg-[#F9F8FD]">
+          <AppWrapper>
+            <Stack screenOptions={{ headerShown: false }} />
+          </AppWrapper>
+        </SafeAreaView>
+      </AppProvider>
+    </TailwindProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { Image, View, ImageSourcePropType } from "react-native";
+import { Image, ImageSourcePropType, View } from "react-native";
 
 export default function SplashScreen(): JSX.Element {
   const router = useRouter();

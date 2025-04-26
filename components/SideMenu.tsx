@@ -1,192 +1,230 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { Dimensions, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import Animated, {
-  Easing,
-  FadeIn,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-type MenuItem = {
-  name: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  route: string;
-  badge?: number;
-};
+import React from 'react';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native';
 
 type SideMenuProps = {
   isVisible: boolean;
   onClose: () => void;
 };
 
-// Rutas corregidas para expo-router
-const menuItems: MenuItem[] = [
-  { name: 'Mi Cuenta', icon: 'person-outline', route: '/(views)/account' },
-  { name: 'Configuración', icon: 'settings-outline', route: '/(views)/settings' },
-  { name: 'Notificaciones', icon: 'notifications-outline', route: '/(views)/notifications', badge: 3 },
-  { name: 'Ayuda', icon: 'help-circle-outline', route: '/(views)/help' },
-  { name: 'Informes', icon: 'bar-chart-outline', route: '/(views)/reports' },
-];
-
+/**
+ * SideMenu simplificado y estable sin animaciones complejas
+ */
 export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  
-  // Obtener dimensiones de la pantalla de manera más segura
-  const windowHeight = Dimensions.get('window').height;
-  
-  // Valores animados con valores iniciales seguros
-  const translateX = useSharedValue(-300);
-  const overlayOpacity = useSharedValue(0);
 
-  // Manejar errores en la navegación
+  // Si no es visible, no renderizar nada
+  if (!isVisible) return null;
+
+  // Menú items simplificados
+  const menuItems = [
+    { name: 'Mi Cuenta', icon: 'person-outline', route: '/account' },
+    { name: 'Configuración', icon: 'settings-outline', route: '/settings' },
+    { name: 'Notificaciones', icon: 'notifications-outline', route: '/notifications' },
+    { name: 'Ayuda', icon: 'help-circle-outline', route: '/help' },
+    { name: 'Informes', icon: 'bar-chart-outline', route: '/reports' },
+  ];
+
+  // Navegación segura
   const navigateTo = (route: string) => {
     try {
       onClose();
       setTimeout(() => {
-        router.push(route as any);
+        router.push(route as never);
       }, 100);
     } catch (error) {
-      console.log('Error navigating to:', route, error);
+      console.log('Error de navegación:', error);
     }
   };
 
-  // Controlar animaciones de apertura/cierre
-  useEffect(() => {
-    if (isVisible) {
-      translateX.value = withTiming(0, {
-        duration: 250,
-        easing: Easing.out(Easing.quad)
-      });
-      overlayOpacity.value = withTiming(0.5, { duration: 250 });
-    } else {
-      translateX.value = withTiming(-300, {
-        duration: 200,
-        easing: Easing.in(Easing.quad)
-      });
-      overlayOpacity.value = withTiming(0, { duration: 200 });
-    }
-  }, [isVisible]);
-
-  // Estilos animados
-  const menuStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-    height: windowHeight,
-    position: 'absolute',
-    left: 0,
-    width: 300,
-    zIndex: 50,
-  }));
-
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-    display: overlayOpacity.value === 0 ? 'none' : 'flex',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: windowHeight,
-    zIndex: 40,
-  }));
-
-  // Simplificamos el uso de SafeAreaInsets para evitar problemas
-  const topPadding = Platform.OS === 'ios' ? insets.top : 30;
-  const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 20;
-
   return (
-    <>
-      {/* Fondo semi-transparente */}
-      <Animated.View
-        style={overlayStyle}
-        className="bg-black"
-        pointerEvents={isVisible ? 'auto' : 'none'}
-        onTouchStart={onClose}
-      />
+    <View style={styles.container}>
+      {/* Overlay para cerrar el menú */}
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay} />
+      </TouchableWithoutFeedback>
 
-      {/* Panel lateral */}
-      <Animated.View
-        style={menuStyle}
-        className="bg-gray-100 shadow-xl"
-      >
+      {/* Panel del menú */}
+      <View style={styles.menuPanel}>
         {/* Cabecera */}
-        <View 
-          className="bg-blue-800 px-6" 
-          style={{ paddingTop: topPadding, paddingBottom: 10 }}
-        >
-          <View className="flex-row items-center mb-2">
-            <View className="h-14 w-14 rounded-full bg-white/20 items-center justify-center mr-4">
-              <Text className="text-white text-lg font-bold">US</Text>
+        <View style={styles.header}>
+          <View style={styles.profileContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>US</Text>
             </View>
-
             <View>
-              <Text className="text-white font-medium">Usuario</Text>
-              <Text className="text-blue-100 text-xs">usuario@miempresa.com</Text>
+              <Text style={styles.username}>Usuario</Text>
+              <Text style={styles.email}>usuario@miempresa.com</Text>
             </View>
           </View>
-
           <TouchableOpacity
+            style={styles.closeButton}
             onPress={onClose}
-            className="absolute right-4"
-            style={{ top: topPadding }}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
           >
             <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
         </View>
 
-        {/* Menú */}
-        <ScrollView 
-          className="flex-1 pt-2"
-          bounces={false}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 80 }}
-        >
-          {menuItems.map((item, index) => (
-            <Animated.View
+        {/* Lista de opciones */}
+        <ScrollView style={styles.menuList}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
               key={item.name}
-              entering={FadeIn.delay(50 * index).duration(200)}
+              style={styles.menuItem}
+              onPress={() => navigateTo(item.route)}
             >
-              <TouchableOpacity
-                onPress={() => navigateTo(item.route)}
-                className="flex-row items-center py-3.5 px-6"
-                activeOpacity={0.7}
-              >
-                <View className="w-9 h-9 rounded-full bg-white items-center justify-center mr-4">
-                  <Ionicons name={item.icon} size={20} color="#1e40af" />
-                </View>
-
-                <Text className="text-gray-800 flex-1">{item.name}</Text>
-
-                {item.badge && (
-                  <View className="bg-blue-500 rounded-full h-5 min-w-5 px-1 items-center justify-center">
-                    <Text className="text-white text-xs font-medium">{item.badge}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
+              <View style={styles.iconContainer}>
+                <Ionicons name={item.icon as any} size={20} color="#1e40af" />
+              </View>
+              <Text style={styles.menuItemText}>{item.name}</Text>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* Pie con botón de cerrar sesión */}
-        <View 
-          className="px-8 py-4 bg-gray-100 border-t border-gray-200 absolute left-0 right-0 bottom-0" 
-          style={{ paddingBottom: bottomPadding > 0 ? bottomPadding + 40 : 50 }}
-        >
+        {/* Pie - Cerrar sesión */}
+        <View style={styles.footer}>
           <TouchableOpacity
-            onPress={() => navigateTo('/(views)/Login')}
-            className="flex-row items-center py-2 mb-8"
+            style={styles.logoutButton}
+            onPress={() => navigateTo('/Login')}
           >
-            <Text className="text-red-600 font-medium">Cerrar sesión</Text>
-            <View className="w-9 h-9 rounded-full bg-red-100 items-center justify-center ml-2">
-              <Ionicons name="log-out-outline" size={20} color="#FE0000FF" />
+            <Text style={styles.logoutText}>Cerrar sesión</Text>
+            <View style={styles.logoutIcon}>
+              <Ionicons name="log-out-outline" size={20} color="#dc2626" />
             </View>
           </TouchableOpacity>
         </View>
-      </Animated.View>
-    </>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  menuPanel: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: 280,
+    backgroundColor: '#F9F8FD',
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  header: {
+    backgroundColor: '#0B34A5FF',
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    position: 'relative',
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  username: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 16,
+  },
+  email: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    right: 20,
+  },
+  menuList: {
+    flex: 1,
+    paddingTop: 10,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+  menuItemText: {
+    color: '#334155',
+    fontSize: 16,
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    marginBottom: Platform.OS === 'ios' ? 30 : 20,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  logoutText: {
+    color: '#dc2626',
+    fontWeight: '500',
+    fontSize: 16,
+    marginRight: 10,
+  },
+  logoutIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
