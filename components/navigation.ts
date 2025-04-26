@@ -6,7 +6,8 @@ export const PUBLIC_ROUTES = [
   '(Auth)',
   'Login',
   'ForgetPassword',
-  'MethodAuth'
+  'MethodAuth',
+  'LoadingScreen'
 ];
 
 export const isPublicRoute = (path: string): boolean => {
