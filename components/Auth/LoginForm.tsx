@@ -8,11 +8,12 @@ import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { BounceIn, Easing, FadeIn, interpolateColor, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLoginUser } from '../../hooks/useLoginUser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function LoginForm() {
-  const { login, isLoading } = useLoginUser();
+  const { isPending, mutate } = useLoginUser();
   const [error, setError] = useState<string | null>();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -106,8 +107,15 @@ export default function LoginForm() {
         easing: Easing.inOut(Easing.ease)
       });
 
-      // Llamada a la API
-      await login(data);
+      mutate(data, {
+        onSuccess: async (data) => {
+          await AsyncStorage.setItem("authToken", data.token)
+          router.replace('/Entrepise')
+        },
+        onError: (err: any) => {
+          setError(err.response.data.mensaje)
+        }
+      })
 
       // Completar animación de carga
       buttonProgress.value = withTiming(1, {
@@ -263,10 +271,10 @@ export default function LoginForm() {
                   style={buttonAnimatedStyle}
                   className={`w-full py-4 rounded-xl overflow-hidden mt-2 ${isFormFilled ? '' : 'opacity-70'}`}
                   onPress={handleSubmit(onSubmit)}
-                  disabled={isLoading || !isFormFilled}
+                  disabled={isPending || !isFormFilled}
                   activeOpacity={0.9}
                 >
-                  {isLoading ? (
+                  {isPending ? (
                     <View className="items-center justify-center">
                       <ActivityIndicator color="white" size="small" />
                     </View>
