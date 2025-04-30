@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -12,6 +12,7 @@ type NavBarProps = {
  */
 export default function NavBar({ onMenuPress }: NavBarProps) {
   const router = useRouter();
+  const currentPath = usePathname();
 
   // Tabs simplificados
   const tabs = [
@@ -34,6 +35,12 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
     }
   };
 
+  // Verificar si el tab está activo
+  const isActive = (tab: any) => {
+    if (tab.isMenu) return false;
+    return currentPath === tab.route;
+  };
+
   return (
     <View style={{
       flexDirection: 'row',
@@ -41,29 +48,31 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
       borderTopColor: '#ddd',
       paddingTop: 8,
       paddingBottom: 8,
-      backgroundColor: '#F9F8FD'
     }}>
-      {tabs.map((tab, index) => (
-        <TouchableOpacity
-          key={tab.name}
-          style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}
-          onPress={() => handleNavigation(tab)}
-        >
-          <Ionicons
-            name={tab.icon as any}
-            size={24}
-            color={index === 0 ? '#1e3a8a' : '#666'}
-          />
-          <Text style={{
-            fontSize: 12,
-            marginTop: 4,
-            color: index === 0 ? '#1e3a8a' : '#666',
-            fontWeight: index === 0 ? 'bold' : 'normal'
-          }}>
-            {tab.name}
-          </Text>
-        </TouchableOpacity>
-      ))}
+      {tabs.map((tab) => {
+        const active = isActive(tab);
+        return (
+          <TouchableOpacity
+            key={tab.name}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}
+            onPress={() => handleNavigation(tab)}
+          >
+            <Ionicons
+              name={tab.icon as any}
+              size={24}
+              color={active ? '#1e3a8a' : '#666'}
+            />
+            <Text style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: active ? '#1e3a8a' : '#666',
+              fontWeight: active ? 'bold' : 'normal'
+            }}>
+              {tab.name}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }

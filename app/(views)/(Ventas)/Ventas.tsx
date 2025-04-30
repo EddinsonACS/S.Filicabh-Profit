@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LoadingScreen from '../../../components/LoadingScreen';
 
@@ -80,28 +80,6 @@ export default function Ventas() {
     const [isLoading, setIsLoading] = useState(true);
     const [viewType, setViewType] = useState<ViewType>(ViewType.Grid);
 
-    // Simulamos algunas notificaciones recientes
-    const recentNotifications: Notification[] = [
-        {
-            id: '1',
-            title: 'Nuevo pedido',
-            description: 'El cliente ABC ha realizado un nuevo pedido',
-            icon: 'cart-outline',
-            color: '#059669',
-            createdAt: new Date(),
-            read: false
-        },
-        {
-            id: '2',
-            title: 'Pago recibido',
-            description: 'Se ha registrado un nuevo pago de $45,600',
-            icon: 'cash-outline',
-            color: '#1e40af',
-            createdAt: new Date(Date.now() - 3600000), // 1 hora atrás
-            read: false
-        }
-    ];
-
     // Simulamos carga inicial
     React.useEffect(() => {
         setTimeout(() => {
@@ -163,13 +141,6 @@ export default function Ventas() {
                                 color="white"
                             />
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                            className="w-10 h-10 rounded-full bg-blue-700 items-center justify-center"
-                            onPress={() => navigateTo('/Ventas/Buscar')}
-                        >
-                            <Ionicons name="search-outline" size={20} color="white" />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -186,40 +157,6 @@ export default function Ventas() {
                     </View>
                 </View>
             </Animated.View>
-
-            {/* Notificaciones recientes */}
-            {recentNotifications.length > 0 && (
-                <Animated.View
-                    entering={SlideInUp.duration(400).delay(200)}
-                    className="px-4 py-3"
-                >
-                    <Text className="text-gray-700 font-medium mb-2">Notificaciones recientes</Text>
-
-                    {recentNotifications.map((notification) => (
-                        <TouchableOpacity
-                            key={notification.id}
-                            className="bg-white rounded-xl p-3 mb-2 flex-row items-center"
-                            onPress={() => console.log(`Notification ${notification.id} pressed`)}
-                        >
-                            <View style={{ backgroundColor: `${notification.color}20` }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
-                                <Ionicons name={notification.icon} size={20} color={notification.color} />
-                            </View>
-
-                            <View className="flex-1">
-                                <View className="flex-row items-center">
-                                    <Text className="text-gray-800 font-medium flex-1">{notification.title}</Text>
-                                    <Text className="text-gray-500 text-xs">{getRelativeTime(notification.createdAt)}</Text>
-                                </View>
-                                <Text className="text-gray-600 text-sm mt-1">{notification.description}</Text>
-                            </View>
-
-                            {!notification.read && (
-                                <View className="w-3 h-3 rounded-full bg-blue-600 ml-2" />
-                            )}
-                        </TouchableOpacity>
-                    ))}
-                </Animated.View>
-            )}
 
             {/* Menú principal */}
             <Animated.View
@@ -280,7 +217,7 @@ export default function Ventas() {
             {/* Estadísticas rápidas */}
             <Animated.View
                 entering={SlideInUp.duration(400).delay(400)}
-                className="px-4 py-3"
+                className="px-4 py-3 mb-6"
             >
                 <Text className="text-gray-700 font-medium mb-3">Estadísticas rápidas</Text>
 
