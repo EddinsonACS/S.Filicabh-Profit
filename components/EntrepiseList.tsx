@@ -1,7 +1,7 @@
 import { enterpriseSchema } from "@/utils/schemas/selectEntrepiseSchema";
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
@@ -13,8 +13,8 @@ import { useRouter } from "expo-router";
 export default function EntrepiseList() {
   const router = useRouter()
   const { isLoading, error, data, isError } = useEnterpriseList();
-  const { selectedEnterprise } = enterpriseStore()
-  const [isSubmitting,setIsSubmitting] = useState(false)
+  const { setListEnterprise, setSelectedEnterprise } = enterpriseStore()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(enterpriseSchema),
@@ -23,13 +23,24 @@ export default function EntrepiseList() {
     },
   });
 
-  const onSubmit = ()=>{
+  const onSubmit = () => {
     setIsSubmitting(true)
     console.log("bello")
     setIsSubmitting(false)
     router.replace("/Home")
   }
 
+  useEffect(() => {
+    if (!isLoading && data?.data.length && data?.data?.length > 0) {
+      setListEnterprise(data.data)
+    }
+
+    if (!isLoading && data?.data.length == 1) {
+      setSelectedEnterprise(data.data[0])
+      router.replace("/Home")
+    }
+
+  }, [data, isLoading])
 
   if (isLoading) {
     return <LoadingScreen message="Cargando empresas disponibles" />;

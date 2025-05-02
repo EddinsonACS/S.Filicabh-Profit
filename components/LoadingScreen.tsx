@@ -10,6 +10,7 @@ import Animated, {
   SlideInUp,
   withSequence
 } from 'react-native-reanimated';
+import { enterpriseStore } from '@/data/global/entrepiseStore';
 
 interface LoadingScreenProps {
   message?: string;
@@ -23,6 +24,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const scale = useSharedValue(1);
   const progressWidth = useSharedValue(10);
   const opacity = useSharedValue(0);
+  const { selectedEnterprise } = enterpriseStore()
 
   useEffect(() => {
     // Rotate animation
@@ -151,11 +153,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
         {/* Company info */}
         <Animated.View
-          entering={FadeIn.delay(1200).duration(800)}
+          entering={FadeIn.delay(100).duration(600)}
           className="items-center mt-12"
         >
           <Text className="text-blue-200 text-xs">
-            © 2025 Tu Empresa • Todos los derechos reservados
+            {selectedEnterprise?.nombre}
           </Text>
         </Animated.View>
       </Animated.View>

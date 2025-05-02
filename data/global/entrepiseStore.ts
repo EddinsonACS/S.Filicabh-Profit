@@ -1,22 +1,16 @@
+import { Enterprise } from '@/core/models/Enterpise';
 import { create } from 'zustand';
-
-interface Enterprise {
-  id: string;
-  name: string;
-  description?: string;
-  balance?: number;
-}
 
 interface EnterpriseStore {
   selectedEnterprise: Enterprise | null;
-  showLateral: boolean;
-  setShowLateral: (value:boolean) => void;
+  listEnterprise: Enterprise[];
+  setListEnterprise: (listEnterprise: Enterprise[]) => void
   setSelectedEnterprise: (enterprise: Enterprise) => void;
 }
 
 export const enterpriseStore = create<EnterpriseStore>((set) => ({
   selectedEnterprise: null,
-  showLateral: false,
-  setShowLateral: (value) => set({ showLateral: value}),
+  listEnterprise: [],
+  setListEnterprise: (list) => set({ listEnterprise: list }),
   setSelectedEnterprise: (enterprise) => set({ selectedEnterprise: enterprise }),
 }));
