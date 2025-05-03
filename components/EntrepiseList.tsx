@@ -25,7 +25,6 @@ export default function EntrepiseList() {
 
   const onSubmit = () => {
     setIsSubmitting(true)
-    console.log("bello")
     setIsSubmitting(false)
     router.replace("/Home")
   }

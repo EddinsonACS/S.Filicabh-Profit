@@ -19,7 +19,7 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
     { name: 'Inicio', icon: 'home-outline', route: '/Home' },
     { name: 'Ventas', icon: 'cart-outline', route: '/Ventas' },
     { name: 'Inventario', icon: 'bag-handle-outline', route: '/Inventario' },
-    { name: 'Menú', icon: 'menu-outline', isMenu: true },
+    { name: 'Cruds', icon: 'menu-outline', route: '/Crud' },
   ];
 
   // Manejar la navegación de forma segura
