@@ -1,11 +1,14 @@
+import { enterpriseStore } from "@/data/global/entrepiseStore";
 import { Building2, ChevronRight } from "lucide-react-native";
 import { TouchableOpacity, View, Text } from "react-native";
 
 interface ChangeEnterpriseButtomProps {
   handleChangeEnterprise: () => void
+  count: number
 }
 
-export default function ChangeEnterpriseButtom({ handleChangeEnterprise }: ChangeEnterpriseButtomProps) {
+export default function ChangeEnterpriseButtom({ handleChangeEnterprise, count }: ChangeEnterpriseButtomProps) {
+  const { selectedEnterprise } = enterpriseStore()
   return (
     <TouchableOpacity
       onPress={handleChangeEnterprise}
@@ -24,12 +27,12 @@ export default function ChangeEnterpriseButtom({ handleChangeEnterprise }: Chang
         </View>
         <View>
           <Text className="text-sm text-gray-800">Empresa actual</Text>
-          <Text className="text-lg font-bold text-black">Empresa Principal</Text>
+          <Text className="text-lg font-bold text-black">{selectedEnterprise?.nombre}</Text>
         </View>
       </View>
       <View className="flex-row items-center">
         <View className="bg-blue-500 rounded-full w-6 h-6 items-center justify-center mr-2">
-          <Text className="text-white text-xs font-bold">3</Text>
+          <Text className="text-white text-xs font-bold">{count}</Text>
         </View>
         <ChevronRight size={20} color="#000000" />
       </View>

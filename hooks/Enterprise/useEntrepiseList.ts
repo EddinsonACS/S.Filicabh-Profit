@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getEnterpriseList } from '@/data/api/getEnterpriseList';
+import { getEnterpriseList } from '@/data/api/Enterprise/getEnterpriseList';
 
 
 export const useEnterpriseList = () => {

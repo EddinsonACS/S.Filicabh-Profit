@@ -1,20 +1,23 @@
 import { enterpriseSchema } from "@/utils/schemas/selectEntrepiseSchema";
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 import LoadingScreen from "../components/LoadingScreen";
-import { useEnterpriseList } from "../hooks/useEntrepiseList";
+import { useEnterpriseList } from "../hooks/Enterprise/useEntrepiseList";
 import { enterpriseStore } from "@/data/global/entrepiseStore";
 import { useRouter } from "expo-router";
+import { useSelectEnterprise } from "@/hooks/Enterprise/useSelectEnterprise";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 
 export default function EntrepiseList() {
   const router = useRouter()
   const { isLoading, error, data, isError } = useEnterpriseList();
   const { setListEnterprise, setSelectedEnterprise } = enterpriseStore()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPending, setIsPending] = useState(false)
+  const { mutate } = useSelectEnterprise()
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(enterpriseSchema),
@@ -23,23 +26,26 @@ export default function EntrepiseList() {
     },
   });
 
-  const onSubmit = () => {
-    setIsSubmitting(true)
-    setIsSubmitting(false)
-    router.replace("/Home")
-  }
-
-  useEffect(() => {
-    if (!isLoading && data?.data.length && data?.data?.length > 0) {
+  const onSubmit = async ({ enterpriseId }: { enterpriseId: string }) => {
+    setIsPending(true)
+    if (data) {
       setListEnterprise(data.data)
     }
+    const enterprise = data?.data.find((e) => enterpriseId == e.codigo)
+    mutate(enterpriseId, {
+      onSuccess: async (response) => {
+        await AsyncStorage.setItem("authToken", response.token)
+        if (enterprise) {
+          setSelectedEnterprise(enterprise)
+        }
+        router.replace('/Home')
+      },
+      onError: (err) => {
+        console.log(err)
+      }
+    })
+  }
 
-    if (!isLoading && data?.data.length == 1) {
-      setSelectedEnterprise(data.data[0])
-      router.replace("/Home")
-    }
-
-  }, [data, isLoading])
 
   if (isLoading) {
     return <LoadingScreen message="Cargando empresas disponibles" />;
@@ -63,9 +69,6 @@ export default function EntrepiseList() {
     );
   }
 
-  if (isSubmitting) {
-    return <LoadingScreen message="Configurando tu espacio de trabajo" />;
-  }
 
   return (
     <View className="flex-1 w-full bg-[#F9F8FD]">
@@ -142,9 +145,15 @@ export default function EntrepiseList() {
             className="w-full bg-blue-800 py-4 rounded-xl"
             onPress={handleSubmit(onSubmit)}
           >
-            <Text className="text-white text-center font-semibold">
-              Continuar
-            </Text>
+            {isPending ? (
+              <View className="items-center justify-center">
+                <ActivityIndicator color="white" size="small" />
+              </View>
+            ) : (
+              <Text className="text-white text-center font-semibold">
+                Continuar
+              </Text>
+            )}
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

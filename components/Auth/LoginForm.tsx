@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { BounceIn, Easing, FadeIn, interpolateColor, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import { useLoginUser } from '../../hooks/useLoginUser';
+import { useLoginUser } from '../../hooks/auth/useLoginUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);

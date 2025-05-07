@@ -21,8 +21,7 @@ export default function HomeScreen() {
   };
 
   const handleChangeEnterprise = (): void => {
-    // Asegúrate que la ruta 'Enterprise' esté definida en tu router
-    router.replace('/(views)/Entrepise' as const);
+    router.replace('/(views)/Entrepise');
   };
 
   return (
@@ -30,7 +29,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 1. Selector de empresa */}
         <View className='my-1'>
-          {listEnterprise.length > 1 && <ChangeEnterpriseButtom handleChangeEnterprise={handleChangeEnterprise} />}
+          {listEnterprise.length > 1 && <ChangeEnterpriseButtom count={listEnterprise.length} handleChangeEnterprise={handleChangeEnterprise} />}
         </View>
 
         {/* 2. Tarjetas KPI */}

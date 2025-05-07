@@ -6,9 +6,15 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+<<<<<<<< HEAD:app/(views)/(Entidades)/Entidades.tsx
 import CrudFinanzas from './EntFinanzas';
 import CrudInventario from './EntInventario';
 import CrudVentas from './EntVentas';
+========
+import CrudInventario from './CrudInventario';
+import CrudVentas from './CrudVentas';
+import CrudFinanzas from './CrudFinanzas';
+>>>>>>>> 5477b2d ([ADD] avances en integracion con el backend):app/(views)/(Crud)/Crud.tsx
 
 // Define section colors
 const SECTION_COLORS = {
@@ -224,4 +230,8 @@ const Entidades: React.FC = () => {
     );
 };
 
+<<<<<<<< HEAD:app/(views)/(Entidades)/Entidades.tsx
 export default Entidades;
+========
+export default MainNavigation;
+>>>>>>>> 5477b2d ([ADD] avances en integracion con el backend):app/(views)/(Crud)/Crud.tsx
