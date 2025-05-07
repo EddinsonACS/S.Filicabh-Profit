@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { ArticleFormData } from '@/utils/schemas/articleSchema';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Actions from '../../../components/Inventario/Actions';
+import Filter from '../../../components/Inventario/Filter';
+import FormNewArticle from '../../../components/Inventario/FormNewArticle';
+import ListArticle from '../../../components/Inventario/ListArticle';
 import LoadingScreen from '../../../components/LoadingScreen';
-import Filter from '../../../components/Inventory/Filter';
-import ListArticle from '../../../components/Inventory/ListArticle';
-import FormNewArticle from '../../../components/Inventory/FormNewArticle';
-import Actions from '../../../components/Inventory/Actions';
-import { ArticleFormData } from '@/utils/schemas/articleSchema';
 
 // Tipos para artículos
 type Article = {
@@ -127,23 +127,23 @@ export default function Inventario() {
   // Filtrar artículos cuando cambia la búsqueda o categoría
   useEffect(() => {
     let filtered = [...articles];
-    
+
     // Filtrar por categoría si hay una seleccionada
     if (currentCategory && currentCategory !== 'all') {
       filtered = filtered.filter(article => article.category === currentCategory);
     }
-    
+
     // Filtrar por término de búsqueda
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        article => 
+        article =>
           article.name.toLowerCase().includes(query) ||
           article.description.toLowerCase().includes(query) ||
           article.code.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredArticles(filtered);
   }, [searchQuery, articles, currentCategory]);
 
@@ -189,7 +189,7 @@ export default function Inventario() {
   // Eliminar artículo
   const deleteArticle = () => {
     if (!selectedArticle) return;
-    
+
     // En una app real, aquí iría la llamada a la API para eliminar
     const updatedArticles = articles.filter(article => article.id !== selectedArticle.id);
     setArticles(updatedArticles);
@@ -201,7 +201,7 @@ export default function Inventario() {
   // Guardar artículo (crear o editar)
   const saveArticle = (data: ArticleFormData) => {
     const now = new Date();
-    
+
     if (modalState === 'create') {
       // Crear nuevo artículo
       const newArticle: Article = {
@@ -216,7 +216,7 @@ export default function Inventario() {
         createdAt: now,
         updatedAt: now
       };
-      
+
       setArticles([newArticle, ...articles]);
     } else if (modalState === 'edit' && selectedArticle) {
       // Actualizar artículo existente
@@ -230,10 +230,10 @@ export default function Inventario() {
         }
         return article;
       });
-      
+
       setArticles(updatedArticles);
     }
-    
+
     setModalState('closed');
     setSelectedArticle(null);
   };
@@ -245,18 +245,18 @@ export default function Inventario() {
   };
 
   if (isLoading) {
-    return <LoadingScreen message="Cargando inventario" />;
+    return <LoadingScreen message="Cargando Modulo Inventario" color="purple" />;
   }
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-gray-100 mb-12">
       {/* Cabecera */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="bg-blue-800 pt-4 pb-5 px-4"
+        className="bg-purple-700 pt-4 pb-5 px-4"
       >
         <Text className="text-white text-2xl font-bold mb-4">Inventario</Text>
-        
+
         {/* Filtros */}
         <Filter
           searchQuery={searchQuery}
@@ -266,7 +266,7 @@ export default function Inventario() {
           onCategoryChange={setCurrentCategory}
         />
       </Animated.View>
-      
+
       {/* Lista de artículos */}
       <ListArticle
         articles={filteredArticles}
@@ -277,7 +277,7 @@ export default function Inventario() {
         getCategoryName={getCategoryName}
         onCreate={createArticle}
       />
-      
+
       {/* Formulario de crear/editar */}
       <FormNewArticle
         visible={modalState === 'create' || modalState === 'edit'}
@@ -287,7 +287,7 @@ export default function Inventario() {
         initialData={selectedArticle || undefined}
         mode={modalState === 'create' ? 'create' : 'edit'}
       />
-      
+
       {/* Modales de acciones */}
       <Actions
         viewModalVisible={modalState === 'view'}

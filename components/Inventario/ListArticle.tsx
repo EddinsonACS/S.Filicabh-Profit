@@ -69,7 +69,7 @@ export default function ListArticle({
       
       {/* Botón flotante para agregar */}
       <TouchableOpacity
-        className="absolute bottom-20 right-6 w-14 h-14 rounded-full bg-blue-800 items-center justify-center shadow-lg"
+        className="absolute bottom-10 right-6 w-14 h-14 rounded-full bg-purple-900 items-center justify-center shadow-lg"
         style={{ elevation: 5 }}
         onPress={onCreate}
       >

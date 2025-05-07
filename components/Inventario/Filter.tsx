@@ -26,18 +26,18 @@ export default function Filter({
   return (
     <>
       {/* Buscador */}
-      <View className="bg-blue-700 rounded-xl flex-row items-center p-3">
-        <Ionicons name="search-outline" size={20} color="#93c5fd" />
+      <View className="bg-purple-900 rounded-xl flex-row items-center p-3">
+        <Ionicons name="search-outline" size={20} color="#ffffff" />
         <TextInput
           className="flex-1 text-white ml-2"
           placeholder="Buscar artículo..."
-          placeholderTextColor="#93c5fd"
+          placeholderTextColor="#ffffff"
           value={searchQuery}
           onChangeText={onSearchChange}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => onSearchChange('')}>
-            <Ionicons name="close-circle-outline" size={20} color="#93c5fd" />
+            <Ionicons name="close-circle-outline" size={20} color="#ffffff" />
           </TouchableOpacity>
         )}
       </View>
@@ -57,16 +57,16 @@ export default function Filter({
               key={category.id}
               className={`px-4 py-2 mr-2 rounded-full border ${
                 currentCategory === category.id || (category.id === 'all' && !currentCategory)
-                  ? 'bg-blue-800 border-blue-800'
-                  : 'bg-white border-gray-300'
+                  ? 'bg-white border-purple-900'
+                  : 'bg-purple-300 border-purple-900'
               }`}
               onPress={() => onCategoryChange(category.id === 'all' ? null : category.id)}
             >
               <Text
                 className={
                   currentCategory === category.id || (category.id === 'all' && !currentCategory)
-                    ? 'text-white'
-                    : 'text-gray-700'
+                    ? 'text-purple-900'
+                    : 'text-purple-600'
                 }
               >
                 {category.name}

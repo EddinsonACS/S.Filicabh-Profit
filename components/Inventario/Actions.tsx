@@ -91,8 +91,8 @@ export default function Actions({
 
                   <View className="flex-row justify-between mb-3">
                     <Text className="text-gray-600">Stock disponible:</Text>
-                    <View className="bg-blue-100 rounded-full px-2 py-0.5">
-                      <Text className="text-blue-800 font-medium">{selectedArticle.stock} unidades</Text>
+                    <View className="bg-gray-100 rounded-full px-2 py-0.5">
+                      <Text className="text-gray-800 font-medium">{selectedArticle.stock} unidades</Text>
                     </View>
                   </View>
 
@@ -108,13 +108,13 @@ export default function Actions({
                   
                   <View className="flex-row mt-5 pt-4 border-t border-gray-200">
                     <TouchableOpacity
-                      className="flex-1 mr-2 bg-blue-100 py-3 rounded-lg"
+                      className="flex-1 mr-2 bg-gray-100 py-3 rounded-lg"
                       onPress={() => {
                         onCloseViewModal();
                         onEdit();
                       }}
                     >
-                      <Text className="text-blue-800 font-medium text-center">Editar</Text>
+                      <Text className="text-gray-800 font-medium text-center">Editar</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity

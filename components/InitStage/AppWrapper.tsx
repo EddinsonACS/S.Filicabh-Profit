@@ -1,11 +1,11 @@
+import { Ionicons } from "@expo/vector-icons";
 import { usePathname } from 'expo-router';
 import React, { ReactNode, useEffect, useRef } from 'react';
-import { Animated, Dimensions, Easing, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, TouchableOpacity, View } from 'react-native';
+import { isPublicRoute } from '../navigation';
 import { useAppContext } from './AppContext';
 import NavBar from './NavBar';
-import { isPublicRoute } from './navigation';
 import SideMenu from './SideMenu';
-import Header from './Header';
 
 interface AppWrapperProps {
   children: ReactNode;
@@ -14,25 +14,27 @@ interface AppWrapperProps {
 export default function AppWrapper({ children }: AppWrapperProps) {
   const { isSideMenuOpen, toggleSideMenu, closeSideMenu } = useAppContext();
   const pathname = usePathname();
-  // Valores para animación
+
+  // Animation values
   const translateX = useRef(new Animated.Value(-300)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const menuWidth = 288;
-  const { width: screenWidth } = Dimensions.get('window');
-
-  // Verificar si la ruta actual es pública
   const isPublic = isPublicRoute(pathname);
 
-  // Función para manejar notificaciones
-  const handleNotifications = () => {
-    // Aquí puedes implementar la lógica para mostrar notificaciones
-    console.log('Mostrar notificaciones');
+  // Get active section color based on current path
+  const getActiveSectionColor = () => {
+    if (pathname.startsWith('/Ventas')) {
+      return '#007C2DFF';
+    } else if (pathname.startsWith('/Inventario')) {
+      return '#581c87';
+    } else {
+      return '#1e3a8a';
+    }
   };
 
-  // Controlar la animación cuando cambia el estado del menú
+  // Control animation SideMenu
   useEffect(() => {
     if (isSideMenuOpen) {
-      // Abrir menú con animación
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
@@ -47,31 +49,28 @@ export default function AppWrapper({ children }: AppWrapperProps) {
         }),
       ]).start();
     } else {
-      // Cerrar menú con animación
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: -menuWidth,
-          duration: 300,
-          easing: Easing.out(Easing.back(1)),
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(overlayOpacity, {
           toValue: 0,
-          duration: 250,
+          duration: 300,
           useNativeDriver: true,
         }),
       ]).start();
     }
   }, [isSideMenuOpen]);
 
-  // Cerrar menú cuando cambia la ruta para prevenir memory leaks
   useEffect(() => {
     if (isSideMenuOpen) {
       closeSideMenu();
     }
   }, [pathname]);
 
-  // Cleanup al desmontar el componente
   useEffect(() => {
     return () => {
       if (isSideMenuOpen) {
@@ -80,14 +79,16 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     };
   }, []);
 
-  // No mostrar navegación en rutas públicas
   if (isPublic) {
     return <>{children}</>;
   }
 
+  // Active section color
+  const activeColor = getActiveSectionColor();
+
   return (
     <View className="flex-1 bg-[#F9F8FD] relative">
-      {/* Overlay con efecto de opacidad */}
+      {/* opacity effect */}
       {isSideMenuOpen && (
         <Animated.View
           style={{
@@ -108,8 +109,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           />
         </Animated.View>
       )}
-
-      {/* SideMenu animado */}
+      {/* Animated SideMenu */}
       <Animated.View
         style={{
           position: 'absolute',
@@ -123,12 +123,10 @@ export default function AppWrapper({ children }: AppWrapperProps) {
       >
         <SideMenu isVisible={isSideMenuOpen} onClose={closeSideMenu} />
       </Animated.View>
-
       {/* AppBar */}
       <View
         className="bg-[#F9F8FD] pt-2 pb-2 px-4"
         style={{
-          shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.05,
           shadowRadius: 2,
@@ -136,10 +134,33 @@ export default function AppWrapper({ children }: AppWrapperProps) {
           zIndex: 10
         }}
       >
-        <Header toggleSideMenu={toggleSideMenu} handleNotifications={handleNotifications} />
+        {/* Header */}
+        <View className="flex-row items-center justify-between">
+
+          {/* Menu Button */}
+          <TouchableOpacity
+            onPress={toggleSideMenu}
+            className="w-10 h-10 bg-white rounded-xl items-center justify-center border border-gray-600"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="menu-outline" size={25} color={activeColor} />
+          </TouchableOpacity>
+
+          {/* Notifications Button */}
+          {/* <TouchableOpacity
+            className="w-10 h-10 bg-white rounded-xl items-center justify-center border border-gray-300"
+            activeOpacity={0.7}
+            style={{ borderColor: activeColor, borderWidth: 1 }}
+          >
+            <View className="relative">
+              <Ionicons name="notifications-outline" size={22} color={activeColor} />
+              <View className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full" />
+            </View>
+          </TouchableOpacity> */}
+        </View>
       </View>
 
-      {/* Contenido principal */}
+      {/* Content */}
       <View className="flex-1">
         {children}
       </View>
@@ -148,7 +169,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
       <View
         className="absolute bottom-0 left-0 right-0 bg-[#F9F8FD]"
         style={{
-          shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 2,

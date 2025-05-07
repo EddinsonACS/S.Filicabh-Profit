@@ -10,8 +10,8 @@ interface AppContextProps {
 // Contexto con valores por defecto
 const AppContext = createContext<AppContextProps>({
   isSideMenuOpen: false,
-  toggleSideMenu: () => {},
-  closeSideMenu: () => {},
+  toggleSideMenu: () => { },
+  closeSideMenu: () => { },
 });
 
 // Hook personalizado

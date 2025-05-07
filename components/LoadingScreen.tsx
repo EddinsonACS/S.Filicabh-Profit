@@ -14,34 +14,74 @@ import { enterpriseStore } from '@/data/global/entrepiseStore';
 
 interface LoadingScreenProps {
   message?: string;
+  color?: string | {
+    primary: string;
+    secondary: string;
+    tertiary: string;
+  };
 }
 
+// Color mapping for sections
+const colorMappings: Record<string, any> = {
+  blue: {
+    primary: 'bg-blue-900',
+    secondary: 'bg-blue-700',
+    tertiary: 'bg-blue-600',
+    accent: 'bg-blue-500',
+    text: 'text-blue-200',
+    iconBg: 'bg-blue-800',
+    progressBg: 'bg-blue-700'
+  },
+  green: {
+    primary: 'bg-green-900',
+    secondary: 'bg-green-700',
+    tertiary: 'bg-green-600',
+    accent: 'bg-green-500',
+    text: 'text-green-200',
+    iconBg: 'bg-green-800',
+    progressBg: 'bg-green-700'
+  },
+  purple: {
+    primary: 'bg-purple-900',
+    secondary: 'bg-purple-700',
+    tertiary: 'bg-purple-600',
+    accent: 'bg-purple-500',
+    text: 'text-purple-200',
+    iconBg: 'bg-purple-800',
+    progressBg: 'bg-purple-700'
+  }
+};
+
 const LoadingScreen: React.FC<LoadingScreenProps> = ({
-  message = ""
+  message = "",
+  color = "blue"
 }) => {
   // Animation values
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
   const progressWidth = useSharedValue(10);
   const opacity = useSharedValue(0);
-  const { selectedEnterprise } = enterpriseStore()
+  const { selectedEnterprise } = enterpriseStore();
+
+  // Get the color theme based on the color prop
+  const colorTheme = typeof color === 'string'
+    ? colorMappings[color] || colorMappings.blue
+    : color;
 
   useEffect(() => {
-    // Rotate animation
     rotation.value = withRepeat(
       withTiming(360, { duration: 2000 }),
-      -1, // Infinite repetition
-      false // No reverse
+      -1,
+      false
     );
 
-    // Pulse animation
     scale.value = withRepeat(
       withSequence(
         withTiming(1.1, { duration: 800 }),
         withTiming(1, { duration: 800 })
       ),
-      -1, // Infinite repetition
-      false // No reverse
+      -1,
+      false
     );
 
     // Progress animation with realistic increment patterns
@@ -57,8 +97,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     opacity.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 800 }),
-        withTiming(1, { duration: 2000 }),  // Stay visible
-        withTiming(0, { duration: 400 })    // Fade out
+        withTiming(1, { duration: 2000 }),
+        withTiming(0, { duration: 400 })
       ),
       -1
     );
@@ -95,11 +135,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   ];
 
   return (
-    <View className="flex-1 w-full bg-blue-900 items-center justify-center">
+    <View className={`flex-1 w-full ${colorTheme.primary} items-center justify-center`}>
       {/* Background decorative elements */}
-      <View className="absolute top-0 right-0 w-40 h-40 rounded-full bg-blue-700 opacity-20" />
-      <View className="absolute bottom-0 left-0 w-56 h-56 rounded-full bg-blue-600 opacity-10" />
-      <View className="absolute top-1/4 left-10 w-20 h-20 rounded-full bg-blue-500 opacity-20" />
+      <View className={`absolute top-0 right-0 w-40 h-40 rounded-full ${colorTheme.secondary} opacity-20`} />
+      <View className={`absolute bottom-0 left-0 w-56 h-56 rounded-full ${colorTheme.tertiary} opacity-10`} />
+      <View className={`absolute top-1/4 left-10 w-20 h-20 rounded-full ${colorTheme.accent} opacity-20`} />
 
       {/* Main content container */}
       <Animated.View
@@ -112,7 +152,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           style={[rotatingStyle, pulseStyle]}
           className="mb-8"
         >
-          <View className="bg-blue-800 p-5 rounded-2xl shadow-lg">
+          <View className={`${colorTheme.iconBg} p-5 rounded-2xl shadow-lg`}>
             <Ionicons name="cube-outline" size={50} color="#ffffff" />
           </View>
         </Animated.View>
@@ -136,7 +176,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
                 opacity: index === 0 ? 1 : 0
               }]}
               entering={FadeIn.delay(index * 3000).duration(500)}
-              className="text-blue-200 text-center"
+              className={`${colorTheme.text} text-center`}
             >
               {step}...
             </Animated.Text>
@@ -144,7 +184,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         </View>
 
         {/* Progress bar */}
-        <View className="w-4/5 h-1 bg-blue-700 rounded-full overflow-hidden mb-6">
+        <View className={`w-4/5 h-1 ${colorTheme.progressBg} rounded-full overflow-hidden mb-6`}>
           <Animated.View
             style={progressStyle}
             className="h-full bg-white rounded-full"
@@ -156,7 +196,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           entering={FadeIn.delay(100).duration(600)}
           className="items-center mt-12"
         >
-          <Text className="text-blue-200 text-xs">
+          <Text className={`${colorTheme.text} text-xs`}>
             {selectedEnterprise?.nombre}
           </Text>
         </Animated.View>

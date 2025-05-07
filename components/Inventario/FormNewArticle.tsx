@@ -96,7 +96,7 @@ export default function FormNewArticle({
           className="bg-white w-full max-w-sm rounded-2xl overflow-hidden"
         >
           {/* Cabecera del modal */}
-          <View className="bg-blue-800 px-5 py-4">
+          <View className="bg-purple-900 px-5 py-4">
             <Text className="text-white text-lg font-bold">
               {mode === 'create' ? 'Crear nuevo artículo' : 'Editar artículo'}
             </Text>
@@ -202,7 +202,7 @@ export default function FormNewArticle({
                         <TouchableOpacity
                           key={category.id}
                           className={`px-3 py-2 mr-1 rounded-lg ${
-                            value === category.id ? 'bg-blue-800' : 'bg-transparent'
+                            value === category.id ? 'bg-purple-800' : 'bg-transparent'
                           }`}
                           onPress={() => onChange(category.id)}
                         >
@@ -267,7 +267,7 @@ export default function FormNewArticle({
             {/* Botones de acción */}
             <View className="flex-row mt-4">
               <TouchableOpacity
-                className="flex-1 mr-2 bg-blue-800 py-3 rounded-lg"
+                className="flex-1 mr-2 bg-purple-900 py-3 rounded-lg"
                 onPress={handleSubmit(handleFormSubmit)}
               >
                 <Text className="text-white font-medium text-center">Guardar</Text>

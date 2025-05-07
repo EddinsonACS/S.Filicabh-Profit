@@ -114,7 +114,7 @@ export default function Ventas() {
     };
 
     if (isLoading) {
-        return <LoadingScreen message="Cargando módulo de ventas" />;
+        return <LoadingScreen message="Cargando Modulo Ventas" color="green" />;
     }
 
     return (
@@ -125,14 +125,14 @@ export default function Ventas() {
             {/* Cabecera */}
             <Animated.View
                 entering={FadeIn.duration(400)}
-                className="bg-blue-800 pt-4 pb-5 px-4"
+                className="bg-green-700 pt-4 pb-5 px-4"
             >
                 <View className="flex-row justify-between items-center">
                     <Text className="text-white text-2xl font-bold">Ventas</Text>
 
                     <View className="flex-row">
                         <TouchableOpacity
-                            className="w-10 h-10 rounded-full bg-blue-700 items-center justify-center mr-2"
+                            className="w-10 h-10 rounded-full bg-green-900 items-center justify-center mr-2"
                             onPress={toggleViewType}
                         >
                             <Ionicons
@@ -146,12 +146,12 @@ export default function Ventas() {
 
                 {/* Resumen */}
                 <View className="flex-row mt-5 justify-between">
-                    <View className="bg-blue-700 rounded-xl p-3" style={{ width: '48%' }}>
+                    <View className="bg-green-900 rounded-xl p-3" style={{ width: '48%' }}>
                         <Text className="text-blue-100 text-sm">Ventas del mes</Text>
                         <Text className="text-white text-xl font-bold">$430,500</Text>
                     </View>
 
-                    <View className="bg-blue-700 rounded-xl p-3" style={{ width: '48%' }}>
+                    <View className="bg-green-900 rounded-xl p-3" style={{ width: '48%' }}>
                         <Text className="text-blue-100 text-sm">Pedidos pendientes</Text>
                         <Text className="text-white text-xl font-bold">12</Text>
                     </View>
@@ -164,7 +164,7 @@ export default function Ventas() {
                 className="px-4 py-3"
             >
                 <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-gray-700 font-medium">Módulos de ventas</Text>
+                    <Text className="text-gray-800 font-medium">Módulos de ventas</Text>
                 </View>
 
                 {/* Visualización de cuadrícula */}
@@ -219,13 +219,13 @@ export default function Ventas() {
                 entering={SlideInUp.duration(400).delay(400)}
                 className="px-4 py-3 mb-6"
             >
-                <Text className="text-gray-700 font-medium mb-3">Estadísticas rápidas</Text>
+                <Text className="text-gray-800 font-medium mb-3">Estadísticas rápidas</Text>
 
                 <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                     <View className="flex-row justify-between items-center mb-4">
                         <Text className="text-lg font-semibold text-gray-800">Desempeño mensual</Text>
                         <TouchableOpacity>
-                            <Text className="text-blue-800">Ver más</Text>
+                            <Text className="text-gray-800">Ver más</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -236,7 +236,7 @@ export default function Ventas() {
 
                     <View className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
                         <Animated.View
-                            className="h-full bg-blue-800 rounded-full"
+                            className="h-full bg-gray-800 rounded-full"
                             style={{ width: '65%' }}
                         />
                     </View>

@@ -48,8 +48,8 @@ export default function ItemArticle({
               <Ionicons name="cube-outline" size={28} color="#9ca3af" />
             )}
           </View>
-          <View className="absolute top-0 right-0 bg-blue-100 rounded-full px-1.5 py-0.5">
-            <Text className="text-xs text-blue-800 font-medium">{item.stock}</Text>
+          <View className="absolute top-0 right-0 bg-purple-100 rounded-full px-1.5 py-0.5">
+            <Text className="text-xs text-pruple-900 font-medium">{item.stock}</Text>
           </View>
         </View>
         
@@ -59,7 +59,7 @@ export default function ItemArticle({
           <Text className="text-gray-600 text-xs mt-1" numberOfLines={2}>{item.description}</Text>
           
           <View className="flex-row mt-2 items-center">
-            <Text className="text-blue-800 font-bold">{formatPrice(item.price)}</Text>
+            <Text className="text-purple-900 font-bold">{formatPrice(item.price)}</Text>
             <View className="bg-gray-100 rounded-full px-2 py-0.5 ml-2">
               <Text className="text-xs text-gray-600">{getCategoryName(item.category)}</Text>
             </View>

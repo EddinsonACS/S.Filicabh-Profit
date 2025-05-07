@@ -7,19 +7,16 @@ type NavBarProps = {
   onMenuPress?: () => void;
 }
 
-/**
- * Componente NavBar simplificado y estable
- */
 export default function NavBar({ onMenuPress }: NavBarProps) {
   const router = useRouter();
   const currentPath = usePathname();
 
-  // Tabs simplificados
+  // Tabs with section colors
   const tabs = [
-    { name: 'Inicio', icon: 'home-outline', route: '/Home' },
-    { name: 'Ventas', icon: 'cart-outline', route: '/Ventas' },
-    { name: 'Inventario', icon: 'bag-handle-outline', route: '/Inventario' },
-    { name: 'Cruds', icon: 'menu-outline', route: '/Crud' },
+    { name: 'Inicio', icon: 'home-outline', route: '/Home', color: '#1e3a8a' },
+    { name: 'Ventas', icon: 'cart-outline', route: '/Ventas', color: '#007C2DFF' },
+    { name: 'Inventario', icon: 'bag-handle-outline', route: '/Inventario', color: '#7c3aed' },
+    { name: 'Entidades', icon: 'menu-outline', route: '/Entidades', color: '#1e3a8a'},
   ];
 
   // Manejar la navegación de forma segura
@@ -60,12 +57,12 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
             <Ionicons
               name={tab.icon as any}
               size={24}
-              color={active ? '#1e3a8a' : '#666'}
+              color={active ? tab.color : '#666'}
             />
             <Text style={{
               fontSize: 12,
               marginTop: 4,
-              color: active ? '#1e3a8a' : '#666',
+              color: active ? tab.color : '#666',
               fontWeight: active ? 'bold' : 'normal'
             }}>
               {tab.name}
