@@ -4,17 +4,12 @@ import {
     SafeAreaView,
     Text,
     TouchableOpacity,
-    View
+    View,
+    ScrollView
 } from 'react-native';
-<<<<<<<< HEAD:app/(views)/(Entidades)/Entidades.tsx
 import CrudFinanzas from './EntFinanzas';
 import CrudInventario from './EntInventario';
 import CrudVentas from './EntVentas';
-========
-import CrudInventario from './CrudInventario';
-import CrudVentas from './CrudVentas';
-import CrudFinanzas from './CrudFinanzas';
->>>>>>>> 5477b2d ([ADD] avances en integracion con el backend):app/(views)/(Crud)/Crud.tsx
 
 // Define section colors
 const SECTION_COLORS = {
@@ -44,9 +39,50 @@ const Entidades: React.FC = () => {
                 return <CrudFinanzas />;
             default:
                 return (
-                    <View className="flex-1 p-4">
+                    <ScrollView className="flex-1 p-4">
+                        {/* Favoritos (antes Acciones rápidas) */}
+                        <Text className="text-xl font-semibold text-gray-800 mb-3">Favoritos</Text>
+                        <View className="flex-row justify-between mb-6">
+                            <TouchableOpacity
+                                className="bg-white w-[23%] rounded-xl shadow-sm border border-gray-100 p-2 items-center"
+                                onPress={() => setSelectedTab('sales')}
+                            >
+                                <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mb-1">
+                                    <Ionicons name="cart" size={20} color={SECTION_COLORS.sales} />
+                                </View>
+                                <Text className="text-gray-800 text-xs font-medium text-center">Nueva venta</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="bg-white w-[23%] rounded-xl shadow-sm border border-gray-100 p-2 items-center"
+                                onPress={() => setSelectedTab('sales')}
+                            >
+                                <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mb-1">
+                                    <Ionicons name="bag-handle" size={20} color={SECTION_COLORS.sales} />
+                                </View>
+                                <Text className="text-gray-800 text-xs font-medium text-center">Nueva compra</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="bg-white w-[23%] rounded-xl shadow-sm border border-gray-100 p-2 items-center"
+                                onPress={() => setSelectedTab('sales')}
+                            >
+                                <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mb-1">
+                                    <Ionicons name="person-add" size={20} color={SECTION_COLORS.sales} />
+                                </View>
+                                <Text className="text-gray-800 text-xs font-medium text-center">Nuevo cliente</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="bg-white w-[23%] rounded-xl shadow-sm border border-gray-100 p-2 items-center"
+                                onPress={() => setSelectedTab('inventory')}
+                            >
+                                <View className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center mb-1">
+                                    <Ionicons name="add-circle" size={20} color={SECTION_COLORS.inventory} />
+                                </View>
+                                <Text className="text-gray-800 text-xs font-medium text-center">Nuevo artículo</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         {/* Botones principales */}
+                        <Text className="text-xl font-semibold text-gray-800 mb-3">Módulos principales</Text>
                         <TouchableOpacity
                             className="bg-white w-full h-20 rounded-xl shadow-sm border border-gray-100 mb-4 flex-row items-center px-4"
                             onPress={() => setSelectedTab('inventory')}
@@ -60,7 +96,6 @@ const Entidades: React.FC = () => {
                             </View>
                             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
                         </TouchableOpacity>
-
                         <TouchableOpacity
                             className="bg-white w-full h-20 rounded-xl shadow-sm border border-gray-100 mb-4 flex-row items-center px-4"
                             onPress={() => setSelectedTab('sales')}
@@ -74,7 +109,6 @@ const Entidades: React.FC = () => {
                             </View>
                             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
                         </TouchableOpacity>
-
                         <TouchableOpacity
                             className="bg-white w-full h-20 rounded-xl shadow-sm border border-gray-100 mb-4 flex-row items-center px-4"
                             onPress={() => setSelectedTab('finance')}
@@ -88,52 +122,7 @@ const Entidades: React.FC = () => {
                             </View>
                             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
                         </TouchableOpacity>
-
-                        {/* Acciones rápidas */}
-                        <Text className="text-xl font-semibold text-gray-800 mt-6 mb-4">Acciones rápidas</Text>
-
-                        <View className="flex-row flex-wrap justify-between">
-                            <TouchableOpacity
-                                className="bg-white w-[48%] rounded-xl shadow-sm border border-gray-100 mb-4 p-4 items-center"
-                                onPress={() => setSelectedTab('sales')}
-                            >
-                                <View className="w-12 h-12 rounded-full bg-green-50 items-center justify-center mb-2">
-                                    <Ionicons name="cart" size={24} color={SECTION_COLORS.sales} />
-                                </View>
-                                <Text className="text-gray-800 font-medium">Nueva venta</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                className="bg-white w-[48%] rounded-xl shadow-sm border border-gray-100 mb-4 p-4 items-center"
-                                onPress={() => setSelectedTab('sales')}
-                            >
-                                <View className="w-12 h-12 rounded-full bg-green-50 items-center justify-center mb-2">
-                                    <Ionicons name="bag-handle" size={24} color={SECTION_COLORS.sales} />
-                                </View>
-                                <Text className="text-gray-800 font-medium">Nueva compra</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                className="bg-white w-[48%] rounded-xl shadow-sm border border-gray-100 mb-4 p-4 items-center"
-                                onPress={() => setSelectedTab('sales')}
-                            >
-                                <View className="w-12 h-12 rounded-full bg-green-50 items-center justify-center mb-2">
-                                    <Ionicons name="person-add" size={24} color={SECTION_COLORS.sales} />
-                                </View>
-                                <Text className="text-gray-800 font-medium">Nuevo cliente</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                className="bg-white w-[48%] rounded-xl shadow-sm border border-gray-100 mb-4 p-4 items-center"
-                                onPress={() => setSelectedTab('inventory')}
-                            >
-                                <View className="w-12 h-12 rounded-full bg-purple-50 items-center justify-center mb-2">
-                                    <Ionicons name="add-circle" size={24} color={SECTION_COLORS.inventory} />
-                                </View>
-                                <Text className="text-gray-800 font-medium">Nuevo artículo</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    </ScrollView>
                 );
         }
     };
@@ -143,7 +132,6 @@ const Entidades: React.FC = () => {
             <View className="flex-1">
                 {renderContent()}
             </View>
-
             {/* Barra de navegación inferior */}
             <View className="h-16 bg-white border-t border-gray-200 flex-row items-center justify-around px-4">
                 <TouchableOpacity
@@ -161,7 +149,6 @@ const Entidades: React.FC = () => {
                         Inicio
                     </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => setSelectedTab('inventory')}
@@ -177,7 +164,6 @@ const Entidades: React.FC = () => {
                         Inventario
                     </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => setSelectedTab('sales')}
@@ -193,7 +179,6 @@ const Entidades: React.FC = () => {
                         Ventas
                     </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => setSelectedTab('finance')}
@@ -209,7 +194,6 @@ const Entidades: React.FC = () => {
                         Finanzas
                     </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => setSelectedTab('profile')}
@@ -230,8 +214,4 @@ const Entidades: React.FC = () => {
     );
 };
 
-<<<<<<<< HEAD:app/(views)/(Entidades)/Entidades.tsx
 export default Entidades;
-========
-export default MainNavigation;
->>>>>>>> 5477b2d ([ADD] avances en integracion con el backend):app/(views)/(Crud)/Crud.tsx

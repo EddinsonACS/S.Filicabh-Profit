@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { ShoppingBag, TrendingUp, ChevronRight, Award } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PeriodType } from '../../app/(views)/(Home)/Home';
 
 interface TopProductListProps {
@@ -70,15 +70,14 @@ const TopProductList: React.FC<TopProductListProps> = ({ period }) => {
       <View className="flex-row justify-between items-center mb-4">
         <View className="flex-row items-center">
           <View className="bg-blue-100 p-2 rounded-lg mr-3">
-            <Award size={20} color="#1e3a8a" />
+            <Ionicons name="trophy-outline" size={20} color="#1e3a8a" />
           </View>
           <Text className="text-lg font-semibold">Top productos más vendidos</Text>
         </View>
         <TouchableOpacity className="bg-blue-50 p-2 rounded-full">
-          <ChevronRight size={18} color="#1e3a8a" />
+          <Ionicons name="chevron-forward" size={18} color="#1e3a8a" />
         </TouchableOpacity>
       </View>
-
       {topProducts.map((product, index) => (
         <TouchableOpacity
           key={product.id}
@@ -91,16 +90,19 @@ const TopProductList: React.FC<TopProductListProps> = ({ period }) => {
             <Text className={`font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'
               }`}>{index + 1}</Text>
           </View>
-
           {/* Información del producto */}
           <View className="flex-1">
             <Text className="font-semibold">{product.name}</Text>
             <View className="flex-row mt-1">
               <Text className="text-xs text-gray-500 mr-4">
-                <ShoppingBag size={12} color="#666" /> {product.units} unidades
+                <Ionicons name="bag-outline" size={12} color="#666" /> {product.units} unidades
               </Text>
               <View className="flex-row items-center">
-                <TrendingUp size={12} color={product.change >= 0 ? '#4CAF50' : '#F44336'} />
+                <Ionicons 
+                  name={product.change >= 0 ? "trending-up" : "trending-down"} 
+                  size={12} 
+                  color={product.change >= 0 ? '#4CAF50' : '#F44336'} 
+                />
                 <Text className={`text-xs ml-1 ${product.change >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
                   {product.change > 0 ? '+' : ''}{product.change}%
@@ -108,7 +110,6 @@ const TopProductList: React.FC<TopProductListProps> = ({ period }) => {
               </View>
             </View>
           </View>
-
           {/* Ingresos */}
           <Text className="font-bold">{formatCurrency(product.revenue)}</Text>
         </TouchableOpacity>
