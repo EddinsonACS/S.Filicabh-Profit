@@ -1,12 +1,12 @@
-import { mockData } from '@/components/Entidades/Inventario/EntInventarioData';
-import { FormDataType, InventoryItem } from '@/components/Entidades/Inventario/InventoryTypes';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { BackHandler, View } from 'react-native';
+import { useInventory } from '@/hooks/Inventario/useInventory';
+import { Inventario } from '@/core/models/Inventario';
+import { InventoryFormData } from '@/utils/schemas/inventorySchema';
 
 // Import components
-import CategorySelector from '@/components/Entidades/Inventario/CategorySelector';
 import EmptyState from '@/components/Entidades/Inventario/EmptyState';
 import FormModal from '@/components/Entidades/Inventario/FormModal';
 import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
@@ -14,40 +14,33 @@ import ItemsList from '@/components/Entidades/Inventario/ItemList';
 import ItemModal from '@/components/Entidades/Inventario/ItemModal';
 import LoadingState from '@/components/Entidades/Inventario/LoadingState';
 import SearchBar from '@/components/Entidades/Inventario/SearchBar';
+import { authStorage } from '@/data/global/authStorage';
 
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
+  const router = useRouter();
+  const {
+    useGetInventoryList,
+    useCreateInventory,
+    useUpdateInventory,
+    useDeleteInventory
+  } = useInventory();
 
   // State management
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('article');
-  const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
   const [formModalVisible, setFormModalVisible] = useState<boolean>(false);
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
-  const [currentItem, setCurrentItem] = useState<InventoryItem | null>(null);
+  const [currentItem, setCurrentItem] = useState<Inventario | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
-  const [formData, setFormData] = useState<FormDataType>({
-    name: '',
-    description: '',
-    code: '',
-    category: '',
-    group: '',
-    section: '',
-    unit: '',
-    size: '',
-    color: '',
-    taxType: '',
-    articleType: '',
-    origin: '',
-    warehouse: '',
-    price: '',
-    stock: '',
-    image: '',
-    status: 'active' as 'active' | 'inactive'
-  });
-  const router = useRouter();
+  const { username } = authStorage();
+
+  // React Query hooks
+  const { data: inventoryData, isLoading } = useGetInventoryList();
+  const createMutation = useCreateInventory();
+  const updateMutation = useUpdateInventory();
+  const deleteMutation = useDeleteInventory();
+
   const navigateToModules = () => {
     router.replace('/Entidades');
   };
@@ -62,7 +55,6 @@ const EntInventario: React.FC = () => {
         setDetailModalVisible(false);
         return true;
       }
-      // Navigate back to main section
       navigation.goBack();
       return true;
     };
@@ -75,202 +67,117 @@ const EntInventario: React.FC = () => {
     return () => backHandlerSubscription.remove();
   }, [formModalVisible, detailModalVisible, navigation]);
 
-  useEffect(() => {
-    const loadData = () => {
-      setTimeout(() => {
-        setItems(mockData);
-        setLoading(false);
-      }, 800);
-    };
-
-    loadData();
-  }, []);
-
-  // Filter items by category and search
-  const filteredItems = items.filter(item =>
-    item.type === selectedCategory &&
-    (searchQuery === '' ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())))
-  );
+  // Filter items by search
+  const filteredItems = inventoryData?.data.filter(item =>
+    (item.nombre as string).toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.otrosC1 && (item.otrosC1 as string).toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
 
   // CRUD operations
-  const handleCreate = () => {
-    const newItem: InventoryItem = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description,
-      code: formData.code,
-      category: formData.category || undefined,
-      group: formData.group || undefined,
-      section: formData.section || undefined,
-      unit: formData.unit || undefined,
-      size: formData.size || undefined,
-      color: formData.color || undefined,
-      taxType: formData.taxType || undefined,
-      articleType: formData.articleType || undefined,
-      origin: formData.origin || undefined,
-      warehouse: formData.warehouse || undefined,
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      stock: formData.stock ? parseInt(formData.stock) : undefined,
-      image: formData.image || undefined,
-      status: formData.status,
-      createdAt: new Date().toISOString().split('T')[0],
-      type: selectedCategory as any
+  const handleCreate = (formData: InventoryFormData) => {
+    const newItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+      nombre: formData.nombre,
+      aplicaVentas: formData.aplicaVentas,
+      aplicaCompras: formData.aplicaCompras,
+      suspendido: formData.suspendido,
+      otrosF1: new Date().toISOString(),
+      otrosN1: 0,
+      otrosN2: 0,
+      equipo: "equipo",
+      otrosC1: null,
+      otrosC2: null,
+      otrosC3: null,
+      otrosC4: null,
+      otrosT1: null
     };
 
-    setItems([...items, newItem]);
-    resetForm();
+    createMutation.mutate(newItem);
     setFormModalVisible(false);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (formData: InventoryFormData) => {
     if (!currentItem) return;
 
-    const updatedItems = items.map(item =>
-      item.id === currentItem.id
-        ? {
-          ...item,
-          name: formData.name,
-          description: formData.description,
-          code: formData.code,
-          category: formData.category || item.category,
-          group: formData.group || item.group,
-          section: formData.section || item.section,
-          unit: formData.unit || item.unit,
-          size: formData.size || item.size,
-          color: formData.color || item.color,
-          taxType: formData.taxType || item.taxType,
-          articleType: formData.articleType || item.articleType,
-          origin: formData.origin || item.origin,
-          warehouse: formData.warehouse || item.warehouse,
-          price: formData.price ? parseFloat(formData.price) : item.price,
-          stock: formData.stock ? parseInt(formData.stock) : item.stock,
-          image: formData.image || item.image,
-          status: formData.status
-        }
-        : item
-    );
+    const updatedItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+      nombre: formData.nombre,
+      aplicaVentas: formData.aplicaVentas,
+      aplicaCompras: formData.aplicaCompras,
+      suspendido: formData.suspendido,
+      otrosF1: new Date().toISOString(),
+      otrosN1: 0,
+      equipo: "equipo",
+      otrosN2: 0,
+      otrosC1: null,
+      otrosC2: null,
+      otrosC3: null,
+      otrosC4: null,
+      otrosT1: null
+    };
 
-    setItems(updatedItems);
-    resetForm();
+    updateMutation.mutate({ id: currentItem.id, data: updatedItem });
     setFormModalVisible(false);
   };
 
-  const handleDelete = (id: string) => {
-    const updatedItems = items.filter(item => item.id !== id);
-    setItems(updatedItems);
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(id);
   };
 
   // Helper functions
-  const showItemDetails = (item: InventoryItem) => {
+  const showItemDetails = (item: Inventario) => {
     setCurrentItem(item);
     setDetailModalVisible(true);
   };
 
-  const openEditModal = (item: InventoryItem) => {
+  const openEditModal = (item: Inventario) => {
     setCurrentItem(item);
-    setFormData({
-      name: item.name,
-      description: item.description || '',
-      code: item.code || '',
-      category: item.category || '',
-      group: item.group || '',
-      section: item.section || '',
-      unit: item.unit || '',
-      size: item.size || '',
-      color: item.color || '',
-      taxType: item.taxType || '',
-      articleType: item.articleType || '',
-      origin: item.origin || '',
-      warehouse: item.warehouse || '',
-      price: item.price?.toString() || '',
-      stock: item.stock?.toString() || '',
-      image: item.image || '',
-      status: item.status
-    });
     setIsEditing(true);
     setFormModalVisible(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      code: '',
-      category: '',
-      group: '',
-      section: '',
-      unit: '',
-      size: '',
-      color: '',
-      taxType: '',
-      articleType: '',
-      origin: '',
-      warehouse: '',
-      price: '',
-      stock: '',
-      image: '',
-      status: 'active'
-    });
-    setCurrentItem(null);
-    setIsEditing(false);
-  };
-
   return (
-    <View>
+    <View className="flex-1">
       <InventoryHeader
+        navigateToModules={navigateToModules}
         viewType={viewType}
         setViewType={setViewType}
-        navigateToModules={navigateToModules}
-      />
-
-      <CategorySelector
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        viewType={viewType}
       />
 
       <SearchBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onAddPress={() => {
-          resetForm();
+          setCurrentItem(null);
+          setIsEditing(false);
           setFormModalVisible(true);
         }}
       />
 
-      {loading ? (
-        <LoadingState />
-      ) : (
-        filteredItems.length > 0 ? (
-          <ItemsList
-            items={filteredItems}
-            handleDelete={handleDelete}
-            showItemDetails={showItemDetails}
-            openEditModal={openEditModal}
-          />
+      <View className="flex-1">
+        {isLoading ? (
+          <LoadingState />
         ) : (
-          <EmptyState />
-        )
-      )}
+          filteredItems.length > 0 ? (
+            <ItemsList
+              items={filteredItems}
+              handleDelete={handleDelete}
+              showItemDetails={showItemDetails}
+              openEditModal={openEditModal}
+            />
+          ) : (
+            <EmptyState />
+          )
+        )}
+      </View>
 
-      {/* Updated FormModal with new styling */}
       <FormModal
         visible={formModalVisible}
-        onClose={() => {
-          resetForm();
-          setFormModalVisible(false);
-        }}
-        formData={formData}
-        setFormData={setFormData}
+        onClose={() => setFormModalVisible(false)}
         isEditing={isEditing}
-        selectedCategory={selectedCategory}
+        currentItem={currentItem}
         handleCreate={handleCreate}
         handleUpdate={handleUpdate}
       />
 
-      {/* Updated ItemModal with removed top buttons */}
       <ItemModal
         visible={detailModalVisible}
         onClose={() => setDetailModalVisible(false)}

@@ -35,19 +35,6 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           </View>
         </View>
 
-        <TouchableOpacity
-          className="bg-purple-800 rounded-full p-2 flex-row items-center"
-          onPress={() => setViewType(viewType === 'chips' ? 'dropdown' : 'chips')}
-        >
-          <Ionicons
-            name={viewType === 'chips' ? 'list-outline' : 'grid-outline'}
-            size={18}
-            color="#f3e8ff"
-          />
-          <Text className="text-purple-100 ml-1 text-xs">
-            {viewType === 'chips' ? 'Ver lista' : 'Ver chips'}
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

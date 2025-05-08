@@ -9,6 +9,7 @@ import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable,
 import Animated, { BounceIn, Easing, FadeIn, interpolateColor, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLoginUser } from '../../hooks/auth/useLoginUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authStorage } from '@/data/global/authStorage';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -17,6 +18,7 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const { setUsername } = authStorage();
   const router = useRouter();
 
   // Valores animados
@@ -108,8 +110,9 @@ export default function LoginForm() {
       });
 
       mutate(data, {
-        onSuccess: async (data) => {
-          await AsyncStorage.setItem("authToken", data.token)
+        onSuccess: async (response) => {
+          await AsyncStorage.setItem("authToken", response.token)
+          setUsername(data.username)
           router.replace('/Entrepise')
         },
         onError: (err: any) => {

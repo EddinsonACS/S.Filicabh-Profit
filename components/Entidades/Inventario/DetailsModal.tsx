@@ -8,15 +8,14 @@ import {
     ScrollView,
     Image
 } from 'react-native';
-import { InventoryItem, inventoryCategories } from '../data/mockData';
-import { INVENTORY_COLOR } from '../styles/colors';
+import { Inventario } from '@/core/models/Inventario';
 
 interface DetailsModalProps {
     visible: boolean;
-    item: InventoryItem | null;
+    item: Inventario | null;
     onClose: () => void;
-    onEdit: (item: InventoryItem) => void;
-    onDelete: (id: string) => void;
+    onEdit: (item: Inventario) => void;
+    onDelete: (id: number) => void;
 }
 
 const DetailsModal: React.FC<DetailsModalProps> = ({
@@ -49,19 +48,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                         </TouchableOpacity>
                     </View>
 
-                    {item.image && item.type === 'article' && (
-                        <Image
-                            source={{ uri: item.image }}
-                            className="w-full h-40 rounded-lg mb-4"
-                            resizeMode="cover"
-                        />
-                    )}
-
                     <View className="bg-purple-50 rounded-lg p-4 mb-4">
-                        <Text className="text-2xl font-bold text-purple-900 mb-2">{item.name}</Text>
-                        <View className={`self-start px-3 py-1 rounded-full ${item.status === 'active' ? 'bg-green-100' : 'bg-red-100'} mb-4`}>
-                            <Text className={`text-sm font-medium ${item.status === 'active' ? 'text-green-800' : 'text-red-800'}`}>
-                                {item.status === 'active' ? 'Activo' : 'Inactivo'}
+                        <Text className="text-2xl font-bold text-purple-900 mb-2">{item.nombre}</Text>
+                        <View className={`self-start px-3 py-1 rounded-full ${!item.suspendido ? 'bg-green-100' : 'bg-red-100'} mb-4`}>
+                            <Text className={`text-sm font-medium ${!item.suspendido ? 'text-green-800' : 'text-red-800'}`}>
+                                {!item.suspendido ? 'Activo' : 'Inactivo'}
                             </Text>
                         </View>
                     </View>
@@ -69,49 +60,42 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                     <ScrollView className="max-h-80">
                         <View className="mb-4">
                             <Text className="text-gray-500 mb-1">Descripción</Text>
-                            <Text className="text-gray-800">{item.description || 'Sin descripción'}</Text>
+                            <Text className="text-gray-800">{item.otrosC1 || 'Sin descripción'}</Text>
                         </View>
 
                         <View className="mb-4">
                             <Text className="text-gray-500 mb-1">Código</Text>
-                            <Text className="text-gray-800">{item.code || 'Sin código'}</Text>
+                            <Text className="text-gray-800">{item.otrosC2 || 'Sin código'}</Text>
                         </View>
 
-                        {item.type === 'article' && (
-                            <>
-                                <View className="mb-4">
-                                    <Text className="text-gray-500 mb-1">Categoría</Text>
-                                    <Text className="text-gray-800">{item.category || 'No asignada'}</Text>
-                                </View>
+                        <View className="mb-4">
+                            <Text className="text-gray-500 mb-1">Grupo</Text>
+                            <Text className="text-gray-800">{item.otrosC4 || 'No asignado'}</Text>
+                        </View>
 
-                                <View className="mb-4">
-                                    <Text className="text-gray-500 mb-1">Grupo</Text>
-                                    <Text className="text-gray-800">{item.group || 'No asignado'}</Text>
-                                </View>
+                        <View className="mb-4">
+                            <Text className="text-gray-500 mb-1">Fecha de registro</Text>
+                            <Text className="text-gray-800">{new Date(item.fechaRegistro).toLocaleDateString()}</Text>
+                        </View>
 
-                                <View className="mb-4">
-                                    <Text className="text-gray-500 mb-1">Precio</Text>
-                                    <Text className="text-gray-800 font-medium">Bs. {item.price?.toFixed(2) || '0.00'}</Text>
-                                </View>
+                        <View className="mb-4">
+                            <Text className="text-gray-500 mb-1">Registrado por</Text>
+                            <Text className="text-gray-800">{item.usuarioRegistroNombre}</Text>
+                        </View>
 
-                                <View className="mb-4">
-                                    <Text className="text-gray-500 mb-1">Stock</Text>
-                                    <Text className="text-gray-800">{item.stock || '0'} unidades</Text>
-                                </View>
-                            </>
+                        {item.fechaModificacion && (
+                            <View className="mb-4">
+                                <Text className="text-gray-500 mb-1">Última modificación</Text>
+                                <Text className="text-gray-800">{new Date(item.fechaModificacion).toLocaleDateString()}</Text>
+                            </View>
                         )}
 
-                        <View className="mb-4">
-                            <Text className="text-gray-500 mb-1">Fecha de creación</Text>
-                            <Text className="text-gray-800">{item.createdAt}</Text>
-                        </View>
-
-                        <View className="mb-4">
-                            <Text className="text-gray-500 mb-1">Tipo</Text>
-                            <Text className="text-gray-800">
-                                {inventoryCategories.find(cat => cat.type === item.type)?.title || item.type}
-                            </Text>
-                        </View>
+                        {item.usuarioModificacionNombre && (
+                            <View className="mb-4">
+                                <Text className="text-gray-500 mb-1">Modificado por</Text>
+                                <Text className="text-gray-800">{item.usuarioModificacionNombre}</Text>
+                            </View>
+                        )}
                     </ScrollView>
 
                     <View className="flex-row mt-6">
