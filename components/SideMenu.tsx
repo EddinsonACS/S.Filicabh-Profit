@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { queryClient } from "@/utils/libs/queryClient";
 
 type SideMenuProps = {
   isVisible: boolean;
@@ -114,9 +115,8 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
     }
   };
 
-  const closeSession = async () => {
-    await AsyncStorage.removeItem("authToken") 
-    router.replace("/Login")
+  const closeSession = () => {
+    console.log("Cerrando sesión")
   }
 
   const toggleMainItem = (itemName: string): void => {

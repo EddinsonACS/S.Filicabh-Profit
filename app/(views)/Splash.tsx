@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
@@ -6,10 +7,16 @@ export default function SplashScreen(): JSX.Element {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/Login");
+    const timer = setTimeout(async () => {
+      const notNew = await AsyncStorage.getItem("not_new");
+      if (!notNew) {
+        router.replace("/Onboarding")
+      } else {
+        router.replace("/Login");
+      }
+
     }, 2000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 

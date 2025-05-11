@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef, useState } from "react";
@@ -46,17 +47,20 @@ export default function OnboardingScreen() {
   const slidesRef = useRef<ScrollView>(null);
 
   // Siguiente diapositiva
-  const goToNextSlide = () => {
+  const goToNextSlide = async () => {
     if (currentIndex < slides.length - 1) {
       slidesRef.current?.scrollTo({ x: width * (currentIndex + 1), animated: true });
       setCurrentIndex(currentIndex + 1);
+      await AsyncStorage.setItem("not_new","active")
     } else {
+      await AsyncStorage.setItem("not_new","active")
       router.replace("/Login");
     }
   };
 
   // Saltar
-  const skipOnboarding = () => {
+  const skipOnboarding = async () => {
+    await AsyncStorage.setItem("not_new","active")
     router.replace("/Login");
   };
 

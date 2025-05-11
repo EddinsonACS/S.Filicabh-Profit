@@ -1,8 +1,10 @@
+import { queryClient } from '@/utils/libs/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,9 +24,9 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Slot />
       <StatusBar style="auto" />
-    </>
+    </QueryClientProvider>
   );
 }

@@ -1,4 +1,4 @@
 export default interface LoginResponse {
-  token: string,
+  token?: string,
   mensaje?: string
 }

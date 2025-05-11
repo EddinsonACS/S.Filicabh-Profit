@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, usePathname } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -66,12 +67,11 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
     }
   };
 
-  const navigateTo = (route: string): void => {
+  const navigateTo = async (route: string) => {
     try {
       onClose();
-      setTimeout(() => {
-        router.push(route as any);
-      }, 100);
+      await AsyncStorage.removeItem("authToken")
+      router.push(route as any);
     } catch (error) {
       console.log('Error de navegación:', error);
     }

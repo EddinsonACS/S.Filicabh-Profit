@@ -111,7 +111,9 @@ export default function LoginForm() {
 
       mutate(data, {
         onSuccess: async (response) => {
-          await AsyncStorage.setItem("authToken", response.token)
+          if (response.token) {
+            await AsyncStorage.setItem("authToken", response.token)
+          }
           setUsername(data.username)
           router.replace('/Entrepise')
         },
