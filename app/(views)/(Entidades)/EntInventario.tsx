@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { BackHandler, View } from 'react-native';
 import { useInventory } from '@/hooks/Inventario/useInventory';
 import { Inventario } from '@/core/models/Inventario';
@@ -17,6 +17,8 @@ import ItemModal from '@/components/Entidades/Inventario/ItemModal';
 import LoadingState from '@/components/Entidades/Inventario/LoadingState';
 import SearchBar from '@/components/Entidades/Inventario/SearchBar';
 import { authStorage } from '@/data/global/authStorage';
+
+const PAGE_SIZE = 10;
 
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
@@ -37,13 +39,38 @@ const EntInventario: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('almacen');
   const [mockItems, setMockItems] = useState<Inventario[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [accumulatedItems, setAccumulatedItems] = useState<Inventario[]>([]);
   const { username } = authStorage();
 
   // React Query hooks - Para Almacén (sólo se ejecuta cuando la categoría seleccionada es 'almacen')
-  const { data: inventoryData, isLoading: isLoadingApi } = useGetInventoryList();
+  const { data: inventoryData, isLoading: isLoadingApi } = useGetInventoryList(currentPage, PAGE_SIZE);
   const createMutation = useCreateInventory();
   const updateMutation = useUpdateInventory();
   const deleteMutation = useDeleteInventory();
+
+  // Reset pagination when category changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setHasMore(true);
+    setAccumulatedItems([]);
+  }, [selectedCategory]);
+
+  // Update hasMore and accumulate items when new data arrives
+  useEffect(() => {
+    if (inventoryData && selectedCategory === 'almacen') {
+      const totalPages = Math.ceil(inventoryData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      // Accumulate items
+      if (currentPage === 1) {
+        setAccumulatedItems(inventoryData.data);
+      } else {
+        setAccumulatedItems(prev => [...prev, ...inventoryData.data]);
+      }
+    }
+  }, [inventoryData, currentPage, selectedCategory]);
 
   // Cargar datos de prueba cuando cambia la categoría
   useEffect(() => {
@@ -85,11 +112,11 @@ const EntInventario: React.FC = () => {
   // Datos combinados - API para almacén, mock para el resto
   const items = useMemo(() => {
     if (selectedCategory === 'almacen') {
-      return inventoryData?.data || [];
+      return accumulatedItems;
     } else {
       return mockItems;
     }
-  }, [selectedCategory, inventoryData, mockItems]);
+  }, [selectedCategory, accumulatedItems, mockItems]);
 
   // Filter items by search
   const filteredItems = useMemo(() => {
@@ -97,6 +124,13 @@ const EntInventario: React.FC = () => {
       item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [items, searchQuery]);
+
+  // Load more items when reaching the end
+  const handleLoadMore = useCallback(() => {
+    if (selectedCategory === 'almacen' && hasMore && !isLoading) {
+      setCurrentPage(prev => prev + 1);
+    }
+  }, [selectedCategory, hasMore, isLoading]);
 
   // CRUD operations
   const handleCreate = (formData: InventoryFormData) => {
@@ -240,19 +274,17 @@ const EntInventario: React.FC = () => {
       />
 
       <View className="flex-1">
-        {isLoading ? (
+        {isLoading && currentPage === 1 ? (
           <LoadingState />
         ) : (
-          filteredItems.length > 0 ? (
-            <ItemsList
-              items={filteredItems}
-              handleDelete={handleDelete}
-              showItemDetails={showItemDetails}
-              openEditModal={openEditModal}
-            />
-          ) : (
-            <EmptyState />
-          )
+          <ItemsList
+            items={filteredItems}
+            handleDelete={handleDelete}
+            showItemDetails={showItemDetails}
+            openEditModal={openEditModal}
+            onLoadMore={handleLoadMore}
+            hasMore={hasMore}
+          />
         )}
       </View>
 

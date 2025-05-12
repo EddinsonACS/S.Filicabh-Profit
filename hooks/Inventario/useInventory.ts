@@ -7,10 +7,10 @@ import { queryClient } from '@/utils/libs/queryClient';
 
 export const useInventory = () => {
 
-  const useGetInventoryList = () => {
+  const useGetInventoryList = (page: number = 1, size: number = 10) => {
     return useQuery<ListInventarioResponse, Error>({
-      queryKey: ['inventory', 'list'],
-      queryFn: inventoryApi.getList,
+      queryKey: ['inventory', 'list', page, size],
+      queryFn: () => inventoryApi.getList(page, size),
       onSettled: (_: ListInventarioResponse | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(

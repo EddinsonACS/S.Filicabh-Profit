@@ -9,7 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ViewsLayout() {
   const { useGetInventoryList } = useInventory();
-  const { isError, isSuccess, isLoading } = useGetInventoryList();
+  const { isError, isSuccess, isLoading } = useGetInventoryList(1,1);
   const hasCheckedSession = useRef(false);
 
   useEffect(() => {

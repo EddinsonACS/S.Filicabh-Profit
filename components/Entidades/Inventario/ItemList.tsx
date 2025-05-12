@@ -9,13 +9,14 @@ import {
   Animated,
   PanResponder,
   Dimensions,
-  StyleSheet,
   LayoutAnimation,
   Platform,
   UIManager,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Inventario } from '@/core/models/Inventario';
+import EmptyState from './EmptyState';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -27,6 +28,8 @@ interface ItemsListProps {
   handleDelete: (id: number) => void;
   showItemDetails: (item: Inventario) => void;
   openEditModal: (item: Inventario) => void;
+  onLoadMore: () => void;
+  hasMore: boolean;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -36,7 +39,9 @@ const ItemsList: React.FC<ItemsListProps> = ({
   items,
   handleDelete,
   showItemDetails,
-  openEditModal
+  openEditModal,
+  onLoadMore,
+  hasMore
 }) => {
   const [activeRow, setActiveRow] = useState<number | null>(null);
   const [swipeHintShown, setSwipeHintShown] = useState<boolean>(false);
@@ -283,6 +288,12 @@ const ItemsList: React.FC<ItemsListProps> = ({
         <Text className="text-xs text-gray-400 mt-2">
           ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
         </Text>
+        <Text className="text-xs text-gray-400 mt-2">
+          Creado por: {item.usuarioRegistroNombre}
+        </Text>
+        <Text className="text-xs text-gray-400 mt-2">
+          Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+        </Text>
       </View>
     );
 
@@ -294,69 +305,52 @@ const ItemsList: React.FC<ItemsListProps> = ({
       ]
     };
 
-    // Helper styles for action buttons
-    const leftActionStyles = {
-      width: leftButtonWidth,
-      opacity: leftButtonWidth.interpolate({
-        inputRange: [0, 40, 80],
-        outputRange: [0, 0.8, 1]
-      })
-    };
-
-    const rightActionStyles = {
-      width: rightButtonWidth,
-      opacity: rightButtonWidth.interpolate({
-        inputRange: [0, 40, 80],
-        outputRange: [0, 0.8, 1]
-      })
-    };
-
     return (
-      <View className="mb-4 relative">
-        {/* Left action button - Delete */}
-        <Animated.View style={[styles.leftAction, leftActionStyles]}>
+      <Animated.View style={[rowStyles]} className="flex-row bg-white rounded-xl my-1.5 shadow-sm border border-gray-100 overflow-hidden">
+        {/* Left button (Delete) */}
+        <Animated.View style={{ width: leftButtonWidth }} className="absolute left-0 h-full bg-red-500 justify-center items-center overflow-hidden">
           <TouchableOpacity
+            className="w-full h-full justify-center items-center"
             onPress={confirmDelete}
-            className="h-full flex justify-center items-center"
           >
-            <View className="items-center justify-center w-12 h-12 rounded-full bg-red-100">
-              <Ionicons name="trash" size={24} color="#dc2626" />
-            </View>
+            <Ionicons name="trash-outline" size={24} color="white" />
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Right action button - Edit */}
-        <Animated.View style={[styles.rightAction, rightActionStyles]}>
+        {/* Right button (Edit) */}
+        <Animated.View style={{ width: rightButtonWidth }} className="absolute right-0 h-full bg-purple-900 justify-center items-center overflow-hidden">
           <TouchableOpacity
+            className="w-full h-full justify-center items-center"
             onPress={() => {
               resetRow();
               openEditModal(item);
             }}
-            className="h-full flex justify-center items-center"
           >
-            <View className="items-center justify-center w-12 h-12 rounded-full bg-purple-100">
-              <Ionicons name="create" size={24} color="#7e22ce" />
-            </View>
+            <Ionicons name="pencil-outline" size={24} color="white" />
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Main card content */}
-        <Animated.View style={rowStyles} {...panResponder.panHandlers}>
+        {/* Main content */}
+        <Animated.View
+          {...panResponder.panHandlers}
+          className="flex-1 bg-white"
+        >
           <TouchableOpacity
-            className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
             onPress={handlePress}
-            activeOpacity={0.9}
+            activeOpacity={0.7}
           >
             {renderItemContent()}
           </TouchableOpacity>
         </Animated.View>
+      </Animated.View>
+    );
+  };
 
-        {/* Swipe hint indicator (only shown for the first item and only once) */}
-        {index === 0 && !swipeHintShown && (
-          <View className="absolute right-3 top-1/2 -mt-4 bg-black/60 rounded-full px-2 py-1 z-10">
-            <Text className="text-white text-xs">Desliza ← →</Text>
-          </View>
-        )}
+  const renderFooter = () => {
+    if (!hasMore) return null;
+    return (
+      <View className="py-4 items-center">
+        <ActivityIndicator size="small" color="#581c87" />
       </View>
     );
   };
@@ -364,43 +358,17 @@ const ItemsList: React.FC<ItemsListProps> = ({
   return (
     <FlatList
       data={items}
+      ListEmptyComponent={<EmptyState />}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item, index }) => (
-        <SwipeableItem
-          item={item}
-          index={index}
-        />
+        <SwipeableItem item={item} index={index} />
       )}
-      contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
-      showsVerticalScrollIndicator={false}
-      onScrollBeginDrag={() => setActiveRow(null)}
+      onEndReached={onLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  leftAction: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(254, 226, 226, 0.8)',
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    overflow: 'hidden',
-    zIndex: 1
-  },
-  rightAction: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(243, 232, 255, 0.8)',
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    overflow: 'hidden',
-    zIndex: 1
-  }
-});
 
 export default ItemsList;

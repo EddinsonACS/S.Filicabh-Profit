@@ -221,7 +221,13 @@ const FormModal: React.FC<FormModalProps> = ({
     if (validateApiConfig()) {
       handleSubmit(onSubmit)();
     }
+    reset()
   };
+
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
 
   // Obtener el título correcto según la categoría
   const getCategoryTitle = () => {
@@ -469,7 +475,7 @@ const FormModal: React.FC<FormModalProps> = ({
               <View className="flex-row">
                 <TouchableOpacity
                   className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
-                  onPress={onClose}
+                  onPress={handleClose}
                 >
                   <Ionicons name="close-outline" size={18} color="#4b5563" style={{ marginRight: 6 }} />
                   <Text className="text-gray-600 font-medium">Cancelar</Text>

@@ -4,8 +4,8 @@ import ListInventarioResponse from '@/core/response/ListInventarioResponse';
 import { api } from '@/utils/libs/api';
 
 export const inventoryApi = {
-  getList: async (): Promise<ListInventarioResponse> => {
-    const response = await api.get(endpoints.inventory.list);
+  getList: async (pageNumber: number = 1, pageSize: number = 10): Promise<ListInventarioResponse> => {
+    const response = await api.get(endpoints.inventory.list + `?pageNumber=${pageNumber}&pageSize=${pageSize}`);
     return response.data;
   },
 
