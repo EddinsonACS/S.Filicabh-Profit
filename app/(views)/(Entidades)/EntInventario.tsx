@@ -66,7 +66,12 @@ const EntInventario: React.FC = () => {
       if (currentPage === 1) {
         setAccumulatedItems(inventoryData.data);
       } else {
-        setAccumulatedItems(prev => [...prev, ...inventoryData.data]);
+        setAccumulatedItems(prev => {
+          // Filtrar duplicados basados en el ID
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = inventoryData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
       }
     }
   }, [inventoryData, currentPage, selectedCategory]);
@@ -151,7 +156,20 @@ const EntInventario: React.FC = () => {
         otrosT1: null
       };
 
-      createMutation.mutate(newItem);
+      createMutation.mutate(newItem, {
+        onSuccess: (createdItem) => {
+          // Agregar el nuevo item al principio de la lista
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          
+          // Resetear la paginación para asegurar que el nuevo item sea visible
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          // Si hay error, recargar la página actual
+          setCurrentPage(1);
+        }
+      });
     } else {
       // Para otras categorías, usar datos de prueba locales
       const newItem: Inventario = {
@@ -175,7 +193,7 @@ const EntInventario: React.FC = () => {
         usuarioModificacionNombre: username || "usuario_local"
       };
 
-      setMockItems([...mockItems, newItem]);
+      setMockItems(prev => [newItem, ...prev]);
     }
 
     setFormModalVisible(false);
@@ -195,17 +213,28 @@ const EntInventario: React.FC = () => {
         otrosN1: 0,
         equipo: "equipo",
         otrosN2: 0,
-        otrosC1: currentItem.otrosC1, // Preservamos la configuración API existente
+        otrosC1: null,
         otrosC2: null,
         otrosC3: null,
         otrosC4: null,
         otrosT1: null
       };
 
-      updateMutation.mutate({ id: currentItem.id, data: updatedItem });
+      updateMutation.mutate({ id: currentItem.id, data: updatedItem }, {
+        onSuccess: (updatedItem) => {
+          // Actualizar con los datos reales del servidor
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          // Si hay error, recargar la página actual
+          setCurrentPage(1);
+        }
+      });
     } else {
       // Para otras categorías, actualizar datos de prueba locales
-      const updatedItems = mockItems.map(item =>
+      setMockItems(prev => prev.map(item =>
         item.id === currentItem.id
           ? {
             ...item,
@@ -217,22 +246,31 @@ const EntInventario: React.FC = () => {
             usuarioModificacionNombre: username || "usuario_local"
           }
           : item
-      );
-
-      setMockItems(updatedItems);
+      ));
     }
 
     setFormModalVisible(false);
+    setDetailModalVisible(false);
   };
 
   const handleDelete = (id: number) => {
     if (selectedCategory === 'almacen') {
-      // Para almacén, usar la API real
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          // Recargar la página actual para asegurar la consistencia
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          // Si hay error, recargar la página actual
+          setCurrentPage(1);
+        }
+      });
     } else {
       // Para otras categorías, eliminar de datos de prueba locales
-      setMockItems(mockItems.filter(item => item.id !== id));
+      setMockItems(prev => prev.filter(item => item.id !== id));
     }
+    setDetailModalVisible(false);
   };
 
   // Helper functions

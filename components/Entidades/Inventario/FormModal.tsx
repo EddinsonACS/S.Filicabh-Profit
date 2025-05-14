@@ -152,6 +152,7 @@ const FormModal: React.FC<FormModalProps> = ({
   const handleFormSubmit = () => {
     handleSubmit(onSubmit)();
     reset();
+    onClose();
   };
 
   const handleClose = () => {
