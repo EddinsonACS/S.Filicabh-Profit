@@ -10,7 +10,7 @@ import { enterpriseStore } from "@/data/global/entrepiseStore";
 import { useRouter } from "expo-router";
 import { useSelectEnterprise } from "@/hooks/Enterprise/useSelectEnterprise";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function EntrepiseList() {
   const router = useRouter()
@@ -25,6 +25,25 @@ export default function EntrepiseList() {
       enterpriseId: '',
     },
   });
+
+  useEffect(() => {
+    if (data?.data.length === 1) {
+      const singleEnterprise = data.data[0];
+      setIsPending(true);
+      setListEnterprise(data.data);
+      mutate(singleEnterprise.codigo, {
+        onSuccess: async (response) => {
+          await AsyncStorage.setItem("authToken", response.token);
+          setSelectedEnterprise(singleEnterprise);
+          router.replace('/Home');
+        },
+        onError: (err) => {
+          console.log(err);
+          setIsPending(false);
+        }
+      });
+    }
+  }, [data]);
 
   const onSubmit = async ({ enterpriseId }: { enterpriseId: string }) => {
     setIsPending(true)
@@ -42,10 +61,10 @@ export default function EntrepiseList() {
       },
       onError: (err) => {
         console.log(err)
+        setIsPending(false)
       }
     })
   }
-
 
   if (isLoading) {
     return <LoadingScreen message="Cargando empresas disponibles" />;
@@ -69,6 +88,7 @@ export default function EntrepiseList() {
     );
   }
 
+  const hasSingleEnterprise = data?.data.length === 1;
 
   return (
     <View className="flex-1 w-full bg-[#F9F8FD]">
@@ -78,10 +98,10 @@ export default function EntrepiseList() {
         className="pt-4 pb-4 bg-blue-800"
       >
         <Text className="text-white text-2xl font-bold mb-2 text-center">
-          Selecciona tu empresa
+          {hasSingleEnterprise ? 'Procesando empresa' : 'Selecciona tu empresa'}
         </Text>
         <Text className="text-blue-100 text-base text-center">
-          Elige la empresa con la que deseas trabajar
+          {hasSingleEnterprise ? 'Redirigiendo...' : 'Elige la empresa con la que deseas trabajar'}
         </Text>
       </Animated.View>
 
@@ -96,66 +116,77 @@ export default function EntrepiseList() {
           </Animated.View>
         )}
 
-        <Animated.View
-          entering={FadeIn.delay(300).duration(500)}
-          className="mb-8"
-        >
-          <Text className="text-gray-700 font-semibold mb-4">Empresa</Text>
-          <Controller
-            control={control}
-            name="enterpriseId"
-            render={({ field: { onChange, value } }) => (
-              <View className="rounded-xl overflow-hidden border border-gray-200">
-                {data?.data?.map((enterprise) => (
-                  <TouchableOpacity
-                    key={enterprise.codigo}
-                    className={`p-4 border-b border-gray-200 ${value === enterprise.codigo ? 'bg-blue-50' : 'bg-white'
-                      }`}
-                    onPress={() => {
-                      onChange(enterprise.codigo);
-                    }}
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-1">
-                        <Text className="text-lg font-medium text-gray-800">
-                          {enterprise.nombre}
-                        </Text>
-                      </View>
-                      {value === enterprise.codigo && (
-                        <Ionicons name="checkmark-circle" size={24} color="#1e3a8a" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          />
-          {errors.enterpriseId && (
-            <Text className="text-red-500 text-sm mt-2 ml-1">
-              {errors.enterpriseId.message}
-            </Text>
-          )}
-        </Animated.View>
-
-        <Animated.View
-          entering={FadeIn.delay(600).duration(500)}
-          className="mb-10"
-        >
-          <TouchableOpacity
-            className="w-full bg-blue-800 py-4 rounded-xl"
-            onPress={handleSubmit(onSubmit)}
+        {!hasSingleEnterprise && (
+          <Animated.View
+            entering={FadeIn.delay(300).duration(500)}
+            className="mb-8"
           >
-            {isPending ? (
-              <View className="items-center justify-center">
-                <ActivityIndicator color="white" size="small" />
-              </View>
-            ) : (
-              <Text className="text-white text-center font-semibold">
-                Continuar
+            <Text className="text-gray-700 font-semibold mb-4">Empresa</Text>
+            <Controller
+              control={control}
+              name="enterpriseId"
+              render={({ field: { onChange, value } }) => (
+                <View className="rounded-xl overflow-hidden border border-gray-200">
+                  {data?.data?.map((enterprise) => (
+                    <TouchableOpacity
+                      key={enterprise.codigo}
+                      className={`p-4 border-b border-gray-200 ${value === enterprise.codigo ? 'bg-blue-50' : 'bg-white'
+                        }`}
+                      onPress={() => {
+                        onChange(enterprise.codigo);
+                      }}
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-1">
+                          <Text className="text-lg font-medium text-gray-800">
+                            {enterprise.nombre}
+                          </Text>
+                        </View>
+                        {value === enterprise.codigo && (
+                          <Ionicons name="checkmark-circle" size={24} color="#1e3a8a" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            />
+            {errors.enterpriseId && (
+              <Text className="text-red-500 text-sm mt-2 ml-1">
+                {errors.enterpriseId.message}
               </Text>
             )}
-          </TouchableOpacity>
-        </Animated.View>
+          </Animated.View>
+        )}
+
+        {!hasSingleEnterprise && (
+          <Animated.View
+            entering={FadeIn.delay(600).duration(500)}
+            className="mb-10"
+          >
+            <TouchableOpacity
+              className="w-full bg-blue-800 py-4 rounded-xl"
+              onPress={handleSubmit(onSubmit)}
+            >
+              {isPending ? (
+                <View className="items-center justify-center">
+                  <ActivityIndicator color="white" size="small" />
+                </View>
+              ) : (
+                <Text className="text-white text-center font-semibold">
+                  Continuar
+                </Text>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {hasSingleEnterprise && isPending && (
+          <View className="items-center justify-center py-8">
+            <ActivityIndicator size="large" color="#1e3a8a" />
+            <Text className="text-gray-600 mt-4">Procesando empresa...</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );

@@ -11,19 +11,21 @@ import {
 import EmptyState from './EmptyState';
 
 interface ItemsListProps {
-  items: Inventario[];
+  items: Inventario[];  
   handleDelete: (id: number) => void;
   showItemDetails: (item: Inventario) => void;
   openEditModal: (item: Inventario) => void;
   onLoadMore: () => void;
   hasMore: boolean;
+  selectedCategory: string;
 }
 
 const ItemsList: React.FC<ItemsListProps> = ({
   items,
   showItemDetails,
   onLoadMore,
-  hasMore
+  hasMore,
+  selectedCategory
 }) => {
   const ItemComponent = ({ item }: { item: Inventario }) => (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
@@ -105,7 +107,12 @@ const ItemsList: React.FC<ItemsListProps> = ({
     if (!hasMore) return null;
     return (
       <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#581c87" />
+        {selectedCategory == "almacen" && (
+          <View className="flex-row items-center">
+            <ActivityIndicator size="small" color="#581c87" />
+          </View>
+        )}
+       
       </View>
     );
   };

@@ -282,6 +282,7 @@ const EntInventario: React.FC = () => {
             showItemDetails={showItemDetails}
             openEditModal={openEditModal}
             onLoadMore={handleLoadMore}
+            selectedCategory={selectedCategory}
             hasMore={hasMore}
           />
         )}
