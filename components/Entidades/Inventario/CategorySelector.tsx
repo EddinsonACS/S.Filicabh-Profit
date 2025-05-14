@@ -1,9 +1,8 @@
-// CategorySelector.tsx
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
-import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { inventoryCategories } from '@/components/Entidades/Inventario/InventoryMockdata';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 interface CategorySelectorProps {
   selectedCategory: string;
@@ -18,7 +17,6 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Render chips view (horizontal scrolling buttons)
   const renderChipsView = () => (
     <Animated.View
       entering={FadeIn.duration(300)}
@@ -33,8 +31,8 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
           <TouchableOpacity
             key={category.id}
             className={`mr-3 px-4 py-2 rounded-lg flex-row items-center ${selectedCategory === category.type
-                ? 'bg-purple-100 border border-purple-300'
-                : 'bg-white border border-gray-200'
+              ? 'bg-purple-100 border border-purple-300'
+              : 'bg-white border border-gray-200'
               }`}
             onPress={() => setSelectedCategory(category.type)}
             testID={`category-chip-${category.type}`}
@@ -56,7 +54,6 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     </Animated.View>
   );
 
-  // Render dropdown view
   const renderDropdownView = () => (
     <View className="px-4 py-2">
       <TouchableOpacity
@@ -80,7 +77,6 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
         <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="#581c87" />
       </TouchableOpacity>
 
-      {/* Dropdown menu (in-place, not modal) */}
       {isDropdownOpen && (
         <Animated.View
           entering={SlideInDown.duration(300)}

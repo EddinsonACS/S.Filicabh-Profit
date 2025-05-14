@@ -1,4 +1,3 @@
-// InventoryHeader.tsx
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -8,7 +7,7 @@ interface InventoryHeaderProps {
   viewType: 'chips' | 'dropdown';
   setViewType: (type: 'chips' | 'dropdown') => void;
   navigateToModules: () => void;
-  selectedCategory: string; // Propiedad requerida
+  selectedCategory: string;
 }
 
 const InventoryHeader: React.FC<InventoryHeaderProps> = ({
@@ -17,24 +16,20 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   navigateToModules,
   selectedCategory
 }) => {
-  // Estado para almacenar el título actual de la categoría
-  const [categoryTitle, setCategoryTitle] = useState<string>('Almacén');
 
-  // Actualizar el título cuando cambia la categoría seleccionada
+  const [categoryTitle, setCategoryTitle] = useState<string>('Articulo');
+
   useEffect(() => {
-    // Buscar la categoría en el array de categorías por su tipo
     const category = inventoryCategories.find(cat => cat.type === selectedCategory);
     if (category) {
       setCategoryTitle(category.title);
     }
-    // Este efecto se ejecuta cada vez que cambia selectedCategory
   }, [selectedCategory]);
 
   return (
     <View className="bg-purple-900 px-4 py-4">
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center">
-          {/* Botón de flecha para volver a módulos/favoritos */}
           <TouchableOpacity
             className="mr-3 p-1"
             onPress={navigateToModules}
@@ -49,9 +44,7 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           <View>
             <Text className="text-white text-xl font-bold">Inventario</Text>
             <Text className="text-purple-200 text-sm">
-              {viewType === 'chips'
-                ? `Entidades - ${categoryTitle}`
-                : "Entidades - Gestión"}
+              {`Entidades - ${categoryTitle}`}
             </Text>
           </View>
         </View>

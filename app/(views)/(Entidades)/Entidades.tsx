@@ -7,9 +7,9 @@ import {
     View,
     ScrollView
 } from 'react-native';
-import CrudFinanzas from './EntFinanzas';
+import CrudFinanzas from './EntInventario';
 import CrudInventario from './EntInventario';
-import CrudVentas from './EntVentas';
+import CrudVentas from './EntInventario';
 
 // Define section colors
 const SECTION_COLORS = {
@@ -40,7 +40,7 @@ const Entidades: React.FC = () => {
             default:
                 return (
                     <ScrollView className="flex-1 p-4">
-                        {/* Favoritos (antes Acciones rápidas) */}
+                        {/* Favoritos */}
                         <Text className="text-xl font-semibold text-gray-800 mb-3">Favoritos</Text>
                         <View className="flex-row justify-between mb-6">
                             <TouchableOpacity

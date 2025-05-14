@@ -1,7 +1,6 @@
-// components/Inventory/EmptyState.tsx
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 const EmptyState: React.FC = () => {
   return (

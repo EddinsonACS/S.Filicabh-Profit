@@ -1,4 +1,3 @@
-// components/Ventas/SearchBar.tsx
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';

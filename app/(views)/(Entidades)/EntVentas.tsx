@@ -15,7 +15,7 @@ import LoadingState from '@/components/Entidades/Ventas/LoadingState';
 import SearchBar from '@/components/Entidades/Ventas/SearchBar';
 import VentasHeader from '@/components/Entidades/Ventas/VentasHeader';
 
-const EntVentas: React.FC = () => {
+const VentasCompras: React.FC = () => {
     const navigation = useNavigation();
     const router = useRouter();
 
@@ -162,7 +162,7 @@ const EntVentas: React.FC = () => {
     };
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <VentasHeader
                 viewType={viewType}
                 setViewType={setViewType}
@@ -221,4 +221,4 @@ const EntVentas: React.FC = () => {
     );
 };
 
-export default EntVentas;
+export default VentasCompras;

@@ -1,6 +1,5 @@
-// components/Ventas/ItemModal.tsx
-import { salesCategories } from '@/components/Entidades/Ventas/EntVentasData';
-import { SalesItem } from '@/components/Entidades/Ventas/VentasTypes';
+import { salesCategories } from './EntVentasData';
+import { SalesItem } from './VentasTypes';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import {

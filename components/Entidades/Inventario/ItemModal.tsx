@@ -1,4 +1,3 @@
-// ItemModal.tsx
 import { Inventario } from '@/core/models/Inventario';
 import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useEffect, useRef } from 'react';
@@ -34,27 +33,26 @@ const ItemModal: React.FC<ItemModalProps> = ({
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  // Configurar gesto para cerrar al deslizar hacia abajo
+  // Cerrar al deslizar hacia abajo
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.y0 < 100;
+      },
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Solo activar para movimientos verticales hacia abajo
-        return gestureState.dy > 10;
+        return gestureState.dy > 10 && gestureState.y0 < 100;
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
-          // Solo permitir deslizar hacia abajo
           translateY.setValue(gestureState.dy);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > 100) {
-          // Si se desliza más de 100px, cerrar modal
           onClose();
         } else {
-          // De lo contrario, volver a posición inicial
           Animated.spring(translateY, {
             toValue: 0,
             friction: 8,
@@ -97,34 +95,6 @@ const ItemModal: React.FC<ItemModalProps> = ({
 
   if (!currentItem) return null;
 
-  // Función para determinar si hay configuración API
-  const hasApiConfig = () => {
-    try {
-      if (currentItem.otrosC1) {
-        const apiConfig = JSON.parse(currentItem.otrosC1 as string);
-        return apiConfig && apiConfig.endpoint;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  // Extraer información de configuración API
-  const getApiInfo = () => {
-    try {
-      if (currentItem.otrosC1) {
-        return JSON.parse(currentItem.otrosC1 as string);
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const apiConfig = getApiInfo();
-
-  // Confirmar eliminación
   const confirmDelete = () => {
     Alert.alert(
       "Confirmar eliminación",
@@ -147,7 +117,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="none" // We use our own animation
+      animationType="none"
       onRequestClose={onClose}
     >
       <Animated.View
@@ -161,7 +131,6 @@ const ItemModal: React.FC<ItemModalProps> = ({
           activeOpacity={1}
           onPress={onClose}
         />
-
         <Animated.View
           style={{
             transform: [{ translateY }],
@@ -175,113 +144,102 @@ const ItemModal: React.FC<ItemModalProps> = ({
             overflow: 'hidden',
             height: '80%'
           }}
-          {...panResponder.panHandlers}
         >
-          {/* Pull indicator */}
-          <View className="absolute top-2 left-0 right-0 flex items-center z-10">
-            <View className="w-12 h-1 bg-gray-300 rounded-full" />
+          {/* Header */}
+          <View
+            className="bg-purple-900 rounded-xl mb-4 p-6"
+            {...panResponder.panHandlers}
+          >
+            <View className="absolute top-3 left-0 right-0 flex items-center z-10">
+              <View className="w-12 h-1 bg-gray-300 rounded-full" />
+            </View>
+            <View>
+              <Text className="text-white text-2xl font-bold" numberOfLines={1}>{currentItem.nombre}</Text>
+            </View>
+            <View className="flex-row justify-between items-center mt-2">
+              <View className="flex-row space-x-2">
+                <View className="bg-purple-800/50 p-2 rounded-full flex-row items-center">
+                  <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                    {currentItem.aplicaVentas ? (
+                      <>
+                        <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                        <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                      </>
+                    ) : (
+                      <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                    )}
+                  </View>
+                  <Text className="text-white text-xs ml-1">Ventas</Text>
+                </View>
+                <View className="bg-purple-800/50 px-3 py-1 rounded-full flex-row items-center">
+                  <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                    {currentItem.aplicaCompras ? (
+                      <>
+                        <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                        <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                      </>
+                    ) : (
+                      <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                    )}
+                  </View>
+                  <Text className="text-white text-xs ml-1">Compras</Text>
+                </View>
+              </View>
+
+              <View className={`p-2 rounded-full ${currentItem.suspendido
+                ? 'bg-red-100 border border-red-600'
+                : 'bg-green-100 border border-green-600'
+                }`}>
+                <Text className={`font-bold ${currentItem.suspendido
+                  ? 'text-red-600'
+                  : 'text-green-600'
+                  }`}>
+                  {currentItem.suspendido ? 'Inactivo' : 'Activo'}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          {/* Main content */}
+          {/* Main Content - Área con scroll */}
           <ScrollView
+            ref={scrollViewRef}
             className="flex-1"
             contentContainerStyle={{
-              paddingBottom: 100 // Extra padding for buttons
+              paddingBottom: 100
             }}
             showsVerticalScrollIndicator={true}
             overScrollMode="always"
+            bounces={true}
+            alwaysBounceVertical={true}
+            scrollEventThrottle={16}
+            nestedScrollEnabled={true}
           >
-            {/* Header with title and status */}
-            <View className="bg-purple-900 px-4 pt-8 pb-4 rounded-b-3xl mb-4">
-              <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-white text-2xl font-bold">{currentItem.nombre}</Text>
-                <View className={`px-3 py-1 rounded-full ${currentItem.suspendido
-                    ? 'bg-red-100 border border-red-300'
-                    : 'bg-green-100 border border-green-300'
-                  }`}>
-                  <Text className={`font-medium text-sm ${currentItem.suspendido
-                      ? 'text-red-700'
-                      : 'text-green-700'
-                    }`}>
-                    {currentItem.suspendido ? 'Inactivo' : 'Activo'}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row mt-2">
-                <View className="bg-purple-800/50 px-3 py-1 rounded-full mr-2 flex-row items-center">
-                  <Ionicons
-                    name={currentItem.aplicaVentas ? "checkmark-circle" : "close-circle"}
-                    size={14}
-                    color={currentItem.aplicaVentas ? "#a5f3fc" : "#94a3b8"}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text className="text-purple-100 text-xs">Ventas</Text>
-                </View>
-
-                <View className="bg-purple-800/50 px-3 py-1 rounded-full flex-row items-center">
-                  <Ionicons
-                    name={currentItem.aplicaCompras ? "checkmark-circle" : "close-circle"}
-                    size={14}
-                    color={currentItem.aplicaCompras ? "#a5f3fc" : "#94a3b8"}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text className="text-purple-100 text-xs">Compras</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Card with info */}
+            {/* Card */}
             <View className="px-4 mb-4">
-              {/* Configuración API (solo si existe y es un almacén) */}
-              {hasApiConfig() && (
-                <View className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-4">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="cloud-outline" size={18} color="#7e22ce" style={{ marginRight: 8 }} />
-                    <Text className="text-lg font-semibold text-gray-800">Configuración API</Text>
-                  </View>
-
-                  <View className="flex-row justify-between mt-1">
-                    <Text className="text-gray-500">Endpoint:</Text>
-                    <Text className="text-gray-800 font-medium">{apiConfig?.endpoint || 'No configurado'}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between mt-1">
-                    <Text className="text-gray-500">Autenticación:</Text>
-                    <Text className="text-gray-800 font-medium">{apiConfig?.useAuth ? 'Habilitada' : 'Deshabilitada'}</Text>
-                  </View>
-                </View>
-              )}
-
               {/* Información del sistema */}
-              <View className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+              <View className="bg-white rounded-lg p-6 shadow-sm border border-gray-300">
                 <View className="flex-row items-center mb-3">
-                  <Ionicons name="information-circle-outline" size={18} color="#7e22ce" style={{ marginRight: 8 }} />
-                  <Text className="text-lg font-semibold text-gray-800">Información del Sistema</Text>
+                  <Ionicons name="information-circle-outline" size={20} color="#7e22ce" />
+                  <Text className="text-lg font-semibold text-gray-800 ml-1">Información del Sistema</Text>
                 </View>
-
-                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                <View className="flex-row justify-between py-2 border-b border-gray-300">
                   <Text className="text-gray-500">ID:</Text>
                   <Text className="text-gray-800 font-medium">{currentItem.id}</Text>
                 </View>
-
-                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                <View className="flex-row justify-between py-2 border-b border-gray-300">
                   <Text className="text-gray-500">Fecha de Registro:</Text>
                   <Text className="text-gray-800 font-medium">{new Date(currentItem.fechaRegistro).toLocaleDateString()}</Text>
                 </View>
-
-                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                <View className="flex-row justify-between py-2 border-b border-gray-300">
                   <Text className="text-gray-500">Usuario Registro:</Text>
                   <Text className="text-gray-800 font-medium">{currentItem.usuarioRegistroNombre}</Text>
                 </View>
-
                 {currentItem.fechaModificacion && (
-                  <View className="flex-row justify-between py-2 border-b border-gray-100">
+                  <View className="flex-row justify-between py-2 border-b border-gray-300">
                     <Text className="text-gray-500">Última Modificación:</Text>
                     <Text className="text-gray-800 font-medium">{new Date(currentItem.fechaModificacion).toLocaleDateString()}</Text>
                   </View>
                 )}
-
                 {currentItem.usuarioModificacionNombre && (
                   <View className="flex-row justify-between py-2">
                     <Text className="text-gray-500">Usuario Modificación:</Text>
@@ -292,17 +250,16 @@ const ItemModal: React.FC<ItemModalProps> = ({
             </View>
           </ScrollView>
 
-          {/* Action buttons - Fixed at the bottom */}
-          <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-8 py-8">
-            <View className="flex-row space-x-3">
+          {/* Action buttons */}
+          <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
+            <View className="flex-row space-x-4 mt-1">
               <TouchableOpacity
                 className="flex-1 bg-red-100 py-3 rounded-lg flex-row justify-center items-center"
                 onPress={confirmDelete}
               >
-                <Ionicons name="trash-outline" size={18} color="#dc2626" style={{ marginRight: 6 }} />
-                <Text className="text-red-800 font-medium">Eliminar</Text>
+                <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                <Text className="text-red-800 font-medium ml-2">Eliminar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 className="flex-1 bg-purple-100 py-3 rounded-lg flex-row justify-center items-center"
                 onPress={() => {
@@ -310,8 +267,8 @@ const ItemModal: React.FC<ItemModalProps> = ({
                   openEditModal(currentItem);
                 }}
               >
-                <Ionicons name="create-outline" size={18} color="#7e22ce" style={{ marginRight: 6 }} />
-                <Text className="text-purple-800 font-medium">Editar</Text>
+                <Ionicons name="create-outline" size={18} color="#7e22ce" />
+                <Text className="text-purple-800 font-medium ml-2">Editar</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -1,285 +1,311 @@
-// components/Ventas/FormModal.tsx
-import React, { useEffect } from 'react';
-import {
-    Modal,
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    ScrollView,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Animated,
-    Dimensions
-} from 'react-native';
-import { FormDataType } from '@/components/Entidades/Ventas/VentasTypes';
+import { SalesItem } from './VentasTypes';
 import { Ionicons } from '@expo/vector-icons';
-import { salesCategories } from '@/components/Entidades/Ventas/EntVentasData';
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Modal,
+  PanResponder,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { salesCategories } from './EntVentasData';
 
 interface FormModalProps {
-    visible: boolean;
-    onClose: () => void;
-    formData: FormDataType;
-    setFormData: (data: FormDataType) => void;
-    isEditing: boolean;
-    selectedCategory: string;
-    handleCreate: () => void;
-    handleUpdate: () => void;
+  visible: boolean;
+  onClose: () => void;
+  formData: {
+    name: string;
+    description: string;
+    code: string;
+    status: 'active' | 'inactive';
+    value?: string;
+    date?: string;
+  };
+  setFormData: (data: any) => void;
+  isEditing: boolean;
+  selectedCategory: string;
+  handleCreate: () => void;
+  handleUpdate: () => void;
 }
 
 const { height } = Dimensions.get('window');
 
 const FormModal: React.FC<FormModalProps> = ({
-    visible,
-    onClose,
-    formData,
-    setFormData,
-    isEditing,
-    selectedCategory,
-    handleCreate,
-    handleUpdate
+  visible,
+  onClose,
+  formData,
+  setFormData,
+  isEditing,
+  selectedCategory,
+  handleCreate,
+  handleUpdate
 }) => {
-    // Animation values
-    const translateY = React.useRef(new Animated.Value(height)).current;
-    const opacity = React.useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(height)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
 
-    useEffect(() => {
-        if (visible) {
-            Animated.parallel([
-                Animated.timing(translateY, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacity, {
-                    toValue: 1,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        } else {
-            Animated.parallel([
-                Animated.timing(translateY, {
-                    toValue: height,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacity, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+  // Cerrar al deslizar hacia abajo
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.y0 < 50;
+      },
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 10 && gestureState.y0 < 50;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
         }
-    }, [visible]);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100) {
+          onClose();
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            friction: 8,
+            useNativeDriver: true
+          }).start();
+        }
+      }
+    })
+  ).current;
 
-    // Get category colors for styling
-    const getCategoryColor = (type: string) => {
-        const category = salesCategories.find(cat => cat.type === type);
-        return {
-            primary: category?.color || '#15803d',
-            light: category?.lightColor || '#dcfce7'
-        };
-    };
+  // Manejar animaciones cuando cambia la visibilidad
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: height,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
 
-    const colors = getCategoryColor(selectedCategory);
+  // Obtener el título correcto según la categoría
+  const getCategoryTitle = () => {
+    const category = salesCategories.find(cat => cat.type === selectedCategory);
+    return category ? category.title : 'Elemento';
+  };
 
-    // Basic form fields that all items have
-    const renderBasicFields = () => (
-        <>
-            <View className="mb-4">
-                <Text className="text-gray-700 mb-2 font-medium">Nombre</Text>
-                <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
-                    value={formData.name}
-                    onChangeText={(text) => setFormData({ ...formData, name: text })}
-                    placeholder="Ingrese nombre"
-                />
-            </View>
+  // Obtener color según la categoría
+  const getCategoryColor = () => {
+    return { primary: '#581c87', light: '#f3e8ff' }; // Purple/morado como el de inventario
+  };
 
-            <View className="mb-4">
-                <Text className="text-gray-700 mb-2 font-medium">Descripción</Text>
-                <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
-                    value={formData.description}
-                    onChangeText={(text) => setFormData({ ...formData, description: text })}
-                    placeholder="Ingrese descripción"
-                    multiline
-                    numberOfLines={3}
-                    style={{ height: 100, textAlignVertical: 'top' }}
-                />
-            </View>
+  const renderBasicFields = () => (
+    <>
+      {/* Nombre */}
+      <View className="mb-4">
+        <View className="flex-row mb-1">
+          <Text className="text-sm font-medium text-gray-700">Nombre </Text>
+          <Text className="text-red-600">*</Text>
+        </View>
+        <TextInput
+          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200"
+          placeholder="Nombre del elemento"
+          value={formData.name}
+          onChangeText={(text) => setFormData({ ...formData, name: text })}
+        />
+      </View>
 
-            <View className="mb-4">
-                <Text className="text-gray-700 mb-2 font-medium">Código</Text>
-                <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
-                    value={formData.code}
-                    onChangeText={(text) => setFormData({ ...formData, code: text })}
-                    placeholder="Ingrese código"
-                />
-            </View>
-        </>
-    );
+      {/* Descripción */}
+      <View className="mb-4">
+        <Text className="text-sm font-medium text-gray-700 mb-1">Descripción</Text>
+        <TextInput
+          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200"
+          placeholder="Descripción del elemento"
+          value={formData.description}
+          onChangeText={(text) => setFormData({ ...formData, description: text })}
+          multiline
+          numberOfLines={3}
+          style={{ height: 100, textAlignVertical: 'top' }}
+        />
+      </View>
 
-    // Additional fields for specific types
-    const renderExchangeRateFields = () => (
-        <>
-            <View className="mb-4">
-                <Text className="text-gray-700 mb-2 font-medium">Valor</Text>
-                <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
-                    value={formData.value}
-                    onChangeText={(text) => setFormData({ ...formData, value: text })}
-                    placeholder="Ingrese valor"
-                    keyboardType="numeric"
-                />
-            </View>
+      {/* Código */}
+      <View className="mb-4">
+        <Text className="text-sm font-medium text-gray-700 mb-1">Código</Text>
+        <TextInput
+          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200"
+          placeholder="Código del elemento"
+          value={formData.code}
+          onChangeText={(text) => setFormData({ ...formData, code: text })}
+        />
+      </View>
+    </>
+  );
 
-            <View className="mb-4">
-                <Text className="text-gray-700 mb-2 font-medium">Fecha</Text>
-                <TextInput
-                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
-                    value={formData.date}
-                    onChangeText={(text) => setFormData({ ...formData, date: text })}
-                    placeholder="AAAA-MM-DD"
-                />
-            </View>
-        </>
-    );
+  // Campos adicionales para tipos específicos
+  const renderExchangeRateFields = () => (
+    <>
+      <View className="mb-4">
+        <Text className="text-sm font-medium text-gray-700 mb-1">Valor</Text>
+        <TextInput
+          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200"
+          placeholder="Valor de la tasa"
+          value={formData.value}
+          onChangeText={(text) => setFormData({ ...formData, value: text })}
+          keyboardType="numeric"
+        />
+      </View>
 
-    return (
-        <Modal
-            visible={visible}
-            transparent={true}
-            animationType="none" // Using our own animation
-            onRequestClose={onClose}
+      <View className="mb-4">
+        <Text className="text-sm font-medium text-gray-700 mb-1">Fecha</Text>
+        <TextInput
+          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200"
+          placeholder="AAAA-MM-DD"
+          value={formData.date}
+          onChangeText={(text) => setFormData({ ...formData, date: text })}
+        />
+      </View>
+    </>
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: 'rgba(0,0,0,0.5)', opacity }
+        ]}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <Animated.View
+          style={{
+            transform: [{ translateY }],
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            overflow: 'hidden',
+            height: '80%'
+          }}
         >
-            <Animated.View
-                style={[
-                    StyleSheet.absoluteFill,
-                    { backgroundColor: 'rgba(0,0,0,0.5)', opacity }
-                ]}
+          {/* Header */}
+          <View
+            className="bg-purple-900 p-4 rounded-xl"
+            {...panResponder.panHandlers}
+          >
+            <View className="absolute top-3 left-0 right-0 flex items-center">
+              <View className="w-12 h-1 bg-gray-300 rounded-full" />
+            </View>
+            <Text className="text-white text-xl text-center font-bold mt-1">
+              {isEditing ? 'Editar' : 'Nuevo'} {getCategoryTitle()}
+            </Text>
+          </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            className="flex-1"
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+          >
+            {/* Content */}
+            <ScrollView
+              ref={scrollViewRef}
+              className="flex-1 px-4 pt-4"
+              contentContainerStyle={{ paddingBottom: 100 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={true}
+              overScrollMode="always"
+              bounces={true}
+              alwaysBounceVertical={true}
+              scrollEventThrottle={16}
+              nestedScrollEnabled={true}
             >
+              {renderBasicFields()}
+
+              {selectedCategory === 'exchangeRate' && renderExchangeRateFields()}
+
+              {/* Estado */}
+              <View className="bg-gray-50 rounded-lg p-4 mb-4">
+                <Text className="text-gray-800 font-medium mb-3">Estado</Text>
+                <View className="flex-row justify-between items-center py-2">
+                  <View>
+                    <Text className="text-gray-700 font-medium">Estado Activo</Text>
+                    <Text className="text-gray-500 text-xs">El elemento está disponible para el sistema</Text>
+                  </View>
+                  <Switch
+                    value={formData.status === 'active'}
+                    onValueChange={(value) => 
+                      setFormData({ 
+                        ...formData, 
+                        status: value ? 'active' : 'inactive' 
+                      })
+                    }
+                    trackColor={{ false: '#d1d5db', true: '#00FF15FF' }}
+                    thumbColor={formData.status === 'active' ? '#10E422FF' : '#f4f3f4'}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Bottom */}
+            <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
+              <View className="flex-row mt-1">
                 <TouchableOpacity
-                    style={StyleSheet.absoluteFill}
-                    activeOpacity={1}
-                    onPress={onClose}
-                />
-
-                <Animated.View
-                    style={{
-                        transform: [{ translateY }],
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'white',
-                        borderTopLeftRadius: 24,
-                        borderTopRightRadius: 24,
-                        overflow: 'hidden',
-                        height: '80%'
-                    }}
+                  className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
+                  onPress={onClose}
                 >
-                    {/* Header with matching style */}
-                    <View
-                        style={{
-                            backgroundColor: colors.primary,
-                            paddingVertical: 24,
-                            paddingHorizontal: 16,
-                            borderTopLeftRadius: 24,
-                            borderTopRightRadius: 24
-                        }}
-                    >
-                        <View style={{ position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' }}>
-                            <View style={{ width: 48, height: 4, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 4 }} />
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
-                                {isEditing ? 'Editar' : 'Nuevo'}
-                            </Text>
-
-                            <TouchableOpacity
-                                style={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: 16,
-                                    backgroundColor: 'rgba(255,255,255,0.2)',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                                onPress={onClose}
-                            >
-                                <Ionicons name="close" size={20} color="white" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                        style={{ flex: 1 }}
-                    >
-                        <ScrollView style={{ padding: 16 }}>
-                            {renderBasicFields()}
-
-                            {selectedCategory === 'exchangeRate' && renderExchangeRateFields()}
-
-                            <View className="mb-4">
-                                <Text className="text-gray-700 mb-2 font-medium">Estado</Text>
-                                <View className="flex-row">
-                                    <TouchableOpacity
-                                        className={`flex-1 py-3 rounded-l-lg border ${formData.status === 'active'
-                                                ? 'bg-green-100 border-green-300'
-                                                : 'bg-gray-50 border-gray-200'
-                                            }`}
-                                        onPress={() => setFormData({ ...formData, status: 'active' })}
-                                    >
-                                        <Text className={`text-center ${formData.status === 'active'
-                                                ? 'text-green-900 font-medium'
-                                                : 'text-gray-700'
-                                            }`}>
-                                            Activo
-                                        </Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        className={`flex-1 py-3 rounded-r-lg border ${formData.status === 'inactive'
-                                                ? 'bg-red-100 border-red-300'
-                                                : 'bg-gray-50 border-gray-200'
-                                            }`}
-                                        onPress={() => setFormData({ ...formData, status: 'inactive' })}
-                                    >
-                                        <Text className={`text-center ${formData.status === 'inactive'
-                                                ? 'text-red-900 font-medium'
-                                                : 'text-gray-700'
-                                            }`}>
-                                            Inactivo
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-
-                            {/* Extra bottom padding for scroll */}
-                            <View style={{ height: 20 }} />
-                        </ScrollView>
-
-                        <View className="p-4 border-t border-gray-100">
-                            <TouchableOpacity
-                                className="bg-green-600 py-3 rounded-lg"
-                                onPress={isEditing ? handleUpdate : handleCreate}
-                            >
-                                <Text className="text-center text-white font-medium">
-                                    {isEditing ? 'Actualizar' : 'Guardar'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
-                </Animated.View>
-            </Animated.View>
-        </Modal>
-    );
+                  <Ionicons name="close-outline" size={18} color="#4b5563" />
+                  <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-purple-100 py-3 rounded-lg ml-2 flex-row justify-center items-center"
+                  onPress={isEditing ? handleUpdate : handleCreate}
+                >
+                  <Ionicons name="save-outline" size={18} color="#7e22ce" />
+                  <Text className="text-purple-800 font-medium ml-2">
+                    {isEditing ? 'Actualizar' : 'Guardar'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
 };
 
 export default FormModal;

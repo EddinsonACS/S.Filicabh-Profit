@@ -1,4 +1,4 @@
-import { CategorySection, SalesItem } from '@/components/Entidades/Ventas/VentasTypes';
+import { CategorySection, SalesItem } from './VentasTypes';
 
 // Categorías de ventas y compras
 export const salesCategories: CategorySection[] = [

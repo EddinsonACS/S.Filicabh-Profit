@@ -1,15 +1,14 @@
+import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
+import { Inventario } from '@/core/models/Inventario';
+import { useInventory } from '@/hooks/Inventario/useInventory';
+import { InventoryFormData } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import { useInventory } from '@/hooks/Inventario/useInventory';
-import { Inventario } from '@/core/models/Inventario';
-import { InventoryFormData } from '@/utils/schemas/inventorySchema';
-import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
 
 // Import components
 import CategorySelector from '@/components/Entidades/Inventario/CategorySelector';
-import EmptyState from '@/components/Entidades/Inventario/EmptyState';
 import FormModal from '@/components/Entidades/Inventario/FormModal';
 import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
 import ItemsList from '@/components/Entidades/Inventario/ItemList';
@@ -37,7 +36,7 @@ const EntInventario: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<Inventario | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('almacen');
+  const [selectedCategory, setSelectedCategory] = useState<string>('articulo');
   const [mockItems, setMockItems] = useState<Inventario[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);

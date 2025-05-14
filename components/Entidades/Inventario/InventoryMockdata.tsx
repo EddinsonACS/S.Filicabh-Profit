@@ -13,6 +13,14 @@ const createDate = (): string => {
 
 // Inventario categories (adaptado al tipo de categorías que estás usando)
 export const inventoryCategories = [
+    {
+    id: 'articulo',
+    title: 'Artículos',
+    icon: 'pricetag-outline',
+    color: '#581c87',
+    lightColor: '#f3e8ff',
+    type: 'articulo',
+  },
   {
     id: 'almacen',
     title: 'Almacén',
@@ -20,14 +28,6 @@ export const inventoryCategories = [
     color: '#581c87',
     lightColor: '#f3e8ff',
     type: 'almacen',
-  },
-  {
-    id: 'articulo',
-    title: 'Artículos',
-    icon: 'pricetag-outline',
-    color: '#581c87',
-    lightColor: '#f3e8ff',
-    type: 'articulo',
   },
   {
     id: 'categoria',
