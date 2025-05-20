@@ -257,7 +257,8 @@ const EntInventario: React.FC = () => {
     if (selectedCategory === 'almacen') {
       deleteMutation.mutate(id, {
         onSuccess: () => {
-          // Recargar la página actual para asegurar la consistencia
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          
           setCurrentPage(1);
           setHasMore(true);
         },
