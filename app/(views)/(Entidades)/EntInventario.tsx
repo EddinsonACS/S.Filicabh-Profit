@@ -1,23 +1,84 @@
 import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
 import { Inventario } from '@/core/models/Inventario';
 import { useInventory } from '@/hooks/Inventario/useInventory';
-import { InventoryFormData } from '@/utils/schemas/inventorySchema';
+import { InventoryFormData, inventorySchema } from '@/utils/schemas/inventorySchema';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, View } from 'react-native';
+import { BackHandler, Text, TouchableOpacity, View } from 'react-native';
 
-// Import components
-import CategorySelector from '@/components/Entidades/Inventario/CategorySelector';
-import FormModal from '@/components/Entidades/Inventario/FormModal';
-import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
-import ItemsList from '@/components/Entidades/Inventario/ItemList';
-import ItemModal from '@/components/Entidades/Inventario/ItemModal';
-import LoadingState from '@/components/Entidades/Inventario/LoadingState';
-import SearchBar from '@/components/Entidades/Inventario/SearchBar';
+// Import dynamic components
+import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
+import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
+import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
+import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { authStorage } from '@/data/global/authStorage';
+import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
+import ItemModal from '@/components/Entidades/Inventario/ItemModal';
+import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
+import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
+import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
 
 const PAGE_SIZE = 10;
+
+const CATEGORIES = [
+  { id: 'almacen', label: 'Almacén', icon: 'business' as const },
+  { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
+  { id: 'categoria', label: 'Categoría', icon: 'list' as const },
+  { id: 'grupo', label: 'Grupo', icon: 'people' as const },
+  { id: 'unidad', label: 'Unidad', icon: 'scale' as const },
+  { id: 'color', label: 'Color', icon: 'color-palette' as const },
+  { id: 'impuesto', label: 'Impuesto', icon: 'calculator' as const },
+  { id: 'origen', label: 'Origen', icon: 'globe' as const }
+];
+
+const CATEGORY_TITLES = {
+  almacen: 'Almacén',
+  articulo: 'Artículo',
+  categoria: 'Categoría',
+  grupo: 'Grupo',
+  unidad: 'Unidad',
+  color: 'Color',
+  impuesto: 'Impuesto',
+  origen: 'Origen'
+};
+
+const FORM_FIELDS = [
+  {
+    name: 'nombre',
+    label: 'Nombre',
+    type: 'text' as const,
+    required: true,
+    placeholder: 'Nombre del item',
+    description: 'Ingrese el nombre del elemento de inventario.'
+  },
+  {
+    name: 'aplicaVentas',
+    label: 'Aplica Ventas',
+    type: 'switch' as const,
+    description: 'El artículo está disponible para ventas'
+  },
+  {
+    name: 'aplicaCompras',
+    label: 'Aplica Compras',
+    type: 'switch' as const,
+    description: 'El artículo está disponible para compras'
+  },
+  {
+    name: 'suspendido',
+    label: 'Suspendido',
+    type: 'switch' as const,
+    description: 'El artículo está inactivo'
+  }
+];
+
+const DEFAULT_VALUES = {
+  nombre: '',
+  aplicaVentas: false,
+  aplicaCompras: false,
+  suspendido: false
+};
 
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
@@ -42,8 +103,9 @@ const EntInventario: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<Inventario[]>([]);
   const { username } = authStorage();
+  const [error, setError] = useState<string | null>(null);
 
-  // React Query hooks - Para Almacén (sólo se ejecuta cuando la categoría seleccionada es 'almacen')
+  // React Query hooks
   const { data: inventoryData, isLoading: isLoadingApi } = useGetInventoryList(currentPage, PAGE_SIZE);
   const createMutation = useCreateInventory();
   const updateMutation = useUpdateInventory();
@@ -62,12 +124,10 @@ const EntInventario: React.FC = () => {
       const totalPages = Math.ceil(inventoryData.totalRegistros / PAGE_SIZE);
       setHasMore(currentPage < totalPages);
       
-      // Accumulate items
       if (currentPage === 1) {
         setAccumulatedItems(inventoryData.data);
       } else {
         setAccumulatedItems(prev => {
-          // Filtrar duplicados basados en el ID
           const existingIds = new Set(prev.map(item => item.id));
           const newItems = inventoryData.data.filter(item => !existingIds.has(item.id));
           return [...prev, ...newItems];
@@ -76,7 +136,7 @@ const EntInventario: React.FC = () => {
     }
   }, [inventoryData, currentPage, selectedCategory]);
 
-  // Cargar datos de prueba cuando cambia la categoría
+  // Load mock data when category changes
   useEffect(() => {
     if (selectedCategory !== 'almacen') {
       const mockData = getMockDataByCategory(selectedCategory);
@@ -110,10 +170,8 @@ const EntInventario: React.FC = () => {
     return () => backHandlerSubscription.remove();
   }, [formModalVisible, detailModalVisible, navigation]);
 
-  // Estado de carga - depende de si estamos en almacén (donde usamos la API) o en categorías de prueba
   const isLoading = selectedCategory === 'almacen' ? isLoadingApi : false;
 
-  // Datos combinados - API para almacén, mock para el resto
   const items = useMemo(() => {
     if (selectedCategory === 'almacen') {
       return accumulatedItems;
@@ -122,24 +180,20 @@ const EntInventario: React.FC = () => {
     }
   }, [selectedCategory, accumulatedItems, mockItems]);
 
-  // Filter items by search
   const filteredItems = useMemo(() => {
     return items.filter(item =>
       item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [items, searchQuery]);
 
-  // Load more items when reaching the end
   const handleLoadMore = useCallback(() => {
     if (selectedCategory === 'almacen' && hasMore && !isLoading) {
       setCurrentPage(prev => prev + 1);
     }
   }, [selectedCategory, hasMore, isLoading]);
 
-  // CRUD operations
   const handleCreate = (formData: InventoryFormData) => {
     if (selectedCategory === 'almacen') {
-      // Para almacén, usar la API real
       const newItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
         nombre: formData.nombre,
         aplicaVentas: formData.aplicaVentas,
@@ -158,20 +212,15 @@ const EntInventario: React.FC = () => {
 
       createMutation.mutate(newItem, {
         onSuccess: (createdItem) => {
-          // Agregar el nuevo item al principio de la lista
           setAccumulatedItems(prev => [createdItem, ...prev]);
-          
-          // Resetear la paginación para asegurar que el nuevo item sea visible
           setCurrentPage(1);
           setHasMore(true);
         },
         onError: () => {
-          // Si hay error, recargar la página actual
           setCurrentPage(1);
         }
       });
     } else {
-      // Para otras categorías, usar datos de prueba locales
       const newItem: Inventario = {
         id: Math.floor(Math.random() * 10000) + 1000,
         nombre: formData.nombre,
@@ -203,7 +252,6 @@ const EntInventario: React.FC = () => {
     if (!currentItem) return;
 
     if (selectedCategory === 'almacen') {
-      // Para almacén, usar la API real
       const updatedItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
         nombre: formData.nombre,
         aplicaVentas: formData.aplicaVentas,
@@ -222,18 +270,15 @@ const EntInventario: React.FC = () => {
 
       updateMutation.mutate({ id: currentItem.id, data: updatedItem }, {
         onSuccess: (updatedItem) => {
-          // Actualizar con los datos reales del servidor
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
         },
         onError: () => {
-          // Si hay error, recargar la página actual
           setCurrentPage(1);
         }
       });
     } else {
-      // Para otras categorías, actualizar datos de prueba locales
       setMockItems(prev => prev.map(item =>
         item.id === currentItem.id
           ? {
@@ -258,23 +303,19 @@ const EntInventario: React.FC = () => {
       deleteMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          
           setCurrentPage(1);
           setHasMore(true);
         },
         onError: () => {
-          // Si hay error, recargar la página actual
           setCurrentPage(1);
         }
       });
     } else {
-      // Para otras categorías, eliminar de datos de prueba locales
       setMockItems(prev => prev.filter(item => item.id !== id));
     }
     setDetailModalVisible(false);
   };
 
-  // Helper functions
   const showItemDetails = (item: Inventario) => {
     setCurrentItem(item);
     setDetailModalVisible(true);
@@ -286,6 +327,74 @@ const EntInventario: React.FC = () => {
     setFormModalVisible(true);
   };
 
+  const renderItem = ({ item }: { item: Inventario }) => (
+    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+      <TouchableOpacity
+        onPress={() => showItemDetails(item)}
+        activeOpacity={0.7}
+      >
+        <View className="p-4">
+          <View className="mb-2">
+            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-between items-center mt-1">
+            <View className="flex-row space-x-2">
+              <View className="flex-row items-center">
+                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                  {item.aplicaVentas ? (
+                    <>
+                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                    </>
+                  ) : (
+                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                  )}
+                </View>
+                <Text className="text-sm text-gray-800 ml-1">Ventas</Text>
+              </View>
+
+              <View className="flex-row items-center">
+                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                  {item.aplicaCompras ? (
+                    <>
+                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                    </>
+                  ) : (
+                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                  )}
+                </View>
+                <Text className="text-sm text-gray-800 ml-1">Compras</Text>
+              </View>
+            </View>
+
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-xs text-gray-400 mt-2">
+            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Creado por: {item.usuarioRegistroNombre}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View className="flex-1 bg-gray-50">
       <InventoryHeader
@@ -295,13 +404,14 @@ const EntInventario: React.FC = () => {
         selectedCategory={selectedCategory}
       />
 
-      <CategorySelector
+      <DynamicCategorySelector
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         viewType={viewType}
+        categories={CATEGORIES}
       />
 
-      <SearchBar
+      <DynamicSearchBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onAddPress={() => {
@@ -312,10 +422,20 @@ const EntInventario: React.FC = () => {
       />
 
       <View className="flex-1">
-        {isLoading && currentPage === 1 ? (
-          <LoadingState />
+        {error ? (
+          <DynamicErrorState
+            message={error}
+            onRetry={() => {
+              setError(null);
+              setCurrentPage(1);
+              setHasMore(true);
+              setAccumulatedItems([]);
+            }}
+          />
+        ) : isLoading && currentPage === 1 ? (
+          <DynamicLoadingState />
         ) : (
-          <ItemsList
+          <DynamicItemList
             items={filteredItems}
             handleDelete={handleDelete}
             showItemDetails={showItemDetails}
@@ -323,11 +443,20 @@ const EntInventario: React.FC = () => {
             onLoadMore={handleLoadMore}
             selectedCategory={selectedCategory}
             hasMore={hasMore}
+            renderItem={renderItem}
+            emptyStateComponent={
+              <DynamicEmptyState
+                icon="cube-outline"
+                title="No hay elementos en el inventario"
+                subtitle="Agrega un nuevo elemento para comenzar"
+              />
+            }
+            keyExtractor={(item) => item.id.toString()}
           />
         )}
       </View>
 
-      <FormModal
+      <DynamicFormModal
         visible={formModalVisible}
         onClose={() => setFormModalVisible(false)}
         isEditing={isEditing}
@@ -335,6 +464,10 @@ const EntInventario: React.FC = () => {
         handleCreate={handleCreate}
         handleUpdate={handleUpdate}
         selectedCategory={selectedCategory}
+        schema={inventorySchema}
+        defaultValues={DEFAULT_VALUES}
+        categoryTitles={CATEGORY_TITLES}
+        formFields={FORM_FIELDS}
       />
 
       <ItemModal
