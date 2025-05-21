@@ -8,6 +8,9 @@ interface DynamicSearchBarProps {
   onAddPress: () => void;
   placeholder?: string;
   addButtonText?: string;
+  // Theme colors
+  buttonColor: string;
+  buttonTextColor: string;
 }
 
 const DynamicSearchBar: React.FC<DynamicSearchBarProps> = ({
@@ -15,7 +18,9 @@ const DynamicSearchBar: React.FC<DynamicSearchBarProps> = ({
   setSearchQuery,
   onAddPress,
   placeholder = 'Buscar...',
-  addButtonText = 'Agregar'
+  addButtonText = 'Agregar',
+  buttonColor,
+  buttonTextColor
 }) => {
   return (
     <View className="px-4 mb-2">
@@ -30,10 +35,11 @@ const DynamicSearchBar: React.FC<DynamicSearchBarProps> = ({
           />
         </View>
         <TouchableOpacity
-          className="bg-purple-600 p-2 rounded-lg flex-row items-center"
+          style={{ backgroundColor: buttonColor }}
+          className="p-2 rounded-lg flex-row items-center"
           onPress={onAddPress}
         >
-          <Ionicons name="add" size={24} color="white" />
+          <Ionicons name="add" size={24} color={buttonTextColor} />
         </TouchableOpacity>
       </View>
     </View>

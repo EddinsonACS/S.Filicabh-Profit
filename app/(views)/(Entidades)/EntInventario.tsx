@@ -7,18 +7,15 @@ import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, Text, TouchableOpacity, View } from 'react-native';
-
-// Import dynamic components
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
-import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
-import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import { authStorage } from '@/data/global/authStorage';
-import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
+import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import { themes } from '@/components/Entidades/shared/theme';
+import { authStorage } from '@/data/global/authStorage';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
-import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
-import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
 
 const PAGE_SIZE = 10;
 
@@ -400,121 +397,113 @@ const EntInventario: React.FC = () => {
   return (
     <View className="flex-1 bg-gray-50">
       <DynamicHeader
-        navigateToModules={navigateToModules}
+        title="Inventario"
+        description="Gestión de inventario y productos"
+        backgroundColor={themes.inventory.headerColor}
+        textColor={themes.inventory.headerTextColor}
+        lightTextColor={themes.inventory.buttonTextColor}
+        buttonColor={themes.inventory.buttonColor}
         viewType={viewType}
         setViewType={setViewType}
-        title="Inventario"
-        description="Gestión de productos y existencias"
-        backgroundColor="#581c87"
-        textColor="#ffffff"
-        lightTextColor="#f3e8ff"
-        buttonColor="#4c1d95"
-        categoryTitle={CATEGORY_TITLES[selectedCategory]}
+        navigateToModules={navigateToModules}
       />
 
-      <DynamicCategorySelector<CategoryId>
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        viewType={viewType}
-        categories={CATEGORIES}
-      />
-
-      <DynamicSearchBar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onAddPress={() => {
-          setCurrentItem(null);
-          setIsEditing(false);
-          setFormModalVisible(true);
-        }}
-      />
-
-      <View className="flex-1">
-        {error ? (
-          <DynamicErrorState
-            message={error}
-            onRetry={() => {
-              setError(null);
-              setCurrentPage(1);
-              setHasMore(true);
-              setAccumulatedItems([]);
-            }}
+          <DynamicCategorySelector
+            categories={CATEGORIES}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            viewType={viewType}
           />
-        ) : isLoading && currentPage === 1 ? (
-          <DynamicLoadingState />
-        ) : (
+
+          <DynamicSearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onAddPress={() => {
+              setCurrentItem(null);
+              setIsEditing(false);
+              setFormModalVisible(true);
+            }}
+            placeholder="Buscar en inventario..."
+            addButtonText="Agregar Item"
+            buttonColor={themes.inventory.buttonColor}
+            buttonTextColor={themes.inventory.buttonTextColor}
+          />
+
           <DynamicItemList
             items={filteredItems}
-            handleDelete={handleDelete}
             showItemDetails={showItemDetails}
             openEditModal={openEditModal}
+            handleDelete={handleDelete}
             onLoadMore={handleLoadMore}
-            selectedCategory={selectedCategory}
             hasMore={hasMore}
+            selectedCategory={selectedCategory}
             renderItem={renderItem}
             emptyStateComponent={
               <DynamicEmptyState
-                icon="cube-outline"
-                title="No hay elementos en el inventario"
+                icon="document-text-outline"
+                title="No hay elementos en la lista"
                 subtitle="Agrega un nuevo elemento para comenzar"
               />
             }
             keyExtractor={(item) => item.id.toString()}
           />
-        )}
-      </View>
 
-      <DynamicFormModal
-        visible={formModalVisible}
-        onClose={() => setFormModalVisible(false)}
-        isEditing={isEditing}
-        currentItem={currentItem}
-        handleCreate={handleCreate}
-        handleUpdate={handleUpdate}
-        selectedCategory={selectedCategory}
-        schema={inventorySchema}
-        defaultValues={DEFAULT_VALUES}
-        categoryTitles={CATEGORY_TITLES}
-        formFields={FORM_FIELDS}
-      />
+          <DynamicFormModal
+            visible={formModalVisible}
+            onClose={() => setFormModalVisible(false)}
+            isEditing={isEditing}
+            currentItem={currentItem}
+            handleCreate={handleCreate}
+            handleUpdate={handleUpdate}
+            selectedCategory={selectedCategory}
+            schema={inventorySchema}
+            defaultValues={DEFAULT_VALUES}
+            categoryTitles={CATEGORY_TITLES}
+            formFields={FORM_FIELDS}
+            headerColor={themes.inventory.formHeaderColor}
+            headerTextColor={themes.inventory.formHeaderTextColor}
+            buttonColor={themes.inventory.formButtonColor}
+            buttonTextColor={themes.inventory.formButtonTextColor}
+            switchActiveColor={themes.inventory.switchActiveColor}
+            switchInactiveColor={themes.inventory.switchInactiveColor}
+          />
 
-      <DynamicItemModal
-        visible={detailModalVisible}
-        onClose={() => setDetailModalVisible(false)}
-        currentItem={currentItem}
-        openEditModal={openEditModal}
-        handleDelete={handleDelete}
-        mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
-        badges={[
-          {
-            label: 'Ventas',
-            value: !!currentItem?.aplicaVentas,
-            activeIcon: 'ellipse',
-            inactiveIcon: 'close-circle',
-            color: '#00FF15FF'
-          },
-          {
-            label: 'Compras',
-            value: !!currentItem?.aplicaCompras,
-            activeIcon: 'ellipse',
-            inactiveIcon: 'close-circle',
-            color: '#00FF15FF'
-          }
-        ]}
-        statusField={{
-          value: currentItem ? !currentItem.suspendido : false,
-          activeText: 'Activo',
-          inactiveText: 'Inactivo'
-        }}
-        systemFields={currentItem ? [
-          { label: 'ID', value: String(currentItem.id) },
-          { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
-          { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
-          ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : []),
-          ...(currentItem.usuarioModificacionNombre ? [{ label: 'Usuario Modificación', value: currentItem.usuarioModificacionNombre }] : [])
-        ] : []}
-      />
-    </View>
+          <DynamicItemModal
+            visible={detailModalVisible}
+            onClose={() => setDetailModalVisible(false)}
+            currentItem={currentItem}
+            openEditModal={openEditModal}
+            handleDelete={handleDelete}
+            mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
+            badges={[
+              {
+                label: 'Stock',
+                value: currentItem?.otrosN1 ? currentItem.otrosN1 > 0 : false,
+                activeIcon: 'ellipse',
+                inactiveIcon: 'close-circle',
+                color: themes.inventory.badgeColor
+              }
+            ]}
+            statusField={{
+              value: currentItem ? !currentItem.suspendido : false,
+              activeText: 'Activo',
+              inactiveText: 'Inactivo'
+            }}
+            systemFields={currentItem ? [
+              { label: 'ID', value: String(currentItem.id) },
+              { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
+              { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
+              ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
+            ] : []}
+            headerColor={themes.inventory.itemHeaderColor}
+            headerTextColor={themes.inventory.itemHeaderTextColor}
+            badgeColor={themes.inventory.badgeColor}
+            editButtonColor={themes.inventory.editButtonColor}
+            editButtonTextColor={themes.inventory.editButtonTextColor}
+            deleteButtonColor={themes.inventory.deleteButtonColor}
+            deleteButtonTextColor={themes.inventory.deleteButtonTextColor}
+          />
+        </View>
   );
 };
 

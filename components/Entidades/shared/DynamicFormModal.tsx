@@ -24,6 +24,12 @@ interface DynamicFormModalProps {
     required?: boolean;
     description?: string;
   }>;
+  headerColor: string;
+  headerTextColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  switchActiveColor: string;
+  switchInactiveColor: string;
 }
 
 const { height } = Dimensions.get('window');
@@ -39,7 +45,13 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   schema,
   defaultValues,
   categoryTitles,
-  formFields
+  formFields,
+  headerColor,
+  headerTextColor,
+  buttonColor,
+  buttonTextColor,
+  switchActiveColor,
+  switchInactiveColor
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -164,13 +176,14 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           }}
         >
           <View
-            className="bg-purple-900 p-4 rounded-xl"
+            style={{ backgroundColor: headerColor }}
+            className="p-4 rounded-xl"
             {...panResponder.panHandlers}
           >
             <View className="absolute top-3 left-0 right-0 flex items-center">
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
-            <Text className="text-white text-xl text-center font-bold mt-1">
+            <Text style={{ color: headerTextColor }} className="text-xl text-center font-bold mt-1">
               {isEditing ? 'Editar' : 'Nuevo'} {categoryTitles[selectedCategory]}
             </Text>
           </View>
@@ -247,8 +260,8 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                           <Switch
                             value={value}
                             onValueChange={onChange}
-                            trackColor={{ false: '#d1d5db', true: '#00FF15FF' }}
-                            thumbColor={value ? '#10E422FF' : '#f4f3f4'}
+                            trackColor={{ false: '#d1d5db', true: switchActiveColor }}
+                            thumbColor={value ? switchInactiveColor : '#f4f3f4'}
                           />
                         )}
                       />
@@ -268,14 +281,13 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                   <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center ${
-                    isValid && isDirty ? 'bg-purple-100' : 'bg-purple-100'
-                  }`}
+                  style={{ backgroundColor: buttonColor }}
+                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
                   onPress={handleSubmit(onSubmit)}
                   disabled={!isValid || !isDirty}
                 >
-                  <Ionicons name="save-outline" size={18} color="#7e22ce" />
-                  <Text className="text-purple-800 font-medium ml-2">
+                  <Ionicons name="save-outline" size={18} color={buttonTextColor} />
+                  <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
                     {isEditing ? 'Actualizar' : 'Guardar'}
                   </Text>
                 </TouchableOpacity>

@@ -17,6 +17,7 @@ import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import { themes } from '@/components/Entidades/shared/theme';
 
 const PAGE_SIZE = 10;
 
@@ -256,10 +257,10 @@ const EntVentas: React.FC = () => {
         setViewType={setViewType}
         title="Ventas y Compras"
         description="Gestión comercial en Profit Plus"
-        backgroundColor="#15803d"
-        textColor="#ffffff"
-        lightTextColor="#dcfce7"
-        buttonColor="#166534"
+        backgroundColor={themes.sales.headerColor}
+        textColor={themes.sales.headerTextColor}
+        lightTextColor={themes.sales.buttonTextColor}
+        buttonColor={themes.sales.buttonColor}
         categoryTitle={CATEGORY_TITLES[selectedCategory]}
       />
 
@@ -268,6 +269,10 @@ const EntVentas: React.FC = () => {
         setSelectedCategory={setSelectedCategory}
         viewType={viewType}
         categories={CATEGORIES}
+        headerColor={themes.sales.headerColor}
+        headerTextColor={themes.sales.headerTextColor}
+        buttonColor={themes.sales.buttonColor}
+        buttonTextColor={themes.sales.buttonTextColor}
       />
 
       <DynamicSearchBar
@@ -278,6 +283,8 @@ const EntVentas: React.FC = () => {
           setIsEditing(false);
           setFormModalVisible(true);
         }}
+        buttonColor={themes.sales.buttonColor}
+        buttonTextColor={themes.sales.buttonTextColor}
       />
 
       <View className="flex-1">
@@ -329,6 +336,12 @@ const EntVentas: React.FC = () => {
         defaultValues={DEFAULT_VALUES}
         categoryTitles={CATEGORY_TITLES}
         formFields={FORM_FIELDS}
+        headerColor={themes.sales.formHeaderColor}
+        headerTextColor={themes.sales.formHeaderTextColor}
+        buttonColor={themes.sales.formButtonColor}
+        buttonTextColor={themes.sales.formButtonTextColor}
+        switchActiveColor={themes.sales.switchActiveColor}
+        switchInactiveColor={themes.sales.switchInactiveColor}
       />
 
       <DynamicItemModal
@@ -338,14 +351,25 @@ const EntVentas: React.FC = () => {
         openEditModal={openEditModal}
         handleDelete={handleDelete}
         mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
+        badges={[]}
+        statusField={{
+          value: true,
+          activeText: 'Activo',
+          inactiveText: 'Inactivo'
+        }}
         systemFields={currentItem ? [
           { label: 'ID', value: String(currentItem.id) },
           { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
           { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
           ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
         ] : []}
-        badges={[]}
-        statusField={{ value: true, activeText: 'Activo', inactiveText: 'Inactivo' }}
+        headerColor={themes.sales.itemHeaderColor}
+        headerTextColor={themes.sales.itemHeaderTextColor}
+        badgeColor={themes.sales.badgeColor}
+        editButtonColor={themes.sales.editButtonColor}
+        editButtonTextColor={themes.sales.editButtonTextColor}
+        deleteButtonColor={themes.sales.deleteButtonColor}
+        deleteButtonTextColor={themes.sales.deleteButtonTextColor}
       />
     </View>
   );

@@ -39,6 +39,14 @@ export interface DynamicItemModalProps {
     value: string | number | undefined;
     icon?: string;
   }>;
+  // Theme colors
+  headerColor: string;
+  headerTextColor: string;
+  badgeColor: string;
+  editButtonColor: string;
+  editButtonTextColor: string;
+  deleteButtonColor: string;
+  deleteButtonTextColor: string;
 }
 
 const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
@@ -50,7 +58,14 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
   mainTitleField,
   badges,
   statusField,
-  systemFields
+  systemFields,
+  headerColor,
+  headerTextColor,
+  badgeColor,
+  editButtonColor,
+  editButtonTextColor,
+  deleteButtonColor,
+  deleteButtonTextColor
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -156,19 +171,20 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
         >
           {/* Header */}
           <View
-            className="bg-purple-900 rounded-xl mb-4 p-6"
+            style={{ backgroundColor: headerColor }}
+            className="rounded-xl mb-4 p-6"
             {...panResponder.panHandlers}
           >
             <View className="absolute top-3 left-0 right-0 flex items-center z-10">
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
             <View>
-              <Text className="text-white text-2xl font-bold" numberOfLines={1}>{mainTitleField.value}</Text>
+              <Text style={{ color: headerTextColor }} className="text-2xl font-bold" numberOfLines={1}>{mainTitleField.value}</Text>
             </View>
             <View className="flex-row justify-between items-center mt-2">
               <View className="flex-row space-x-2">
                 {badges.map((badge, idx) => (
-                  <View key={idx} className="bg-purple-800/50 p-2 rounded-full flex-row items-center">
+                  <View key={idx} style={{ backgroundColor: badgeColor }} className="p-2 rounded-full flex-row items-center">
                     <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
                       {badge.value ? (
                         <>
@@ -179,7 +195,7 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
                         <Ionicons name={badge.inactiveIcon as any} size={14} color="#7C7D7DFF" />
                       )}
                     </View>
-                    <Text className="text-white text-xs ml-1">{badge.label}</Text>
+                    <Text style={{ color: headerTextColor }} className="text-xs ml-1">{badge.label}</Text>
                   </View>
                 ))}
               </View>
@@ -226,21 +242,23 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
           <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
             <View className="flex-row space-x-4 mt-1">
               <TouchableOpacity
-                className="flex-1 bg-red-100 py-3 rounded-lg flex-row justify-center items-center"
+                style={{ backgroundColor: deleteButtonColor }}
+                className="flex-1 py-3 rounded-lg flex-row justify-center items-center"
                 onPress={confirmDelete}
               >
-                <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                <Text className="text-red-800 font-medium ml-2">Eliminar</Text>
+                <Ionicons name="trash-outline" size={18} color={deleteButtonTextColor} />
+                <Text style={{ color: deleteButtonTextColor }} className="font-medium ml-2">Eliminar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-purple-100 py-3 rounded-lg flex-row justify-center items-center"
+                style={{ backgroundColor: editButtonColor }}
+                className="flex-1 py-3 rounded-lg flex-row justify-center items-center"
                 onPress={() => {
                   onClose();
                   openEditModal(currentItem);
                 }}
               >
-                <Ionicons name="create-outline" size={18} color="#7e22ce" />
-                <Text className="text-purple-800 font-medium ml-2">Editar</Text>
+                <Ionicons name="create-outline" size={18} color={editButtonTextColor} />
+                <Text style={{ color: editButtonTextColor }} className="font-medium ml-2">Editar</Text>
               </TouchableOpacity>
             </View>
           </View>
