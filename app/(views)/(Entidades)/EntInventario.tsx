@@ -14,7 +14,7 @@ import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { authStorage } from '@/data/global/authStorage';
-import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
+import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
@@ -80,6 +80,8 @@ const DEFAULT_VALUES = {
   suspendido: false
 };
 
+type CategoryId = keyof typeof CATEGORY_TITLES;
+
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
@@ -97,7 +99,7 @@ const EntInventario: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<Almacen | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('articulo');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('almacen');
   const [mockItems, setMockItems] = useState<Almacen[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -397,14 +399,20 @@ const EntInventario: React.FC = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <InventoryHeader
+      <DynamicHeader
         navigateToModules={navigateToModules}
         viewType={viewType}
         setViewType={setViewType}
-        selectedCategory={selectedCategory}
+        title="Inventario"
+        description="Gestión de productos y existencias"
+        backgroundColor="#581c87"
+        textColor="#ffffff"
+        lightTextColor="#f3e8ff"
+        buttonColor="#4c1d95"
+        categoryTitle={CATEGORY_TITLES[selectedCategory]}
       />
 
-      <DynamicCategorySelector
+      <DynamicCategorySelector<CategoryId>
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         viewType={viewType}

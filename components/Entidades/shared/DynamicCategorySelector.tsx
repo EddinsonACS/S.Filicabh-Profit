@@ -9,19 +9,19 @@ interface Category {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-interface DynamicCategorySelectorProps {
-  selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
+interface DynamicCategorySelectorProps<T extends string> {
+  selectedCategory: T;
+  setSelectedCategory: (category: T) => void;
   viewType: 'chips' | 'dropdown';
   categories: Category[];
 }
 
-const DynamicCategorySelector: React.FC<DynamicCategorySelectorProps> = ({
+const DynamicCategorySelector = <T extends string>({
   selectedCategory,
   setSelectedCategory,
   viewType,
   categories
-}) => {
+}: DynamicCategorySelectorProps<T>) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const renderChipsView = () => (
@@ -41,7 +41,7 @@ const DynamicCategorySelector: React.FC<DynamicCategorySelectorProps> = ({
               ? 'bg-purple-100 border border-purple-300'
               : 'bg-white border border-gray-200'
               }`}
-            onPress={() => setSelectedCategory(category.id)}
+            onPress={() => setSelectedCategory(category.id as T)}
             testID={`category-chip-${category.id}`}
           >
             <Ionicons
@@ -101,7 +101,7 @@ const DynamicCategorySelector: React.FC<DynamicCategorySelectorProps> = ({
                 className={`flex-row items-center p-3 border-b border-gray-100 ${selectedCategory === item.id ? 'bg-purple-50' : ''
                   }`}
                 onPress={() => {
-                  setSelectedCategory(item.id);
+                  setSelectedCategory(item.id as T);
                   setIsDropdownOpen(false);
                 }}
                 testID={`dropdown-item-${item.id}`}

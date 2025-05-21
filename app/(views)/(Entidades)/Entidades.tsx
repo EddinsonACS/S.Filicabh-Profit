@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import CrudFinanzas from './EntInventario';
 import CrudInventario from './EntInventario';
-import CrudVentas from './EntInventario';
+import CrudVentas from './EntVentas';
 
 // Define section colors
 const SECTION_COLORS = {
