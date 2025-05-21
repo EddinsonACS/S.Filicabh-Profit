@@ -1,10 +1,11 @@
 import { endpoints } from '@/utils/const/endpoints';
+import ListDataResponse from '@/core/response/ListDataResponse';
 import { AcuerdoDePago } from '@/core/models/AcuerdoDePago';
 import { api } from '@/utils/libs/api';
-import ListDataResponse from '@/core/response/ListDataResponse';
 
-export const sellsApi = { 
-    getList: async (pageNumber: number = 1, pageSize: number = 10): Promise<ListDataResponse<AcuerdoDePago>> => {
+
+export const acuerdoDePagoApi = {
+  getList: async (pageNumber: number = 1, pageSize: number = 10): Promise<ListDataResponse<AcuerdoDePago>> => {
     const response = await api.get(endpoints.sells.acuerdodepago.list + `?pageNumber=${pageNumber}&pageSize=${pageSize}`);
     return response.data;
   },
