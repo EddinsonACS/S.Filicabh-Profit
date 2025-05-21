@@ -1,6 +1,6 @@
 import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
-import { Inventario } from '@/core/models/Inventario';
-import { useInventory } from '@/hooks/Inventario/useInventory';
+import { Almacen } from '@/core/models/Almacen';
+import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { InventoryFormData, inventorySchema } from '@/utils/schemas/inventorySchema';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +15,7 @@ import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { authStorage } from '@/data/global/authStorage';
 import InventoryHeader from '@/components/Entidades/Inventario/InventoryHeader';
-import ItemModal from '@/components/Entidades/Inventario/ItemModal';
+import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
@@ -84,32 +84,32 @@ const EntInventario: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
   const {
-    useGetInventoryList,
-    useCreateInventory,
-    useUpdateInventory,
-    useDeleteInventory
-  } = useInventory();
+    useGetAlmacenList,
+    useCreateAlmacen,
+    useUpdateAlmacen,
+    useDeleteAlmacen
+  } = useAlmacen();
 
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
   const [formModalVisible, setFormModalVisible] = useState<boolean>(false);
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
-  const [currentItem, setCurrentItem] = useState<Inventario | null>(null);
+  const [currentItem, setCurrentItem] = useState<Almacen | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('articulo');
-  const [mockItems, setMockItems] = useState<Inventario[]>([]);
+  const [mockItems, setMockItems] = useState<Almacen[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [accumulatedItems, setAccumulatedItems] = useState<Inventario[]>([]);
+  const [accumulatedItems, setAccumulatedItems] = useState<Almacen[]>([]);
   const { username } = authStorage();
   const [error, setError] = useState<string | null>(null);
 
   // React Query hooks
-  const { data: inventoryData, isLoading: isLoadingApi } = useGetInventoryList(currentPage, PAGE_SIZE);
-  const createMutation = useCreateInventory();
-  const updateMutation = useUpdateInventory();
-  const deleteMutation = useDeleteInventory();
+  const { data: almacenData, isLoading: isLoadingApi } = useGetAlmacenList(currentPage, PAGE_SIZE);
+  const createMutation = useCreateAlmacen();
+  const updateMutation = useUpdateAlmacen();
+  const deleteMutation = useDeleteAlmacen();
 
   // Reset pagination when category changes
   useEffect(() => {
@@ -120,21 +120,21 @@ const EntInventario: React.FC = () => {
 
   // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
-    if (inventoryData && selectedCategory === 'almacen') {
-      const totalPages = Math.ceil(inventoryData.totalRegistros / PAGE_SIZE);
+    if (almacenData && selectedCategory === 'almacen') {
+      const totalPages = Math.ceil(almacenData.totalRegistros / PAGE_SIZE);
       setHasMore(currentPage < totalPages);
       
       if (currentPage === 1) {
-        setAccumulatedItems(inventoryData.data);
+        setAccumulatedItems(almacenData.data);
       } else {
         setAccumulatedItems(prev => {
           const existingIds = new Set(prev.map(item => item.id));
-          const newItems = inventoryData.data.filter(item => !existingIds.has(item.id));
+          const newItems = almacenData.data.filter(item => !existingIds.has(item.id));
           return [...prev, ...newItems];
         });
       }
     }
-  }, [inventoryData, currentPage, selectedCategory]);
+  }, [almacenData, currentPage, selectedCategory]);
 
   // Load mock data when category changes
   useEffect(() => {
@@ -194,7 +194,7 @@ const EntInventario: React.FC = () => {
 
   const handleCreate = (formData: InventoryFormData) => {
     if (selectedCategory === 'almacen') {
-      const newItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+      const newItem: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
         nombre: formData.nombre,
         aplicaVentas: formData.aplicaVentas,
         aplicaCompras: formData.aplicaCompras,
@@ -221,7 +221,7 @@ const EntInventario: React.FC = () => {
         }
       });
     } else {
-      const newItem: Inventario = {
+      const newItem: Almacen = {
         id: Math.floor(Math.random() * 10000) + 1000,
         nombre: formData.nombre,
         aplicaVentas: formData.aplicaVentas,
@@ -252,7 +252,7 @@ const EntInventario: React.FC = () => {
     if (!currentItem) return;
 
     if (selectedCategory === 'almacen') {
-      const updatedItem: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+      const updatedItem: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
         nombre: formData.nombre,
         aplicaVentas: formData.aplicaVentas,
         aplicaCompras: formData.aplicaCompras,
@@ -316,18 +316,18 @@ const EntInventario: React.FC = () => {
     setDetailModalVisible(false);
   };
 
-  const showItemDetails = (item: Inventario) => {
+  const showItemDetails = (item: Almacen) => {
     setCurrentItem(item);
     setDetailModalVisible(true);
   };
 
-  const openEditModal = (item: Inventario) => {
+  const openEditModal = (item: Almacen) => {
     setCurrentItem(item);
     setIsEditing(true);
     setFormModalVisible(true);
   };
 
-  const renderItem = ({ item }: { item: Inventario }) => (
+  const renderItem = ({ item }: { item: Almacen }) => (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
       <TouchableOpacity
         onPress={() => showItemDetails(item)}
@@ -470,12 +470,41 @@ const EntInventario: React.FC = () => {
         formFields={FORM_FIELDS}
       />
 
-      <ItemModal
+      <DynamicItemModal
         visible={detailModalVisible}
         onClose={() => setDetailModalVisible(false)}
         currentItem={currentItem}
         openEditModal={openEditModal}
         handleDelete={handleDelete}
+        mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
+        badges={[
+          {
+            label: 'Ventas',
+            value: !!currentItem?.aplicaVentas,
+            activeIcon: 'ellipse',
+            inactiveIcon: 'close-circle',
+            color: '#00FF15FF'
+          },
+          {
+            label: 'Compras',
+            value: !!currentItem?.aplicaCompras,
+            activeIcon: 'ellipse',
+            inactiveIcon: 'close-circle',
+            color: '#00FF15FF'
+          }
+        ]}
+        statusField={{
+          value: currentItem ? !currentItem.suspendido : false,
+          activeText: 'Activo',
+          inactiveText: 'Inactivo'
+        }}
+        systemFields={currentItem ? [
+          { label: 'ID', value: String(currentItem.id) },
+          { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
+          { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
+          ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : []),
+          ...(currentItem.usuarioModificacionNombre ? [{ label: 'Usuario Modificación', value: currentItem.usuarioModificacionNombre }] : [])
+        ] : []}
       />
     </View>
   );

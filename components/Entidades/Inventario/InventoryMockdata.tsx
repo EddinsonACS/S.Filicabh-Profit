@@ -1,5 +1,5 @@
 // InventoryMockData.ts
-import { Inventario } from '@/core/models/Inventario';
+import { Almacen } from '@/core/models/Almacen';
 
 // Función para generar un ID único
 const generateId = (): number => {
@@ -80,7 +80,7 @@ export const inventoryCategories = [
 ];
 
 // Datos de prueba para Artículos
-const mockArticulos: Inventario[] = [
+const mockArticulos: Almacen[] = [
   {
     id: generateId(),
     nombre: "Laptop HP 15",
@@ -144,7 +144,7 @@ const mockArticulos: Inventario[] = [
 ];
 
 // Datos de prueba para Categorías
-const mockCategorias: Inventario[] = [
+const mockCategorias: Almacen[] = [
   {
     id: generateId(),
     nombre: "Electrónicos",
@@ -208,7 +208,7 @@ const mockCategorias: Inventario[] = [
 ];
 
 // Datos de prueba para Grupos
-const mockGrupos: Inventario[] = [
+const mockGrupos: Almacen[] = [
   {
     id: generateId(),
     nombre: "Laptops",
@@ -272,7 +272,7 @@ const mockGrupos: Inventario[] = [
 ];
 
 // Datos de prueba para Unidades
-const mockUnidades: Inventario[] = [
+const mockUnidades: Almacen[] = [
   {
     id: generateId(),
     nombre: "Unidad",
@@ -316,7 +316,7 @@ const mockUnidades: Inventario[] = [
 ];
 
 // Datos de prueba para Colores
-const mockColores: Inventario[] = [
+const mockColores: Almacen[] = [
   {
     id: generateId(),
     nombre: "Negro",
@@ -380,7 +380,7 @@ const mockColores: Inventario[] = [
 ];
 
 // Datos de prueba para Impuestos
-const mockImpuestos: Inventario[] = [
+const mockImpuestos: Almacen[] = [
   {
     id: generateId(),
     nombre: "IVA 16%",
@@ -424,7 +424,7 @@ const mockImpuestos: Inventario[] = [
 ];
 
 // Datos de prueba para Orígenes
-const mockOrigenes: Inventario[] = [
+const mockOrigenes: Almacen[] = [
   {
     id: generateId(),
     nombre: "Nacional",
@@ -468,7 +468,7 @@ const mockOrigenes: Inventario[] = [
 ];
 
 // Función para obtener datos de prueba según la categoría
-export const getMockDataByCategory = (category: string): Inventario[] => {
+export const getMockDataByCategory = (category: string): Almacen[] => {
   switch (category) {
     case 'articulo':
       return [...mockArticulos];

@@ -1,4 +1,4 @@
-import { Inventario } from '@/core/models/Inventario';
+import { Almacen } from '@/core/models/Almacen';
 import { InventoryFormData, inventorySchema } from '@/utils/schemas/inventorySchema';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +24,7 @@ interface FormModalProps {
   visible: boolean;
   onClose: () => void;
   isEditing: boolean;
-  currentItem?: Inventario | null;
+  currentItem?: Almacen | null;
   handleCreate: (data: InventoryFormData) => void;
   handleUpdate: (data: InventoryFormData) => void;
   selectedCategory: string;

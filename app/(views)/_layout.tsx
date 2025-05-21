@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TailwindProvider } from "tailwindcss-react-native";
 import { AppProvider } from '../../components/InitStage/AppContext';
 import AppWrapper from '../../components/InitStage/AppWrapper';
-import { useInventory } from "@/hooks/Inventario/useInventory";
+import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ViewsLayout() {
-  const { useGetInventoryList } = useInventory();
-  const { isError, isSuccess, isLoading } = useGetInventoryList(1,1);
+  const { useGetAlmacenList } = useAlmacen();
+  const { isError, isSuccess, isLoading } = useGetAlmacenList(1,1);
   const hasCheckedSession = useRef(false);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { Inventario } from '@/core/models/Inventario';
+import { Almacen } from '@/core/models/Almacen';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -11,10 +11,10 @@ import {
 import EmptyState from './EmptyState';
 
 interface ItemsListProps {
-  items: Inventario[];  
+    items: Almacen[];  
   handleDelete: (id: number) => void;
-  showItemDetails: (item: Inventario) => void;
-  openEditModal: (item: Inventario) => void;
+  showItemDetails: (item: Almacen) => void;
+  openEditModal: (item: Almacen) => void;
   onLoadMore: () => void;
   hasMore: boolean;
   selectedCategory: string;
@@ -27,7 +27,7 @@ const ItemsList: React.FC<ItemsListProps> = ({
   hasMore,
   selectedCategory
 }) => {
-  const ItemComponent = ({ item }: { item: Inventario }) => (
+  const ItemComponent = ({ item }: { item: Almacen }) => (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
       <TouchableOpacity
         onPress={() => showItemDetails(item)}

@@ -1,4 +1,4 @@
-export interface Inventario {
+export interface Almacen {
   id: number;
   nombre: string;
   aplicaVentas: boolean;

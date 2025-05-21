@@ -1,5 +1,3 @@
-import { Almacen } from '@/core/models/Almacen';
-import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useEffect, useRef } from 'react';
 import {
   Alert,
@@ -13,37 +11,55 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-
-interface ItemModalProps {
-  visible: boolean;
-  onClose: () => void;
-  currentItem: Almacen | null;
-  openEditModal: (item: Almacen) => void;
-  handleDelete: (id: number) => void;
-}
+import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
-const ItemModal: React.FC<ItemModalProps> = ({
+export interface DynamicItemModalProps {
+  visible: boolean;
+  onClose: () => void;
+  currentItem: any;
+  openEditModal: (item: any) => void;
+  handleDelete: (id: number) => void;
+  mainTitleField: { label: string; value: string };
+  badges: Array<{
+    label: string;
+    value: boolean;
+    activeIcon: string;
+    inactiveIcon: string;
+    color: string;
+  }>;
+  statusField: {
+    value: boolean;
+    activeText: string;
+    inactiveText: string;
+  };
+  systemFields: Array<{
+    label: string;
+    value: string | number | undefined;
+    icon?: string;
+  }>;
+}
+
+const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
   visible,
   onClose,
   currentItem,
   openEditModal,
-  handleDelete
+  handleDelete,
+  mainTitleField,
+  badges,
+  statusField,
+  systemFields
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Cerrar al deslizar hacia abajo
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.y0 < 100;
-      },
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 10 && gestureState.y0 < 100;
-      },
+      onStartShouldSetPanResponder: (_, gestureState) => gestureState.y0 < 100,
+      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 10 && gestureState.y0 < 100,
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           translateY.setValue(gestureState.dy);
@@ -97,18 +113,11 @@ const ItemModal: React.FC<ItemModalProps> = ({
 
   const confirmDelete = () => {
     Alert.alert(
-      "Confirmar eliminación",
-      `¿Estás seguro de eliminar "${currentItem.nombre}"?`,
+      'Confirmar eliminación',
+      `¿Estás seguro de eliminar "${mainTitleField.value}"?`,
       [
-        {
-          text: "Cancelar",
-          style: "cancel"
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => handleDelete(currentItem.id)
-        }
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: () => handleDelete(currentItem.id) }
       ]
     );
   };
@@ -154,48 +163,31 @@ const ItemModal: React.FC<ItemModalProps> = ({
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
             <View>
-              <Text className="text-white text-2xl font-bold" numberOfLines={1}>{currentItem.nombre}</Text>
+              <Text className="text-white text-2xl font-bold" numberOfLines={1}>{mainTitleField.value}</Text>
             </View>
             <View className="flex-row justify-between items-center mt-2">
               <View className="flex-row space-x-2">
-                <View className="bg-purple-800/50 p-2 rounded-full flex-row items-center">
-                  <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
-                    {currentItem.aplicaVentas ? (
-                      <>
-                        <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                        <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
-                      </>
-                    ) : (
-                      <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
-                    )}
+                {badges.map((badge, idx) => (
+                  <View key={idx} className="bg-purple-800/50 p-2 rounded-full flex-row items-center">
+                    <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                      {badge.value ? (
+                        <>
+                          <Ionicons name={badge.activeIcon as any} size={14} color={badge.color} />
+                          <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                        </>
+                      ) : (
+                        <Ionicons name={badge.inactiveIcon as any} size={14} color="#7C7D7DFF" />
+                      )}
+                    </View>
+                    <Text className="text-white text-xs ml-1">{badge.label}</Text>
                   </View>
-                  <Text className="text-white text-xs ml-1">Ventas</Text>
-                </View>
-                <View className="bg-purple-800/50 px-3 py-1 rounded-full flex-row items-center">
-                  <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
-                    {currentItem.aplicaCompras ? (
-                      <>
-                        <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                        <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
-                      </>
-                    ) : (
-                      <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
-                    )}
-                  </View>
-                  <Text className="text-white text-xs ml-1">Compras</Text>
-                </View>
+                ))}
               </View>
-
-              <View className={`p-2 rounded-full ${currentItem.suspendido
-                ? 'bg-red-100 border border-red-600'
-                : 'bg-green-100 border border-green-600'
+              <View className={`p-2 rounded-full ${statusField.value
+                ? 'bg-green-100 border border-green-600'
+                : 'bg-red-100 border border-red-600'
                 }`}>
-                <Text className={`font-bold ${currentItem.suspendido
-                  ? 'text-red-600'
-                  : 'text-green-600'
-                  }`}>
-                  {currentItem.suspendido ? 'Inactivo' : 'Activo'}
-                </Text>
+                <Text className={`font-bold ${statusField.value ? 'text-green-600' : 'text-red-600'}`}>{statusField.value ? statusField.activeText : statusField.inactiveText}</Text>
               </View>
             </View>
           </View>
@@ -204,9 +196,7 @@ const ItemModal: React.FC<ItemModalProps> = ({
           <ScrollView
             ref={scrollViewRef}
             className="flex-1"
-            contentContainerStyle={{
-              paddingBottom: 100
-            }}
+            contentContainerStyle={{ paddingBottom: 100 }}
             showsVerticalScrollIndicator={true}
             overScrollMode="always"
             bounces={true}
@@ -220,32 +210,14 @@ const ItemModal: React.FC<ItemModalProps> = ({
               <View className="bg-white rounded-lg p-6 shadow-sm border border-gray-300">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="information-circle-outline" size={20} color="#7e22ce" />
-                  <Text className="text-lg font-semibold text-gray-800 ml-1">Información del Sistema</Text>
+                  <Text className="text-lg font-semibold text-gray-800 ml-1">Detalles del Registro</Text>
                 </View>
-                <View className="flex-row justify-between py-2 border-b border-gray-300">
-                  <Text className="text-gray-500">ID:</Text>
-                  <Text className="text-gray-800 font-medium">{currentItem.id}</Text>
-                </View>
-                <View className="flex-row justify-between py-2 border-b border-gray-300">
-                  <Text className="text-gray-500">Fecha de Registro:</Text>
-                  <Text className="text-gray-800 font-medium">{new Date(currentItem.fechaRegistro).toLocaleDateString()}</Text>
-                </View>
-                <View className="flex-row justify-between py-2 border-b border-gray-300">
-                  <Text className="text-gray-500">Usuario Registro:</Text>
-                  <Text className="text-gray-800 font-medium">{currentItem.usuarioRegistroNombre}</Text>
-                </View>
-                {currentItem.fechaModificacion && (
-                  <View className="flex-row justify-between py-2 border-b border-gray-300">
-                    <Text className="text-gray-500">Última Modificación:</Text>
-                    <Text className="text-gray-800 font-medium">{new Date(currentItem.fechaModificacion).toLocaleDateString()}</Text>
+                {systemFields.map((field, idx) => (
+                  <View key={idx} className={`flex-row justify-between py-2 ${idx < systemFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
+                    <Text className="text-gray-500">{field.label}</Text>
+                    <Text className="text-gray-800 font-medium">{field.value}</Text>
                   </View>
-                )}
-                {currentItem.usuarioModificacionNombre && (
-                  <View className="flex-row justify-between py-2">
-                    <Text className="text-gray-500">Usuario Modificación:</Text>
-                    <Text className="text-gray-800 font-medium">{currentItem.usuarioModificacionNombre}</Text>
-                  </View>
-                )}
+                ))}
               </View>
             </View>
           </ScrollView>
@@ -278,4 +250,4 @@ const ItemModal: React.FC<ItemModalProps> = ({
   );
 };
 
-export default memo(ItemModal);
+export default memo(DynamicItemModal); 

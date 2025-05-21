@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { inventoryApi } from '@/data/api/Inventario/inventoryApi';
-import { Inventario } from '@/core/models/Inventario';
-import ListInventarioResponse from '@/core/response/ListInventarioResponse';
+import { Almacen } from '@/core/models/Almacen';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
+import ListDataResponse from '@/core/response/ListDataResponse';
 
 export const useInventory = () => {
 
   const useGetInventoryList = (page: number = 1, size: number = 10) => {
-    return useQuery<ListInventarioResponse, Error>({
+    return useQuery<ListDataResponse<Almacen>, Error>({
       queryKey: ['inventory', 'list', page, size],
       queryFn: () => inventoryApi.getList(page, size),
-      onSettled: (_: ListInventarioResponse | undefined, error: Error | null) => {
+      onSettled: (_: ListDataResponse<Almacen> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
             'Error',
@@ -20,15 +20,15 @@ export const useInventory = () => {
           console.error('Error fetching inventory list:', error);
         }
       }
-    } as UseQueryOptions<ListInventarioResponse, Error>);
+    } as UseQueryOptions<ListDataResponse<Almacen>, Error>);
   };
 
   const useGetInventoryItem = (id: number) => {
-    return useQuery<Inventario, Error>({
+    return useQuery<Almacen, Error>({
       queryKey: ['inventory', 'item', id],
       queryFn: () => inventoryApi.getOne(id),
       enabled: !!id,
-      onSettled: (_: Inventario | undefined, error: Error | null) => {
+      onSettled: (_: Almacen | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
             'Error',
@@ -37,12 +37,12 @@ export const useInventory = () => {
           console.error('Error fetching inventory item:', error);
         }
       }
-    } as UseQueryOptions<Inventario, Error>);
+    } as UseQueryOptions<Almacen, Error>);
   };
 
   const useCreateInventory = () => {
     return useMutation({
-      mutationFn: (data: Omit<Inventario, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => inventoryApi.create(data),
+      mutationFn: (data: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => inventoryApi.create(data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['inventory', 'list'] });
         Alert.alert(
@@ -62,7 +62,7 @@ export const useInventory = () => {
 
   const useUpdateInventory = () => {
     return useMutation({
-      mutationFn: ({ id, data }: { id: number; data: Partial<Inventario> }) => 
+      mutationFn: ({ id, data }: { id: number; data: Partial<Almacen> }) => 
         inventoryApi.update(id, data),
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['inventory', 'list'] });
