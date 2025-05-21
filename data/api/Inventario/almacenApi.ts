@@ -3,7 +3,7 @@ import { Almacen } from '@/core/models/Almacen';
 import { api } from '@/utils/libs/api';
 import ListDataResponse from '@/core/response/ListDataResponse';
 
-export const inventoryApi = {
+export const almacenApi = {
   getList: async (pageNumber: number = 1, pageSize: number = 10): Promise<ListDataResponse<Almacen>> => {
     const response = await api.get(endpoints.inventory.almacen.list + `?pageNumber=${pageNumber}&pageSize=${pageSize}`);
     return response.data;

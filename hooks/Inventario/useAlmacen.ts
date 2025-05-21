@@ -1,5 +1,5 @@
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { inventoryApi } from '@/data/api/Inventario/inventoryApi';
+import { almacenApi } from '@/data/api/Inventario/almacenApi';
 import { Almacen } from '@/core/models/Almacen';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
@@ -9,15 +9,15 @@ export const useAlmacen = () => {
 
   const useGetAlmacenList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Almacen>, Error>({
-      queryKey: ['inventory', 'list', page, size],
-      queryFn: () => inventoryApi.getList(page, size),
+      queryKey: ['almacen', 'list', page, size],
+      queryFn: () => almacenApi.getList(page, size),
       onSettled: (_: ListDataResponse<Almacen> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
             'Error',
             'No se pudo cargar la lista de inventario. Por favor, intente nuevamente.'
           );
-          console.error('Error fetching inventory list:', error);
+          console.error('Error fetching almacen list:', error);
         }
       }
     } as UseQueryOptions<ListDataResponse<Almacen>, Error>);
@@ -25,8 +25,8 @@ export const useAlmacen = () => {
 
   const useGetAlmacenItem = (id: number) => {
     return useQuery<Almacen, Error>({
-      queryKey: ['inventory', 'item', id],
-      queryFn: () => inventoryApi.getOne(id),
+      queryKey: ['almacen', 'item', id],
+      queryFn: () => almacenApi.getOne(id),
       enabled: !!id,
       onSettled: (_: Almacen | undefined, error: Error | null) => {
         if (error) {
@@ -34,7 +34,7 @@ export const useAlmacen = () => {
             'Error',
             'No se pudo cargar el item del inventario. Por favor, intente nuevamente.'
           );
-          console.error('Error fetching inventory item:', error);
+          console.error('Error fetching almacen item:', error);
         }
       }
     } as UseQueryOptions<Almacen, Error>);
@@ -42,12 +42,12 @@ export const useAlmacen = () => {
 
   const useCreateAlmacen = () => {
     return useMutation({
-      mutationFn: (data: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => inventoryApi.create(data),
+      mutationFn: (data: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => almacenApi.create(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['inventory', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         Alert.alert(
           'Éxito',
-          'Item de inventario creado correctamente.'
+          'Item de almacen creado correctamente.'
         );
       },
       onError: (error) => {
@@ -63,10 +63,10 @@ export const useAlmacen = () => {
   const useUpdateAlmacen = () => {
     return useMutation({
       mutationFn: ({ id, data }: { id: number; data: Partial<Almacen> }) => 
-        inventoryApi.update(id, data),
+        almacenApi.update(id, data),
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['inventory', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['inventory', 'item', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['almacen', 'item', variables.id] });
         Alert.alert(
           'Éxito',
           'Item de inventario actualizado correctamente.'
@@ -77,19 +77,19 @@ export const useAlmacen = () => {
           'Error',
           'No se pudo actualizar el item de inventario. Por favor, intente nuevamente.'
         );
-        console.error('Error updating inventory item:', error);
+        console.error('Error updating almacen item:', error);
       }
     });
   };
 
   const useDeleteAlmacen = () => {
     return useMutation({
-      mutationFn: (id: number) => inventoryApi.delete(id),
+      mutationFn: (id: number) => almacenApi.delete(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['inventory', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         Alert.alert(
           'Éxito',
-          'Item de inventario eliminado correctamente.'
+          'Item de almacen eliminado correctamente.'
         );
       },
       onError: (error) => {
@@ -97,7 +97,7 @@ export const useAlmacen = () => {
           'Error',
           'No se pudo eliminar el item de inventario. Por favor, intente nuevamente.'
         );
-        console.error('Error deleting inventory item:', error);
+          console.error('Error deleting almacen item:', error);
       }
     });
   };
