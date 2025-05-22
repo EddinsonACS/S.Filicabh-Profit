@@ -11,6 +11,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/almacen/${id}`,
       "update": (id: number) => `/api/almacen/${id}`,
       "delete": (id: number) => `/api/almacen/${id}`
+    },
+    "categoria":{
+      "list": "/api/categoria",
+      "create": "/api/categoria",
+      "getOne": (id: number) => `/api/categoria/${id}`,
+      "update": (id: number) => `/api/categoria/${id}`,
+      "delete": (id: number) => `/api/categoria/${id}`
     }
   },
   "sells":{

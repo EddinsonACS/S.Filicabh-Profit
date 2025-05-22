@@ -1,7 +1,7 @@
 import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
 import { Almacen } from '@/core/models/Almacen';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
-import { InventoryFormData, inventorySchema } from '@/utils/schemas/inventorySchema';
+import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -16,16 +16,14 @@ import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import { themes } from '@/components/Entidades/shared/theme';
 import { authStorage } from '@/data/global/authStorage';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
+import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
+import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 
 const PAGE_SIZE = 10;
 
 const CATEGORIES = [
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
   { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
-  { id: 'articulofoto', label: 'Foto de Artículo', icon: 'image' as const },
-  { id: 'articulolistaprecio', label: 'Lista de Precios', icon: 'pricetag' as const },
-  { id: 'articulopresentacion', label: 'Presentación', icon: 'albums' as const },
-  { id: 'articuloubicacion', label: 'Ubicación', icon: 'pin' as const },
   { id: 'categoria', label: 'Categoría', icon: 'list' as const },
   { id: 'color', label: 'Color', icon: 'color-palette' as const },
   { id: 'grupo', label: 'Grupo', icon: 'people' as const },
@@ -40,10 +38,6 @@ const CATEGORIES = [
 const CATEGORY_TITLES = {
   almacen: 'Almacén',
   articulo: 'Artículo',
-  articulofoto: 'Foto de Artículo',
-  articulolistaprecio: 'Lista de Precios',
-  articulopresentacion: 'Presentación',
-  articuloubicacion: 'Ubicación',
   categoria: 'Categoría',
   color: 'Color',
   grupo: 'Grupo',
@@ -55,41 +49,6 @@ const CATEGORY_TITLES = {
   unidad: 'Unidad'
 };
 
-const FORM_FIELDS = [
-  {
-    name: 'nombre',
-    label: 'Nombre',
-    type: 'text' as const,
-    required: true,
-    placeholder: 'Nombre del item',
-    description: 'Ingrese el nombre del elemento de inventario.'
-  },
-  {
-    name: 'aplicaVentas',
-    label: 'Aplica Ventas',
-    type: 'switch' as const,
-    description: 'El artículo está disponible para ventas'
-  },
-  {
-    name: 'aplicaCompras',
-    label: 'Aplica Compras',
-    type: 'switch' as const,
-    description: 'El artículo está disponible para compras'
-  },
-  {
-    name: 'suspendido',
-    label: 'Suspendido',
-    type: 'switch' as const,
-    description: 'El artículo está inactivo'
-  }
-];
-
-const DEFAULT_VALUES = {
-  nombre: '',
-  aplicaVentas: false,
-  aplicaCompras: false,
-  suspendido: false
-};
 
 type CategoryId = keyof typeof CATEGORY_TITLES;
 
@@ -439,9 +398,9 @@ const EntInventario: React.FC = () => {
             handleUpdate={handleUpdate}
             selectedCategory={selectedCategory}
             schema={inventorySchema}
-            defaultValues={DEFAULT_VALUES}
+            defaultValues={DEFAULT_VALUES_INVENTORY.almacen}
             categoryTitles={CATEGORY_TITLES}
-            formFields={FORM_FIELDS}
+            formFields={FORM_FIELDS_INVENTORY.almacen}
             headerColor={themes.inventory.formHeaderColor}
             headerTextColor={themes.inventory.formHeaderTextColor}
             buttonColor={themes.inventory.formButtonColor}
