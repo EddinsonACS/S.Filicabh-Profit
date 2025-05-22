@@ -16,9 +16,7 @@ export const acuerdoDePagoApi = {
   },
 
   create: async (data: Partial<AcuerdoDePago>): Promise<AcuerdoDePago> => {
-    console.log(data);
     const response = await api.post(endpoints.sells.acuerdodepago.create, data);
-    console.log(response.data);
     return response.data;
   },
 

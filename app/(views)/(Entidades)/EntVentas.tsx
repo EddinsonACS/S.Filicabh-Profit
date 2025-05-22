@@ -22,24 +22,38 @@ const PAGE_SIZE = 10;
 
 const CATEGORIES = [
   { id: 'acuerdodepago', label: 'Acuerdo de Pago', icon: 'document-text' as const },
-  { id: 'commercialFigure', label: 'Figura Comercial', icon: 'people' as const },
-  { id: 'city', label: 'Ciudad', icon: 'business' as const },
+  { id: 'ciudad', label: 'Ciudad', icon: 'business' as const },
+  { id: 'figuracomercial', label: 'Figura Comercial', icon: 'people' as const },
+  { id: 'formadeentrega', label: 'Forma de Entrega', icon: 'car' as const },
+  { id: 'listadeprecio', label: 'Lista de Precio', icon: 'pricetag' as const },
+  { id: 'modulo', label: 'Módulo', icon: 'grid' as const },
+  { id: 'moneda', label: 'Moneda', icon: 'cash' as const },
+  { id: 'pais', label: 'País', icon: 'globe' as const },
   { id: 'region', label: 'Región', icon: 'map' as const },
-  { id: 'country', label: 'País', icon: 'globe' as const },
-  { id: 'deliveryMethod', label: 'Forma de Entrega', icon: 'car' as const },
-  { id: 'personType', label: 'Tipo de Persona', icon: 'person' as const },
-  { id: 'sellerType', label: 'Tipo de Vendedor', icon: 'briefcase' as const }
+  { id: 'rubro', label: 'Rubro', icon: 'albums' as const },
+  { id: 'sector', label: 'Sector', icon: 'layers' as const },
+  { id: 'tasadecambio', label: 'Tasa de Cambio', icon: 'swap-horizontal' as const },
+  { id: 'tipopersona', label: 'Tipo de Persona', icon: 'person' as const },
+  { id: 'tipovendedor', label: 'Tipo de Vendedor', icon: 'briefcase' as const },
+  { id: 'vendedor', label: 'Vendedor', icon: 'person-outline' as const }
 ];
 
 const CATEGORY_TITLES = {
   acuerdodepago: 'Acuerdo de Pago',
-  commercialFigure: 'Figura Comercial',
-  city: 'Ciudad',
+  ciudad: 'Ciudad',
+  figuracomercial: 'Figura Comercial',
+  formadeentrega: 'Forma de Entrega',
+  listadeprecio: 'Lista de Precio',
+  modulo: 'Módulo',
+  moneda: 'Moneda',
+  pais: 'País',
   region: 'Región',
-  country: 'País',
-  deliveryMethod: 'Forma de Entrega',
-  personType: 'Tipo de Persona',
-  sellerType: 'Tipo de Vendedor'
+  rubro: 'Rubro',
+  sector: 'Sector',
+  tasadecambio: 'Tasa de Cambio',
+  tipopersona: 'Tipo de Persona',
+  tipovendedor: 'Tipo de Vendedor',
+  vendedor: 'Vendedor'
 };
 
 const FORM_FIELDS = [

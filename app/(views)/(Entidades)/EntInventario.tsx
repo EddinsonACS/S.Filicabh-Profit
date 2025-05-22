@@ -22,23 +22,37 @@ const PAGE_SIZE = 10;
 const CATEGORIES = [
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
   { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
+  { id: 'articulofoto', label: 'Foto de Artículo', icon: 'image' as const },
+  { id: 'articulolistaprecio', label: 'Lista de Precios', icon: 'pricetag' as const },
+  { id: 'articulopresentacion', label: 'Presentación', icon: 'albums' as const },
+  { id: 'articuloubicacion', label: 'Ubicación', icon: 'pin' as const },
   { id: 'categoria', label: 'Categoría', icon: 'list' as const },
-  { id: 'grupo', label: 'Grupo', icon: 'people' as const },
-  { id: 'unidad', label: 'Unidad', icon: 'scale' as const },
   { id: 'color', label: 'Color', icon: 'color-palette' as const },
-  { id: 'impuesto', label: 'Impuesto', icon: 'calculator' as const },
-  { id: 'origen', label: 'Origen', icon: 'globe' as const }
+  { id: 'grupo', label: 'Grupo', icon: 'people' as const },
+  { id: 'origen', label: 'Origen', icon: 'globe' as const },
+  { id: 'talla', label: 'Talla', icon: 'resize' as const },
+  { id: 'tipodearticulo', label: 'Tipo de Artículo', icon: 'cube-outline' as const },
+  { id: 'tipodeimpuesto', label: 'Tipo de Impuesto', icon: 'calculator' as const },
+  { id: 'seccion', label: 'Sección', icon: 'layers' as const },
+  { id: 'unidad', label: 'Unidad', icon: 'scale' as const }
 ];
 
 const CATEGORY_TITLES = {
   almacen: 'Almacén',
   articulo: 'Artículo',
+  articulofoto: 'Foto de Artículo',
+  articulolistaprecio: 'Lista de Precios',
+  articulopresentacion: 'Presentación',
+  articuloubicacion: 'Ubicación',
   categoria: 'Categoría',
-  grupo: 'Grupo',
-  unidad: 'Unidad',
   color: 'Color',
-  impuesto: 'Impuesto',
-  origen: 'Origen'
+  grupo: 'Grupo',
+  origen: 'Origen',
+  talla: 'Talla',
+  tipodearticulo: 'Tipo de Artículo',
+  tipodeimpuesto: 'Tipo de Impuesto',
+  seccion: 'Sección',
+  unidad: 'Unidad'
 };
 
 const FORM_FIELDS = [
