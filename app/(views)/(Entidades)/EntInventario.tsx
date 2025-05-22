@@ -191,25 +191,9 @@ const EntInventario: React.FC = () => {
     }
   }, [selectedCategory, hasMore, isLoading]);
 
-  const handleCreate = (formData: InventoryFormData) => {
+  const handleCreate = (formData: Partial<Almacen>) => {
     if (selectedCategory === 'almacen') {
-      const newItem: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
-        nombre: formData.nombre,
-        aplicaVentas: formData.aplicaVentas,
-        aplicaCompras: formData.aplicaCompras,
-        suspendido: formData.suspendido,
-        otrosF1: new Date().toISOString(),
-        otrosN1: 0,
-        otrosN2: 0,
-        equipo: "equipo",
-        otrosC1: null,
-        otrosC2: null,
-        otrosC3: null,
-        otrosC4: null,
-        otrosT1: null
-      };
-
-      createMutation.mutate(newItem, {
+      createMutation.mutate(formData, {
         onSuccess: (createdItem) => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
@@ -222,10 +206,10 @@ const EntInventario: React.FC = () => {
     } else {
       const newItem: Almacen = {
         id: Math.floor(Math.random() * 10000) + 1000,
-        nombre: formData.nombre,
-        aplicaVentas: formData.aplicaVentas,
-        aplicaCompras: formData.aplicaCompras,
-        suspendido: formData.suspendido,
+        nombre: formData.nombre || '',
+        aplicaVentas: formData.aplicaVentas || false,
+        aplicaCompras: formData.aplicaCompras || false,
+        suspendido: formData.suspendido || false,
         otrosF1: new Date().toISOString(),
         otrosN1: 0,
         otrosN2: 0,
@@ -247,27 +231,11 @@ const EntInventario: React.FC = () => {
     setFormModalVisible(false);
   };
 
-  const handleUpdate = (formData: InventoryFormData) => {
+  const handleUpdate = (formData: Partial<Almacen>) => {
     if (!currentItem) return;
 
     if (selectedCategory === 'almacen') {
-      const updatedItem: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
-        nombre: formData.nombre,
-        aplicaVentas: formData.aplicaVentas,
-        aplicaCompras: formData.aplicaCompras,
-        suspendido: formData.suspendido,
-        otrosF1: new Date().toISOString(),
-        otrosN1: 0,
-        equipo: "equipo",
-        otrosN2: 0,
-        otrosC1: null,
-        otrosC2: null,
-        otrosC3: null,
-        otrosC4: null,
-        otrosT1: null
-      };
-
-      updateMutation.mutate({ id: currentItem.id, data: updatedItem }, {
+      updateMutation.mutate({ id: currentItem.id, formData }, {
         onSuccess: (updatedItem) => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
@@ -282,10 +250,10 @@ const EntInventario: React.FC = () => {
         item.id === currentItem.id
           ? {
             ...item,
-            nombre: formData.nombre,
-            aplicaVentas: formData.aplicaVentas,
-            aplicaCompras: formData.aplicaCompras,
-            suspendido: formData.suspendido,
+            nombre: formData.nombre || item.nombre,
+            aplicaVentas: formData.aplicaVentas ?? item.aplicaVentas,
+            aplicaCompras: formData.aplicaCompras ?? item.aplicaCompras,
+            suspendido: formData.suspendido ?? item.suspendido,
             fechaModificacion: new Date().toISOString(),
             usuarioModificacionNombre: username || "usuario_local"
           }

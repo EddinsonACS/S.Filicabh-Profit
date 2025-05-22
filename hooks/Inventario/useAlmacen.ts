@@ -4,8 +4,10 @@ import { Almacen } from '@/core/models/Almacen';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
+import { authStorage } from '@/data/global/authStorage';
 
 export const useAlmacen = () => {
+  const { username } = authStorage();
 
   const useGetAlmacenList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Almacen>, Error>({
@@ -42,7 +44,27 @@ export const useAlmacen = () => {
 
   const useCreateAlmacen = () => {
     return useMutation({
-      mutationFn: (data: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => almacenApi.create(data),
+      mutationFn: (formData: Partial<Almacen>) => {
+        if (!formData.nombre) {
+          throw new Error('El nombre es requerido');
+        }
+        const data: Omit<Almacen, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+          nombre: formData.nombre,
+          aplicaVentas: formData.aplicaVentas || false,
+          aplicaCompras: formData.aplicaCompras || false,
+          suspendido: formData.suspendido || false,
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: null,
+          otrosC2: null,
+          otrosC3: null,
+          otrosC4: null,
+          otrosT1: null,
+          equipo: "equipo"
+        };
+        return almacenApi.create(data);
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         Alert.alert(
@@ -62,8 +84,27 @@ export const useAlmacen = () => {
 
   const useUpdateAlmacen = () => {
     return useMutation({
-      mutationFn: ({ id, data }: { id: number; data: Partial<Almacen> }) => 
-        almacenApi.update(id, data),
+      mutationFn: ({ id, formData }: { id: number; formData: Partial<Almacen> }) => {
+        if (!formData.nombre) {
+          throw new Error('El nombre es requerido');
+        }
+        const data: Partial<Almacen> = {
+          nombre: formData.nombre,
+          aplicaVentas: formData.aplicaVentas || false,
+          aplicaCompras: formData.aplicaCompras || false,
+          suspendido: formData.suspendido || false,
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: null,
+          otrosC2: null,
+          otrosC3: null,
+          otrosC4: null,
+          otrosT1: null,
+          equipo: "equipo"
+        };
+        return almacenApi.update(id, data);
+      },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['almacen', 'item', variables.id] });
