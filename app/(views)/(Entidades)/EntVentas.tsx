@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { z } from 'zod';
 
 // Import dynamic components
@@ -51,11 +50,28 @@ const FORM_FIELDS = [
     required: true,
     placeholder: 'Nombre del acuerdo de pago',
     description: 'Ingrese el nombre del acuerdo de pago.'
+  },
+  {
+    name: 'dias',
+    label: 'Días',
+    type: 'number' as const,
+    required: true,
+    placeholder: 'Días del acuerdo de pago',
+    description: 'Ingrese los días del acuerdo de pago.'
+  },
+  {
+    name: 'suspendido',
+    label: 'Suspendido',
+    type: 'switch' as const,
+    required: false,
+    description: 'Indica si el acuerdo de pago está suspendido.'
   }
 ];
 
 const DEFAULT_VALUES = {
-  nombre: ''
+  nombre: '',
+  dias: 0,
+  suspendido: false
 };
 
 type CategoryId = keyof typeof CATEGORY_TITLES;
@@ -162,7 +178,7 @@ const EntVentas: React.FC = () => {
     }
   }, [selectedCategory, hasMore, isLoading]);
 
-  const handleCreate = (formData: { nombre: string }) => {
+  const handleCreate = (formData: Partial<AcuerdoDePago>) => {
     if (selectedCategory === 'acuerdodepago') {
       createMutation.mutate(formData, {
         onSuccess: (createdItem) => {
@@ -178,11 +194,11 @@ const EntVentas: React.FC = () => {
     setFormModalVisible(false);
   };
 
-  const handleUpdate = (formData: { nombre: string }) => {
+  const handleUpdate = (formData: Partial<AcuerdoDePago>) => {
     if (!currentItem) return;
 
     if (selectedCategory === 'acuerdodepago') {
-      updateMutation.mutate({ id: currentItem.id, data: formData }, {
+      updateMutation.mutate({ id: currentItem.id, formData }, {
         onSuccess: (updatedItem) => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
@@ -234,6 +250,20 @@ const EntVentas: React.FC = () => {
         <View className="p-4">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-between items-center mt-1">
+            <Text className="text-sm text-gray-600">Días: {item.dias}</Text>
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
           </View>
           <Text className="text-xs text-gray-400 mt-2">
             ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
@@ -331,7 +361,9 @@ const EntVentas: React.FC = () => {
         handleUpdate={handleUpdate}
         selectedCategory={selectedCategory}
         schema={z.object({
-          nombre: z.string().min(1, 'El nombre es requerido')
+          nombre: z.string().min(1, 'El nombre es requerido'),
+          dias: z.number().min(1, 'Los días son requeridos'),
+          suspendido: z.boolean()
         })}
         defaultValues={DEFAULT_VALUES}
         categoryTitles={CATEGORY_TITLES}

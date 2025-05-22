@@ -15,8 +15,10 @@ export const acuerdoDePagoApi = {
     return response.data;
   },
 
-  create: async (data: Omit<AcuerdoDePago, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>): Promise<AcuerdoDePago> => {
+  create: async (data: Partial<AcuerdoDePago>): Promise<AcuerdoDePago> => {
+    console.log(data);
     const response = await api.post(endpoints.sells.acuerdodepago.create, data);
+    console.log(response.data);
     return response.data;
   },
 

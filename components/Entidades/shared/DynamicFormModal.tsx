@@ -55,7 +55,6 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const modalRef = useRef(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const { control, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm({

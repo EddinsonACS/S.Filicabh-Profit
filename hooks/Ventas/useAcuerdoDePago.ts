@@ -4,8 +4,10 @@ import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
 import { acuerdoDePagoApi } from '@/data/api/Ventas/acuerdoDePagoApi';
+import { authStorage } from '@/data/global/authStorage';
 
 export const useAcuerdoDePago = () => {
+  const { username } = authStorage();
 
   const useGetAcuerdoDePagoList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<AcuerdoDePago>, Error>({
@@ -42,7 +44,27 @@ export const useAcuerdoDePago = () => {
 
   const useCreateAcuerdoDePago = () => {
     return useMutation({
-      mutationFn: (data: Omit<AcuerdoDePago, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'>) => acuerdoDePagoApi.create(data),
+      mutationFn: (formData: Partial<AcuerdoDePago>) => {
+        if (!formData.nombre) {
+          throw new Error('El nombre es requerido');
+        }
+        const data: Omit<AcuerdoDePago, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+          nombre: formData.nombre,
+          dias: formData.dias || 0,
+          suspendido: formData.suspendido || false,
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: "",
+          otrosC2: "",
+          otrosC3: "",
+          otrosC4: "",
+          otrosT1: "",
+          equipo: "equipo",
+          usuario: username ? parseInt(username) : 0
+        };
+        return acuerdoDePagoApi.create(data);
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['acuerdodepago', 'list'] });
         Alert.alert(
@@ -62,8 +84,27 @@ export const useAcuerdoDePago = () => {
 
   const useUpdateAcuerdoDePago = () => {
     return useMutation({
-      mutationFn: ({ id, data }: { id: number; data: Partial<AcuerdoDePago> }) => 
-        acuerdoDePagoApi.update(id, data),
+      mutationFn: ({ id, formData }: { id: number; formData: Partial<AcuerdoDePago> }) => {
+        if (!formData.nombre) {
+          throw new Error('El nombre es requerido');
+        }
+        const data: Partial<AcuerdoDePago> = {
+          nombre: formData.nombre,
+          dias: formData.dias || 0,
+          suspendido: formData.suspendido || false,
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: "",
+          otrosC2: "",
+          otrosC3: "",
+          otrosC4: "",
+          otrosT1: "",
+          equipo: "equipo",
+          usuario: username ? parseInt(username) : 0
+        };
+        return acuerdoDePagoApi.update(id, data);
+      },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['acuerdodepago', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['acuerdodepago', 'item', variables.id] });
