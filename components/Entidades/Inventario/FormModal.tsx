@@ -1,4 +1,4 @@
-import { Almacen } from '@/core/models/Almacen';
+import { Almacen } from '@/core/models/Inventario/Almacen';
 import { InventoryFormData, inventorySchema } from '@/utils/schemas/inventorySchema';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';

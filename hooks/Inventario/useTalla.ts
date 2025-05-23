@@ -1,11 +1,10 @@
-import { useMutation, UseQueryOptions } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { Talla } from '@/core/models/Inventario/Talla';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { Alert } from 'react-native';
-import { Talla } from '@/core/models/Talla';
-import { queryClient } from '@/utils/libs/queryClient';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
+import { queryClient } from '@/utils/libs/queryClient';
+import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 
 const apiTalla = createApiService<Talla>();
 

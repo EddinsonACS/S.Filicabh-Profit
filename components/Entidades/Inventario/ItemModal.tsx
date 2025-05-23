@@ -1,4 +1,4 @@
-import { Almacen } from '@/core/models/Almacen';
+import { Almacen } from '@/core/models/Inventario/Almacen';
 import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useEffect, useRef } from 'react';
 import {

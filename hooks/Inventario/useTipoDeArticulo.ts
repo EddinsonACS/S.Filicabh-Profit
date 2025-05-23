@@ -1,11 +1,10 @@
-import { useMutation, UseQueryOptions } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
-import { Alert } from 'react-native';
-import { queryClient } from '@/utils/libs/queryClient';
+import { TipoDeArticulo } from '@/core/models/Inventario/TipoDeArticulo';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { TipoDeArticulo } from '@/core/models/TipoDeArticulo';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
+import { queryClient } from '@/utils/libs/queryClient';
+import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 
 const apiTipoDeArticulo = createApiService<TipoDeArticulo>();
 

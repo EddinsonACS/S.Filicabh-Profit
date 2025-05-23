@@ -1,5 +1,5 @@
 // InventoryMockData.ts
-import { Almacen } from '@/core/models/Almacen';
+import { Almacen } from '@/core/models/Inventario/Almacen';
 
 // Función para generar un ID único
 const generateId = (): number => {

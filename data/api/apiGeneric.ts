@@ -1,5 +1,5 @@
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { api } from '@/utils/libs/api'; 
+import { api } from '@/utils/libs/api';
 
 interface ApiServiceConfig<T, U = Partial<T>> {
   getList: (url: string, page: number, pageSize: number) => Promise<ListDataResponse<T>>;

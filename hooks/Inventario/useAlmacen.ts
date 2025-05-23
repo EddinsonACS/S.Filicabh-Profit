@@ -1,10 +1,10 @@
-import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Almacen } from '@/core/models/Almacen';
-import { Alert } from 'react-native';
-import { queryClient } from '@/utils/libs/queryClient';
+import { Almacen } from '@/core/models/Inventario/Almacen';
 import ListDataResponse from '@/core/response/ListDataResponse';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
+import { queryClient } from '@/utils/libs/queryClient';
+import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 const apiAlmacen = createApiService<Almacen>();
 
 export const useAlmacen = () => {

@@ -1,10 +1,9 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { Almacen } from '@/core/models/Inventario/Almacen';
+import { Categoria } from '@/core/models/Inventario/Categoria';
+import { Grupo } from '@/core/models/Inventario/Grupo';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { Categoria } from '@/core/models/Categoria';
-import { Almacen } from '@/core/models/Almacen';
-import { Grupo } from '@/core/models/Grupo';
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'unidad';
 

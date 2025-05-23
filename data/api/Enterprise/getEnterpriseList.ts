@@ -1,4 +1,4 @@
-import { Enterprise } from "@/core/models/Enterpise";
+import { Enterprise } from "@/core/models/Inventario/Enterpise";
 import ListDataResponse from "@/core/response/ListDataResponse";
 import { endpoints } from "@/utils/const/endpoints";
 import { api } from "@/utils/libs/api";

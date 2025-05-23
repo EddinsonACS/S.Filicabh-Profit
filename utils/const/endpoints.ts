@@ -76,13 +76,97 @@ export const endpoints = {
       "delete": (id: number) => `/api/origen/${id}`
     }
   },
-  "sells":{
-    "acuerdodepago":{
+  "sales": {
+    "acuerdodepago": {
       "list": "/api/acuerdodepago",
       "create": "/api/acuerdodepago",
       "getOne": (id: number) => `/api/acuerdodepago/${id}`,
       "update": (id: number) => `/api/acuerdodepago/${id}`,
       "delete": (id: number) => `/api/acuerdodepago/${id}`
+    },
+    "ciudad": {
+      "list": "/api/ciudad",
+      "create": "/api/ciudad",
+      "getOne": (id: number) => `/api/ciudad/${id}`,
+      "update": (id: number) => `/api/ciudad/${id}`,
+      "delete": (id: number) => `/api/ciudad/${id}`
+    },
+    "region": {
+      "list": "/api/region",
+      "create": "/api/region",
+      "getOne": (id: number) => `/api/region/${id}`,
+      "update": (id: number) => `/api/region/${id}`,
+      "delete": (id: number) => `/api/region/${id}`
+    },
+    "pais": {
+      "list": "/api/pais",
+      "create": "/api/pais",
+      "getOne": (id: number) => `/api/pais/${id}`,
+      "update": (id: number) => `/api/pais/${id}`,
+      "delete": (id: number) => `/api/pais/${id}`
+    },
+    "formadeentrega": {
+      "list": "/api/formadeentrega",
+      "create": "/api/formadeentrega",
+      "getOne": (id: number) => `/api/formadeentrega/${id}`,
+      "update": (id: number) => `/api/formadeentrega/${id}`,
+      "delete": (id: number) => `/api/formadeentrega/${id}`
+    },
+    "tipopersona": {
+      "list": "/api/tipopersona",
+      "create": "/api/tipopersona",
+      "getOne": (id: number) => `/api/tipopersona/${id}`,
+      "update": (id: number) => `/api/tipopersona/${id}`,
+      "delete": (id: number) => `/api/tipopersona/${id}`
+    },
+    "tipovendedor": {
+      "list": "/api/tipovendedor",
+      "create": "/api/tipovendedor",
+      "getOne": (id: number) => `/api/tipovendedor/${id}`,
+      "update": (id: number) => `/api/tipovendedor/${id}`,
+      "delete": (id: number) => `/api/tipovendedor/${id}`
+    },
+    "vendedor": {
+      "list": "/api/vendedor",
+      "create": "/api/vendedor",
+      "getOne": (id: number) => `/api/vendedor/${id}`,
+      "update": (id: number) => `/api/vendedor/${id}`,
+      "delete": (id: number) => `/api/vendedor/${id}`
+    },
+    "moneda": {
+      "list": "/api/moneda",
+      "create": "/api/moneda",
+      "getOne": (id: number) => `/api/moneda/${id}`,
+      "update": (id: number) => `/api/moneda/${id}`,
+      "delete": (id: number) => `/api/moneda/${id}`
+    },
+    "tasadecambio": {
+      "list": "/api/tasadecambio",
+      "create": "/api/tasadecambio",
+      "getOne": (id: number) => `/api/tasadecambio/${id}`,
+      "update": (id: number) => `/api/tasadecambio/${id}`,
+      "delete": (id: number) => `/api/tasadecambio/${id}`
+    },
+    "listadeprecio": {
+      "list": "/api/listadeprecio",
+      "create": "/api/listadeprecio",
+      "getOne": (id: number) => `/api/listadeprecio/${id}`,
+      "update": (id: number) => `/api/listadeprecio/${id}`,
+      "delete": (id: number) => `/api/listadeprecio/${id}`
+    },
+    "sector": {
+      "list": "/api/sector",
+      "create": "/api/sector",
+      "getOne": (id: number) => `/api/sector/${id}`,
+      "update": (id: number) => `/api/sector/${id}`,
+      "delete": (id: number) => `/api/sector/${id}`
+    },
+    "rubro": {
+      "list": "/api/rubro",
+      "create": "/api/rubro",
+      "getOne": (id: number) => `/api/rubro/${id}`,
+      "update": (id: number) => `/api/rubro/${id}`,
+      "delete": (id: number) => `/api/rubro/${id}`
     }
   }
 }

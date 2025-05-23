@@ -1,11 +1,11 @@
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
 
-import { Alert } from 'react-native';
-import { queryClient } from '@/utils/libs/queryClient';
+import { Grupo } from '@/core/models/Inventario/Grupo';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { Grupo } from '@/core/models/Grupo';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
+import { queryClient } from '@/utils/libs/queryClient';
+import { Alert } from 'react-native';
 
 const apiGrupo = createApiService<Grupo>();
 

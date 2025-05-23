@@ -1,4 +1,4 @@
-import { Enterprise } from '@/core/models/Enterpise';
+import { Enterprise } from '@/core/models/Inventario/Enterpise';
 import { create } from 'zustand';
 
 interface EnterpriseStore {

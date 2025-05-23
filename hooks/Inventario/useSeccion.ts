@@ -1,10 +1,10 @@
-import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
-import { queryClient } from '@/utils/libs/queryClient';
+import { Seccion } from '@/core/models/Inventario/Seccion';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { Seccion } from '@/core/models/Seccion';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
+import { queryClient } from '@/utils/libs/queryClient';
+import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 
 const apiSeccion = createApiService<Seccion>();
 
