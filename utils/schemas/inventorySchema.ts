@@ -14,6 +14,10 @@ const equipoSchema = {
   equipo: z.string().min(1, 'El equipo es requerido')
 };
 
+const codigoCategoriaSchema = {
+  codigoCategoria: z.number().min(1, 'Debe seleccionar una categoría')
+};
+
 export const inventorySchema = {
   almacen: z.object({
     ...baseSchema,
@@ -32,7 +36,7 @@ export const inventorySchema = {
   }),
   grupo: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
+    ...codigoCategoriaSchema
   }),
   origen: z.object({
     ...baseSchema,

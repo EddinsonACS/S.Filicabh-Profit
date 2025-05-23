@@ -1,7 +1,7 @@
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useCategoria } from '@/hooks/Inventario/useCategoria';
+import { useGrupo } from '@/hooks/Inventario/useGrupo';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -68,6 +68,13 @@ const EntInventario: React.FC = () => {
     useDeleteCategoria
   } = useCategoria();
 
+  const {
+    useGetGrupoList,
+    useCreateGrupo,
+    useUpdateGrupo,
+    useDeleteGrupo
+  } = useGrupo();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -84,6 +91,7 @@ const EntInventario: React.FC = () => {
   // React Query hooks
   const { data: almacenData, isLoading: isLoadingAlmacen } = useGetAlmacenList(currentPage, PAGE_SIZE);
   const { data: categoriaData, isLoading: isLoadingCategoria } = useGetCategoriaList(currentPage, PAGE_SIZE);
+  const { data: grupoData, isLoading: isLoadingGrupo } = useGetGrupoList(currentPage, PAGE_SIZE);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -92,6 +100,32 @@ const EntInventario: React.FC = () => {
   const createCategoriaMutation = useCreateCategoria();
   const updateCategoriaMutation = useUpdateCategoria();
   const deleteCategoriaMutation = useDeleteCategoria();
+
+  const createGrupoMutation = useCreateGrupo();
+  const updateGrupoMutation = useUpdateGrupo();
+  const deleteGrupoMutation = useDeleteGrupo();
+
+  // Obtener todas las categorías para el selector de grupos
+  const { data: categoriasData } = useGetCategoriaList(1, 1000); // Obtener todas las categorías
+
+  // Preparar los campos del formulario según la categoría seleccionada
+  const getFormFields = useCallback(() => {
+    const fields = FORM_FIELDS_INVENTORY[selectedCategory];
+    
+    if (selectedCategory === 'grupo' && categoriasData?.data) {
+      return fields.map(field => {
+        if (field.name === 'codigoCategoria') {
+          return {
+            ...field,
+            options: categoriasData.data
+          };
+        }
+        return field;
+      });
+    }
+    
+    return fields;
+  }, [selectedCategory, categoriasData]);
 
   // Reset pagination when category changes
   useEffect(() => {
@@ -128,8 +162,21 @@ const EntInventario: React.FC = () => {
           return [...prev, ...newItems];
         });
       }
+    } else if (selectedCategory === 'grupo' && grupoData) {
+      const totalPages = Math.ceil(grupoData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(grupoData.data);
+      } else {
+        setAccumulatedItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = grupoData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+      }
     }
-  }, [almacenData, categoriaData, currentPage, selectedCategory]);
+  }, [almacenData, categoriaData, grupoData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -158,7 +205,8 @@ const EntInventario: React.FC = () => {
   }, [formModalVisible, detailModalVisible, navigation]);
 
   const isLoading = selectedCategory === 'almacen' ? isLoadingAlmacen : 
-                    selectedCategory === 'categoria' ? isLoadingCategoria : false;
+                    selectedCategory === 'categoria' ? isLoadingCategoria :
+                    selectedCategory === 'grupo' ? isLoadingGrupo : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -199,6 +247,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'grupo') {
+      createGrupoMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
     setFormModalVisible(false);
   };
@@ -228,6 +287,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'grupo') {
+      updateGrupoMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
 
     setFormModalVisible(false);
@@ -248,6 +318,17 @@ const EntInventario: React.FC = () => {
       });
     } else if (selectedCategory === 'categoria') {
       deleteCategoriaMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
+    } else if (selectedCategory === 'grupo') {
+      deleteGrupoMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
@@ -347,7 +428,7 @@ const EntInventario: React.FC = () => {
         schema={inventorySchema[selectedCategory]}
         defaultValues={DEFAULT_VALUES_INVENTORY[selectedCategory]}
         categoryTitles={CATEGORY_TITLES}
-        formFields={FORM_FIELDS_INVENTORY[selectedCategory]}
+        formFields={getFormFields()}
         headerColor={themes.inventory.formHeaderColor}
         headerTextColor={themes.inventory.formHeaderTextColor}
         buttonColor={themes.inventory.formButtonColor}

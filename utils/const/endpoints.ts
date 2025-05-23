@@ -18,6 +18,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/categoria/${id}`,
       "update": (id: number) => `/api/categoria/${id}`,
       "delete": (id: number) => `/api/categoria/${id}`
+    },
+    "grupo":{
+      "list": "/api/grupo",
+      "create": "/api/grupo",
+      "getOne": (id: number) => `/api/grupo/${id}`,
+      "update": (id: number) => `/api/grupo/${id}`,
+      "delete": (id: number) => `/api/grupo/${id}`
     }
   },
   "sells":{

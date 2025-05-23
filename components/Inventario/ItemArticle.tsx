@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Categoria } from '@/core/models/Categoria';
 import { Almacen } from '@/core/models/Almacen';
+import { Grupo } from '@/core/models/Grupo';
 
 type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'unidad';
 
@@ -137,6 +138,50 @@ const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => v
   );
 };
 
+const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void }> = ({ item, onPress }) => {
+  return (
+    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+      <TouchableOpacity
+        onPress={() => onPress(item)}
+        activeOpacity={0.7}
+      >
+        <View className="p-4">
+          <View className="mb-2">
+            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-between items-center mt-1">
+            <View className="flex-row items-center">
+              <Text className="text-sm text-gray-600">Código: {item.codigoCategoria || 'No especificado'}</Text>
+            </View>
+
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-xs text-gray-400 mt-2">
+            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Creado por: {item.usuarioRegistroNombre}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 const ItemDefault: React.FC<ItemProps> = ({ item, category, onPress }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
@@ -183,6 +228,8 @@ export const ItemArticle: React.FC<ItemProps> = ({ item, category, onPress }) =>
       return <ItemAlmacen item={item as Almacen} onPress={onPress} />;
     case 'categoria':
       return <ItemCategoria item={item as Categoria} onPress={onPress} />;
+    case 'grupo':
+      return <ItemGrupo item={item as Grupo} onPress={onPress} />;
     default:
       return <ItemDefault item={item} category={category} onPress={onPress} />;
   }

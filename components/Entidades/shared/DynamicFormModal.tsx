@@ -1,9 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, PanResponder, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView, Switch, Dimensions, Animated } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
+
+interface FormField {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'switch' | 'select';
+  placeholder?: string;
+  required?: boolean;
+  description?: string;
+  options?: any[];
+  optionLabel?: string;
+  optionValue?: string;
+}
 
 interface DynamicFormModalProps {
   visible: boolean;
@@ -16,14 +28,7 @@ interface DynamicFormModalProps {
   schema: z.ZodType<any>;
   defaultValues: Record<string, any>;
   categoryTitles: Record<string, string>;
-  formFields: Array<{
-    name: string;
-    label: string;
-    type: 'text' | 'number' | 'switch';
-    placeholder?: string;
-    required?: boolean;
-    description?: string;
-  }>;
+  formFields: Array<FormField>;
   headerColor: string;
   headerTextColor: string;
   buttonColor: string;
@@ -61,6 +66,9 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     resolver: zodResolver(schema),
     defaultValues: isEditing && currentItem ? currentItem : defaultValues
   });
+
+  // Estado para controlar el selector abierto
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -135,9 +143,10 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     onClose();
   };
 
-  // Separar campos de texto/número y switches
+  // Separar campos de texto/número, switches y selects
   const textFields = formFields.filter(f => f.type === 'text' || f.type === 'number');
   const switchFields = formFields.filter(f => f.type === 'switch');
+  const selectFields = formFields.filter(f => f.type === 'select');
 
   return (
     <Modal
@@ -228,6 +237,78 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                         keyboardType={field.type === 'number' ? 'numeric' : 'default'}
                       />
                     )}
+                  />
+                  {field.description && (
+                    <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                  )}
+                  {errors[field.name] && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {errors[field.name]?.message as string}
+                    </Text>
+                  )}
+                </View>
+              ))}
+
+              {/* Campos de selección */}
+              {selectFields.map((field) => (
+                <View key={field.name} className="mb-4">
+                  <View className="flex-row mb-1">
+                    <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
+                    {field.required && <Text className="text-red-600">*</Text>}
+                  </View>
+                  <Controller
+                    control={control}
+                    name={field.name}
+                    render={({ field: { onChange, value } }) => {
+                      const selectedOption = field.options?.find(
+                        opt => opt[field.optionValue || 'id'] === value
+                      );
+                      
+                      return (
+                        <View>
+                          <TouchableOpacity
+                            onPress={() => setOpenSelect(openSelect === field.name ? null : field.name)}
+                            className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
+                              errors[field.name] ? 'border-red-500' : 'border-gray-200'
+                            }`}
+                          >
+                            <Text className="text-gray-700">
+                              {selectedOption ? selectedOption[field.optionLabel || 'nombre'] : 'Seleccione una opción'}
+                            </Text>
+                            <Ionicons 
+                              name={openSelect === field.name ? "chevron-up" : "chevron-down"} 
+                              size={20} 
+                              color="#6B7280" 
+                            />
+                          </TouchableOpacity>
+
+                          {openSelect === field.name && (
+                            <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                              <ScrollView className="max-h-48">
+                                {field.options?.map((option) => (
+                                  <TouchableOpacity
+                                    key={option[field.optionValue || 'id']}
+                                    onPress={() => {
+                                      onChange(option[field.optionValue || 'id']);
+                                      setOpenSelect(null);
+                                    }}
+                                    className={`px-4 py-3 border-b border-gray-100 ${
+                                      value === option[field.optionValue || 'id'] ? 'bg-blue-50' : ''
+                                    }`}
+                                  >
+                                    <Text className={`${
+                                      value === option[field.optionValue || 'id'] ? 'text-blue-600' : 'text-gray-700'
+                                    }`}>
+                                      {option[field.optionLabel || 'nombre']}
+                                    </Text>
+                                  </TouchableOpacity>
+                                ))}
+                              </ScrollView>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    }}
                   />
                   {field.description && (
                     <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>

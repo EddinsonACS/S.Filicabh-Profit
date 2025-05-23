@@ -23,8 +23,6 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "grupo":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "origen":{
