@@ -18,6 +18,10 @@ const codigoGrupoSchema = {
   codigoGrupo: z.number().min(1, 'Debe seleccionar un grupo')
 };
 
+const manejaInventarioSchema = {
+  manejaInventario: z.boolean()
+};
+
 export const inventorySchema = {
   almacen: z.object({
     ...baseSchema,
@@ -46,7 +50,7 @@ export const inventorySchema = {
   }),
   tipodearticulo: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
+    ...manejaInventarioSchema
   }),
   tipodeimpuesto: z.object({
     ...baseSchema,

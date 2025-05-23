@@ -6,6 +6,7 @@ import { useUnidad } from '@/hooks/Inventario/useUnidad';
 import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useColor } from '@/hooks/Inventario/useColor';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
+import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -114,6 +115,13 @@ const EntInventario: React.FC = () => {
     useDeleteTipoDeImpuesto
   } = useTipoDeImpuesto();
 
+  const {
+    useGetTipoDeArticuloList,
+    useCreateTipoDeArticulo,
+    useUpdateTipoDeArticulo,
+    useDeleteTipoDeArticulo
+  } = useTipoDeArticulo();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -136,6 +144,7 @@ const EntInventario: React.FC = () => {
   const { data: tallaData, isLoading: isLoadingTalla } = useGetTallaList(currentPage, PAGE_SIZE);
   const { data: colorData, isLoading: isLoadingColor } = useGetColorList(currentPage, PAGE_SIZE);
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
+  const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -168,6 +177,10 @@ const EntInventario: React.FC = () => {
   const createTipoDeImpuestoMutation = useCreateTipoDeImpuesto();
   const updateTipoDeImpuestoMutation = useUpdateTipoDeImpuesto();
   const deleteTipoDeImpuestoMutation = useDeleteTipoDeImpuesto();
+
+  const createTipoDeArticuloMutation = useCreateTipoDeArticulo();
+  const updateTipoDeArticuloMutation = useUpdateTipoDeArticulo();
+  const deleteTipoDeArticuloMutation = useDeleteTipoDeArticulo();
 
   // Obtener todas las categorías para el selector de grupos
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
@@ -318,8 +331,21 @@ const EntInventario: React.FC = () => {
           return [...prev, ...newItems];
         });
       }
+    } else if (selectedCategory === 'tipodearticulo' && tipoDeArticuloData) {
+      const totalPages = Math.ceil(tipoDeArticuloData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(tipoDeArticuloData.data);
+      } else {
+        setAccumulatedItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = tipoDeArticuloData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+      }
     }
-  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, colorData, tipoDeImpuestoData, currentPage, selectedCategory]);
+  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -354,7 +380,8 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'unidad' ? isLoadingUnidad :
                     selectedCategory === 'talla' ? isLoadingTalla :
                     selectedCategory === 'color' ? isLoadingColor :
-                    selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto : false;
+                    selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
+                    selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -461,6 +488,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'tipodearticulo') {
+      createTipoDeArticuloMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
     setFormModalVisible(false);
   };
@@ -556,6 +594,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'tipodearticulo') {
+      updateTipoDeArticuloMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
 
     setFormModalVisible(false);
@@ -642,6 +691,17 @@ const EntInventario: React.FC = () => {
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
       deleteTipoDeImpuestoMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
+    } else if (selectedCategory === 'tipodearticulo') {
+      deleteTipoDeArticuloMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);

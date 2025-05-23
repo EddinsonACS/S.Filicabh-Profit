@@ -35,9 +35,8 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "tipodearticulo":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
-        suspendido: false
+        suspendido: false,
+        manejaInventario: false
     },
     "tipodeimpuesto":{
         nombre: '',

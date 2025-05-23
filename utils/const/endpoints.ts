@@ -60,6 +60,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/tipodeimpuesto/${id}`,
       "update": (id: number) => `/api/tipodeimpuesto/${id}`,
       "delete": (id: number) => `/api/tipodeimpuesto/${id}`
+    },
+    "tipoDeArticulo":{
+      "list": "/api/tipodearticulo",
+      "create": "/api/tipodearticulo",
+      "getOne": (id: number) => `/api/tipodearticulo/${id}`,
+      "update": (id: number) => `/api/tipodearticulo/${id}`,
+      "delete": (id: number) => `/api/tipodearticulo/${id}`
     }
   },
   "sells":{
