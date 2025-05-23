@@ -18,6 +18,10 @@ const codigoCategoriaSchema = {
   codigoCategoria: z.number().min(1, 'Debe seleccionar una categoría')
 };
 
+const codigoGrupoSchema = {
+  codigoGrupo: z.number().min(1, 'Debe seleccionar un grupo')
+};
+
 export const inventorySchema = {
   almacen: z.object({
     ...baseSchema,
@@ -56,11 +60,10 @@ export const inventorySchema = {
   }),
   seccion: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
+    ...codigoGrupoSchema
   }),
   unidad: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
   })
 };
 

@@ -25,6 +25,20 @@ export const endpoints = {
       "getOne": (id: number) => `/api/grupo/${id}`,
       "update": (id: number) => `/api/grupo/${id}`,
       "delete": (id: number) => `/api/grupo/${id}`
+    },
+    "seccion":{
+      "list": "/api/seccion",
+      "create": "/api/seccion",
+      "getOne": (id: number) => `/api/seccion/${id}`,
+      "update": (id: number) => `/api/seccion/${id}`,
+      "delete": (id: number) => `/api/seccion/${id}`
+    },
+    "unidad":{
+      "list": "/api/unidad",
+      "create": "/api/unidad",
+      "getOne": (id: number) => `/api/unidad/${id}`,
+      "update": (id: number) => `/api/unidad/${id}`,
+      "delete": (id: number) => `/api/unidad/${id}`
     }
   },
   "sells":{

@@ -51,14 +51,10 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "seccion":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "unidad":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     }
 };
