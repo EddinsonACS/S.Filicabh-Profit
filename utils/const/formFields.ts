@@ -228,3 +228,138 @@ export const FORM_FIELDS_INVENTORY = {
     }
   ]
 };
+
+export const FORM_FIELDS_FINANZAS = {
+  banco: [
+    {
+      name: 'nombre',
+      label: 'Nombre del Banco',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el nombre del banco',
+      description: 'Nombre completo del banco'
+    },
+    {
+      name: 'suspendido',
+      label: 'Suspendido',
+      type: 'switch' as const,
+      description: 'Indica si el banco está suspendido'
+    }
+  ],
+  caja: [
+    {
+      name: 'nombre',
+      label: 'Nombre de la Caja',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el nombre de la caja',
+      description: 'Nombre descriptivo de la caja'
+    },
+    {
+      name: 'codigoMoneda',
+      label: 'Moneda',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione la moneda',
+      description: 'Moneda principal de la caja',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'suspendido',
+      label: 'Suspendido',
+      type: 'switch' as const,
+      description: 'Indica si la caja está suspendida'
+    }
+  ],
+  cuentaBancaria: [
+    {
+      name: 'nroCuenta',
+      label: 'Número de Cuenta',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el número de cuenta',
+      description: 'Número de cuenta bancaria'
+    },
+    {
+      name: 'tipoDeCuenta',
+      label: 'Tipo de Cuenta',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione el tipo de cuenta',
+      description: 'Tipo de cuenta bancaria',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoMoneda',
+      label: 'Moneda',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione la moneda',
+      description: 'Moneda de la cuenta',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoBanco',
+      label: 'Banco',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione el banco',
+      description: 'Banco al que pertenece la cuenta',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'sucursal',
+      label: 'Sucursal',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese la sucursal',
+      description: 'Sucursal del banco'
+    },
+    {
+      name: 'direccion',
+      label: 'Dirección',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese la dirección',
+      description: 'Dirección de la sucursal'
+    },
+    {
+      name: 'nombreEjecutivo',
+      label: 'Nombre del Ejecutivo',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el nombre del ejecutivo',
+      description: 'Nombre del ejecutivo de cuenta'
+    },
+    {
+      name: 'telefono',
+      label: 'Teléfono',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el teléfono',
+      description: 'Teléfono de contacto'
+    },
+    {
+      name: 'email',
+      label: 'Email',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Ingrese el email',
+      description: 'Email de contacto'
+    },
+    {
+      name: 'suspendido',
+      label: 'Suspendido',
+      type: 'switch' as const,
+      description: 'Indica si la cuenta está suspendida'
+    }
+  ]
+};

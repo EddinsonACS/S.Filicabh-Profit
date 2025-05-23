@@ -17,6 +17,7 @@ export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
     },
 
     create: async (url: string, data: U): Promise<T> => {
+      console.log('data', data);
       const response = await api.post(url, data);
       return response.data;
     },

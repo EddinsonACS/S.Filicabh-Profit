@@ -7,7 +7,7 @@ import {
     View,
     ScrollView
 } from 'react-native';
-import CrudFinanzas from './EntInventario';
+import CrudFinanzas from './EntFinanzas';
 import CrudInventario from './EntInventario';
 import CrudVentas from './EntVentas';
 

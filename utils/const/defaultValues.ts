@@ -49,3 +49,27 @@ export const DEFAULT_VALUES_INVENTORY = {
         suspendido: false
     }
 };
+
+export const DEFAULT_VALUES_FINANZAS = {
+    "banco":{
+        nombre: '',
+        suspendido: false
+    },
+    "caja":{
+        nombre: '',
+        suspendido: false,
+        codigoMoneda: undefined
+    },
+    "cuentaBancaria":{
+        suspendido: false,
+        nroCuenta: '',
+        tipoDeCuenta: '',
+        codigoMoneda: undefined,
+        codigoBanco: undefined,
+        sucursal: '',
+        direccion: '',
+        nombreEjecutivo: '',
+        telefono: '',
+        email: ''
+    }
+};

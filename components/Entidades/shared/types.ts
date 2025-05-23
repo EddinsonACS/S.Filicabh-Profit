@@ -1,0 +1,1 @@
+export type CategoryId = 'banco' | 'caja' | 'cuentaBancaria'; 

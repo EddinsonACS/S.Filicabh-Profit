@@ -168,5 +168,28 @@ export const endpoints = {
       "update": (id: number) => `/api/rubro/${id}`,
       "delete": (id: number) => `/api/rubro/${id}`
     }
+  },
+  "finanzas": {
+    "banco": {
+      "list": "/api/banco",
+      "create": "/api/banco",
+      "getOne": (id: number) => `/api/banco/${id}`,
+      "update": (id: number) => `/api/banco/${id}`,
+      "delete": (id: number) => `/api/banco/${id}`
+    },
+    "caja": {
+      "list": "/api/caja",
+      "create": "/api/caja",
+      "getOne": (id: number) => `/api/caja/${id}`,
+      "update": (id: number) => `/api/caja/${id}`,
+      "delete": (id: number) => `/api/caja/${id}`
+    },
+    "cuentaBancaria": {
+      "list": "/api/cuentabancaria",
+      "create": "/api/cuentabancaria",
+      "getOne": (id: number) => `/api/cuentabancaria/${id}`,
+      "update": (id: number) => `/api/cuentabancaria/${id}`,
+      "delete": (id: number) => `/api/cuentabancaria/${id}`
+    }
   }
 }
