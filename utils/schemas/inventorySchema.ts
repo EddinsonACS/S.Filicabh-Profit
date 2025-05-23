@@ -43,7 +43,6 @@ export const inventorySchema = {
   }),
   origen: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
   }),
   talla: z.object({
     ...baseSchema,

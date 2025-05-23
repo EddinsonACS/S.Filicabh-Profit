@@ -7,6 +7,7 @@ import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useColor } from '@/hooks/Inventario/useColor';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
+import { useOrigen } from '@/hooks/Inventario/useOrigen';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -28,7 +29,6 @@ const PAGE_SIZE = 10;
 
 const CATEGORIES = [
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
-  { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
   { id: 'categoria', label: 'Categoría', icon: 'list' as const },
   { id: 'color', label: 'Color', icon: 'color-palette' as const },
   { id: 'grupo', label: 'Grupo', icon: 'people' as const },
@@ -42,7 +42,6 @@ const CATEGORIES = [
 
 const CATEGORY_TITLES = {
   almacen: 'Almacén',
-  articulo: 'Artículo',
   categoria: 'Categoría',
   color: 'Color',
   grupo: 'Grupo',
@@ -122,6 +121,13 @@ const EntInventario: React.FC = () => {
     useDeleteTipoDeArticulo
   } = useTipoDeArticulo();
 
+  const {
+    useGetOrigenList,
+    useCreateOrigen,
+    useUpdateOrigen,
+    useDeleteOrigen
+  } = useOrigen();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -145,6 +151,7 @@ const EntInventario: React.FC = () => {
   const { data: colorData, isLoading: isLoadingColor } = useGetColorList(currentPage, PAGE_SIZE);
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
   const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
+  const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(currentPage, PAGE_SIZE);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -181,6 +188,10 @@ const EntInventario: React.FC = () => {
   const createTipoDeArticuloMutation = useCreateTipoDeArticulo();
   const updateTipoDeArticuloMutation = useUpdateTipoDeArticulo();
   const deleteTipoDeArticuloMutation = useDeleteTipoDeArticulo();
+
+  const createOrigenMutation = useCreateOrigen();
+  const updateOrigenMutation = useUpdateOrigen();
+  const deleteOrigenMutation = useDeleteOrigen();
 
   // Obtener todas las categorías para el selector de grupos
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
@@ -344,8 +355,21 @@ const EntInventario: React.FC = () => {
           return [...prev, ...newItems];
         });
       }
+    } else if (selectedCategory === 'origen' && origenData) {
+      const totalPages = Math.ceil(origenData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(origenData.data);
+      } else {
+        setAccumulatedItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = origenData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+      }
     }
-  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, currentPage, selectedCategory]);
+  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -381,7 +405,8 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'talla' ? isLoadingTalla :
                     selectedCategory === 'color' ? isLoadingColor :
                     selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
-                    selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo : false;
+                    selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo :
+                    selectedCategory === 'origen' ? isLoadingOrigen : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -499,6 +524,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'origen') {
+      createOrigenMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
     setFormModalVisible(false);
   };
@@ -605,6 +641,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'origen') {
+      updateOrigenMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
 
     setFormModalVisible(false);
@@ -702,6 +749,17 @@ const EntInventario: React.FC = () => {
       });
     } else if (selectedCategory === 'tipodearticulo') {
       deleteTipoDeArticuloMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
+    } else if (selectedCategory === 'origen') {
+      deleteOrigenMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);

@@ -25,8 +25,6 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "origen":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "talla":{
