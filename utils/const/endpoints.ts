@@ -39,6 +39,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/unidad/${id}`,
       "update": (id: number) => `/api/unidad/${id}`,
       "delete": (id: number) => `/api/unidad/${id}`
+    },
+    "talla":{
+      "list": "/api/talla",
+      "create": "/api/talla",
+      "getOne": (id: number) => `/api/talla/${id}`,
+      "update": (id: number) => `/api/talla/${id}`,
+      "delete": (id: number) => `/api/talla/${id}`
     }
   },
   "sells":{

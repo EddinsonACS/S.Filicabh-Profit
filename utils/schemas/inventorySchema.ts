@@ -10,10 +10,6 @@ const ventasComprasSchema = {
   aplicaCompras: z.boolean()
 };
 
-const equipoSchema = {
-  equipo: z.string().min(1, 'El equipo es requerido')
-};
-
 const codigoCategoriaSchema = {
   codigoCategoria: z.number().min(1, 'Debe seleccionar una categoría')
 };
@@ -48,7 +44,6 @@ export const inventorySchema = {
   }),
   talla: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
   }),
   tipodearticulo: z.object({
     ...baseSchema,

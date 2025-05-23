@@ -33,8 +33,6 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "talla":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "tipodearticulo":{

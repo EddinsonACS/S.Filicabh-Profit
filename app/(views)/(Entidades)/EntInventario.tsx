@@ -3,6 +3,7 @@ import { useCategoria } from '@/hooks/Inventario/useCategoria';
 import { useGrupo } from '@/hooks/Inventario/useGrupo';
 import { useSeccion } from '@/hooks/Inventario/useSeccion';
 import { useUnidad } from '@/hooks/Inventario/useUnidad';
+import { useTalla } from '@/hooks/Inventario/useTalla';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -90,6 +91,13 @@ const EntInventario: React.FC = () => {
     useDeleteUnidad
   } = useUnidad();
 
+  const {
+    useGetTallaList,
+    useCreateTalla,
+    useUpdateTalla,
+    useDeleteTalla
+  } = useTalla();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -109,6 +117,7 @@ const EntInventario: React.FC = () => {
   const { data: grupoData, isLoading: isLoadingGrupo } = useGetGrupoList(currentPage, PAGE_SIZE);
   const { data: seccionData, isLoading: isLoadingSeccion } = useGetSeccionList(currentPage, PAGE_SIZE);
   const { data: unidadData, isLoading: isLoadingUnidad } = useGetUnidadList(currentPage, PAGE_SIZE);
+  const { data: tallaData, isLoading: isLoadingTalla } = useGetTallaList(currentPage, PAGE_SIZE);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -129,6 +138,10 @@ const EntInventario: React.FC = () => {
   const createUnidadMutation = useCreateUnidad();
   const updateUnidadMutation = useUpdateUnidad();
   const deleteUnidadMutation = useDeleteUnidad();
+
+  const createTallaMutation = useCreateTalla();
+  const updateTallaMutation = useUpdateTalla();
+  const deleteTallaMutation = useDeleteTalla();
 
   // Obtener todas las categorías para el selector de grupos
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
@@ -240,8 +253,21 @@ const EntInventario: React.FC = () => {
           return [...prev, ...newItems];
         });
       }
+    } else if (selectedCategory === 'talla' && tallaData) {
+      const totalPages = Math.ceil(tallaData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(tallaData.data);
+      } else {
+        setAccumulatedItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = tallaData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+      }
     }
-  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, currentPage, selectedCategory]);
+  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -273,7 +299,8 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'categoria' ? isLoadingCategoria :
                     selectedCategory === 'grupo' ? isLoadingGrupo :
                     selectedCategory === 'seccion' ? isLoadingSeccion :
-                    selectedCategory === 'unidad' ? isLoadingUnidad : false;
+                    selectedCategory === 'unidad' ? isLoadingUnidad :
+                    selectedCategory === 'talla' ? isLoadingTalla : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -347,6 +374,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'talla') {
+      createTallaMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
     setFormModalVisible(false);
   };
@@ -409,6 +447,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
+    } else if (selectedCategory === 'talla') {
+      updateTallaMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
 
     setFormModalVisible(false);
@@ -462,6 +511,17 @@ const EntInventario: React.FC = () => {
       });
     } else if (selectedCategory === 'unidad') {
       deleteUnidadMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
+    } else if (selectedCategory === 'talla') {
+      deleteTallaMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
