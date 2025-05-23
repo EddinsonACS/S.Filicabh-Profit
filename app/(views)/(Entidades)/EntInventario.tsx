@@ -1,6 +1,5 @@
-import { getMockDataByCategory } from '@/components/Entidades/Inventario/InventoryMockdata';
-import { Almacen } from '@/core/models/Almacen';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
+import { useCategoria } from '@/hooks/Inventario/useCategoria';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +17,7 @@ import { authStorage } from '@/data/global/authStorage';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
+import { ItemArticle } from '@/components/Inventario/ItemArticle';
 
 const PAGE_SIZE = 10;
 
@@ -49,7 +49,6 @@ const CATEGORY_TITLES = {
   unidad: 'Unidad'
 };
 
-
 type CategoryId = keyof typeof CATEGORY_TITLES;
 
 const EntInventario: React.FC = () => {
@@ -62,26 +61,37 @@ const EntInventario: React.FC = () => {
     useDeleteAlmacen
   } = useAlmacen();
 
+  const {
+    useGetCategoriaList,
+    useCreateCategoria,
+    useUpdateCategoria,
+    useDeleteCategoria
+  } = useCategoria();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
   const [formModalVisible, setFormModalVisible] = useState<boolean>(false);
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
-  const [currentItem, setCurrentItem] = useState<Almacen | null>(null);
+  const [currentItem, setCurrentItem] = useState<any>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('almacen');
-  const [mockItems, setMockItems] = useState<Almacen[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [accumulatedItems, setAccumulatedItems] = useState<Almacen[]>([]);
-  const { username } = authStorage();
-  const [error, setError] = useState<string | null>(null);
+  const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
+
 
   // React Query hooks
-  const { data: almacenData, isLoading: isLoadingApi } = useGetAlmacenList(currentPage, PAGE_SIZE);
-  const createMutation = useCreateAlmacen();
-  const updateMutation = useUpdateAlmacen();
-  const deleteMutation = useDeleteAlmacen();
+  const { data: almacenData, isLoading: isLoadingAlmacen } = useGetAlmacenList(currentPage, PAGE_SIZE);
+  const { data: categoriaData, isLoading: isLoadingCategoria } = useGetCategoriaList(currentPage, PAGE_SIZE);
+  
+  const createAlmacenMutation = useCreateAlmacen();
+  const updateAlmacenMutation = useUpdateAlmacen();
+  const deleteAlmacenMutation = useDeleteAlmacen();
+  
+  const createCategoriaMutation = useCreateCategoria();
+  const updateCategoriaMutation = useUpdateCategoria();
+  const deleteCategoriaMutation = useDeleteCategoria();
 
   // Reset pagination when category changes
   useEffect(() => {
@@ -92,7 +102,7 @@ const EntInventario: React.FC = () => {
 
   // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
-    if (almacenData && selectedCategory === 'almacen') {
+    if (selectedCategory === 'almacen' && almacenData) {
       const totalPages = Math.ceil(almacenData.totalRegistros / PAGE_SIZE);
       setHasMore(currentPage < totalPages);
       
@@ -105,16 +115,21 @@ const EntInventario: React.FC = () => {
           return [...prev, ...newItems];
         });
       }
+    } else if (selectedCategory === 'categoria' && categoriaData) {
+      const totalPages = Math.ceil(categoriaData.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(categoriaData.data);
+      } else {
+        setAccumulatedItems(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const newItems = categoriaData.data.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+      }
     }
-  }, [almacenData, currentPage, selectedCategory]);
-
-  // Load mock data when category changes
-  useEffect(() => {
-    if (selectedCategory !== 'almacen') {
-      const mockData = getMockDataByCategory(selectedCategory);
-      setMockItems(mockData);
-    }
-  }, [selectedCategory]);
+  }, [almacenData, categoriaData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -142,15 +157,12 @@ const EntInventario: React.FC = () => {
     return () => backHandlerSubscription.remove();
   }, [formModalVisible, detailModalVisible, navigation]);
 
-  const isLoading = selectedCategory === 'almacen' ? isLoadingApi : false;
+  const isLoading = selectedCategory === 'almacen' ? isLoadingAlmacen : 
+                    selectedCategory === 'categoria' ? isLoadingCategoria : false;
 
   const items = useMemo(() => {
-    if (selectedCategory === 'almacen') {
-      return accumulatedItems;
-    } else {
-      return mockItems;
-    }
-  }, [selectedCategory, accumulatedItems, mockItems]);
+    return accumulatedItems;
+  }, [accumulatedItems]);
 
   const filteredItems = useMemo(() => {
     return items.filter(item =>
@@ -159,14 +171,14 @@ const EntInventario: React.FC = () => {
   }, [items, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
-    if (selectedCategory === 'almacen' && hasMore && !isLoading) {
+    if (hasMore && !isLoading) {
       setCurrentPage(prev => prev + 1);
     }
-  }, [selectedCategory, hasMore, isLoading]);
+  }, [hasMore, isLoading]);
 
-  const handleCreate = (formData: Partial<Almacen>) => {
+  const handleCreate = (formData: any) => {
     if (selectedCategory === 'almacen') {
-      createMutation.mutate(formData, {
+      createAlmacenMutation.mutate(formData, {
         onSuccess: (createdItem) => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
@@ -176,39 +188,26 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
-    } else {
-      const newItem: Almacen = {
-        id: Math.floor(Math.random() * 10000) + 1000,
-        nombre: formData.nombre || '',
-        aplicaVentas: formData.aplicaVentas || false,
-        aplicaCompras: formData.aplicaCompras || false,
-        suspendido: formData.suspendido || false,
-        otrosF1: new Date().toISOString(),
-        otrosN1: 0,
-        otrosN2: 0,
-        equipo: "equipo",
-        otrosC1: null,
-        otrosC2: null,
-        otrosC3: null,
-        otrosC4: null,
-        otrosT1: null,
-        fechaRegistro: new Date().toISOString(),
-        usuarioRegistroNombre: username || "usuario_local",
-        fechaModificacion: new Date().toISOString(),
-        usuarioModificacionNombre: username || "usuario_local"
-      };
-
-      setMockItems(prev => [newItem, ...prev]);
+    } else if (selectedCategory === 'categoria') {
+      createCategoriaMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
-
     setFormModalVisible(false);
   };
 
-  const handleUpdate = (formData: Partial<Almacen>) => {
+  const handleUpdate = (formData: any) => {
     if (!currentItem) return;
 
     if (selectedCategory === 'almacen') {
-      updateMutation.mutate({ id: currentItem.id, formData }, {
+      updateAlmacenMutation.mutate({ id: currentItem.id, formData }, {
         onSuccess: (updatedItem) => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
@@ -218,20 +217,17 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
-    } else {
-      setMockItems(prev => prev.map(item =>
-        item.id === currentItem.id
-          ? {
-            ...item,
-            nombre: formData.nombre || item.nombre,
-            aplicaVentas: formData.aplicaVentas ?? item.aplicaVentas,
-            aplicaCompras: formData.aplicaCompras ?? item.aplicaCompras,
-            suspendido: formData.suspendido ?? item.suspendido,
-            fechaModificacion: new Date().toISOString(),
-            usuarioModificacionNombre: username || "usuario_local"
-          }
-          : item
-      ));
+    } else if (selectedCategory === 'categoria') {
+      updateCategoriaMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
 
     setFormModalVisible(false);
@@ -240,7 +236,7 @@ const EntInventario: React.FC = () => {
 
   const handleDelete = (id: number) => {
     if (selectedCategory === 'almacen') {
-      deleteMutation.mutate(id, {
+      deleteAlmacenMutation.mutate(id, {
         onSuccess: () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
@@ -250,90 +246,41 @@ const EntInventario: React.FC = () => {
           setCurrentPage(1);
         }
       });
-    } else {
-      setMockItems(prev => prev.filter(item => item.id !== id));
+    } else if (selectedCategory === 'categoria') {
+      deleteCategoriaMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+        },
+        onError: () => {
+          setCurrentPage(1);
+        }
+      });
     }
     setDetailModalVisible(false);
   };
 
-  const showItemDetails = (item: Almacen) => {
+  const showItemDetails = (item: any) => {
     setCurrentItem(item);
     setDetailModalVisible(true);
   };
 
-  const openEditModal = (item: Almacen) => {
+  const openEditModal = (item: any) => {
     setCurrentItem(item);
     setIsEditing(true);
     setFormModalVisible(true);
   };
 
-  const renderItem = ({ item }: { item: Almacen }) => (
-    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => showItemDetails(item)}
-        activeOpacity={0.7}
-      >
-        <View className="p-4">
-          <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
-          </View>
-          <View className="flex-row justify-between items-center mt-1">
-            <View className="flex-row space-x-2">
-              <View className="flex-row items-center">
-                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
-                  {item.aplicaVentas ? (
-                    <>
-                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
-                    </>
-                  ) : (
-                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
-                  )}
-                </View>
-                <Text className="text-sm text-gray-800 ml-1">Ventas</Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
-                  {item.aplicaCompras ? (
-                    <>
-                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
-                    </>
-                  ) : (
-                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
-                  )}
-                </View>
-                <Text className="text-sm text-gray-800 ml-1">Compras</Text>
-              </View>
-            </View>
-
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
-              </Text>
-            </View>
-          </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+  const renderItem = ({ item }: { item: any }) => {
+    return (
+      <ItemArticle
+        item={item}
+        category={selectedCategory}
+        onPress={showItemDetails}
+      />
+    );
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -349,102 +296,102 @@ const EntInventario: React.FC = () => {
         navigateToModules={navigateToModules}
       />
 
-          <DynamicCategorySelector
-            categories={CATEGORIES}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            viewType={viewType}
-          />
+      <DynamicCategorySelector
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        viewType={viewType}
+      />
 
-          <DynamicSearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onAddPress={() => {
-              setCurrentItem(null);
-              setIsEditing(false);
-              setFormModalVisible(true);
-            }}
-            placeholder="Buscar en inventario..."
-            addButtonText="Agregar Item"
-            buttonColor={themes.inventory.buttonColor}
-            buttonTextColor={themes.inventory.buttonTextColor}
-          />
+      <DynamicSearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onAddPress={() => {
+          setCurrentItem(null);
+          setIsEditing(false);
+          setFormModalVisible(true);
+        }}
+        placeholder="Buscar en inventario..."
+        addButtonText="Agregar Item"
+        buttonColor={themes.inventory.buttonColor}
+        buttonTextColor={themes.inventory.buttonTextColor}
+      />
 
-          <DynamicItemList
-            items={filteredItems}
-            showItemDetails={showItemDetails}
-            openEditModal={openEditModal}
-            handleDelete={handleDelete}
-            onLoadMore={handleLoadMore}
-            hasMore={hasMore}
-            selectedCategory={selectedCategory}
-            renderItem={renderItem}
-            emptyStateComponent={
-              <DynamicEmptyState
-                icon="document-text-outline"
-                title="No hay elementos en la lista"
-                subtitle="Agrega un nuevo elemento para comenzar"
-              />
-            }
-            keyExtractor={(item) => item.id.toString()}
+      <DynamicItemList
+        items={filteredItems}
+        showItemDetails={showItemDetails}
+        openEditModal={openEditModal}
+        handleDelete={handleDelete}
+        onLoadMore={handleLoadMore}
+        hasMore={hasMore}
+        selectedCategory={selectedCategory}
+        renderItem={renderItem}
+        emptyStateComponent={
+          <DynamicEmptyState
+            icon="document-text-outline"
+            title="No hay elementos en la lista"
+            subtitle="Agrega un nuevo elemento para comenzar"
           />
+        }
+        keyExtractor={(item) => item.id.toString()}
+      />
 
-          <DynamicFormModal
-            visible={formModalVisible}
-            onClose={() => setFormModalVisible(false)}
-            isEditing={isEditing}
-            currentItem={currentItem}
-            handleCreate={handleCreate}
-            handleUpdate={handleUpdate}
-            selectedCategory={selectedCategory}
-            schema={inventorySchema}
-            defaultValues={DEFAULT_VALUES_INVENTORY.almacen}
-            categoryTitles={CATEGORY_TITLES}
-            formFields={FORM_FIELDS_INVENTORY.almacen}
-            headerColor={themes.inventory.formHeaderColor}
-            headerTextColor={themes.inventory.formHeaderTextColor}
-            buttonColor={themes.inventory.formButtonColor}
-            buttonTextColor={themes.inventory.formButtonTextColor}
-            switchActiveColor={themes.inventory.switchActiveColor}
-            switchInactiveColor={themes.inventory.switchInactiveColor}
-          />
+      <DynamicFormModal
+        visible={formModalVisible}
+        onClose={() => setFormModalVisible(false)}
+        isEditing={isEditing}
+        currentItem={currentItem}
+        handleCreate={handleCreate}
+        handleUpdate={handleUpdate}
+        selectedCategory={selectedCategory}
+        schema={inventorySchema[selectedCategory]}
+        defaultValues={DEFAULT_VALUES_INVENTORY[selectedCategory]}
+        categoryTitles={CATEGORY_TITLES}
+        formFields={FORM_FIELDS_INVENTORY[selectedCategory]}
+        headerColor={themes.inventory.formHeaderColor}
+        headerTextColor={themes.inventory.formHeaderTextColor}
+        buttonColor={themes.inventory.formButtonColor}
+        buttonTextColor={themes.inventory.formButtonTextColor}
+        switchActiveColor={themes.inventory.switchActiveColor}
+        switchInactiveColor={themes.inventory.switchInactiveColor}
+      />
 
-          <DynamicItemModal
-            visible={detailModalVisible}
-            onClose={() => setDetailModalVisible(false)}
-            currentItem={currentItem}
-            openEditModal={openEditModal}
-            handleDelete={handleDelete}
-            mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
-            badges={[
-              {
-                label: 'Stock',
-                value: currentItem?.otrosN1 ? currentItem.otrosN1 > 0 : false,
-                activeIcon: 'ellipse',
-                inactiveIcon: 'close-circle',
-                color: themes.inventory.badgeColor
-              }
-            ]}
-            statusField={{
-              value: currentItem ? !currentItem.suspendido : false,
-              activeText: 'Activo',
-              inactiveText: 'Inactivo'
-            }}
-            systemFields={currentItem ? [
-              { label: 'ID', value: String(currentItem.id) },
-              { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
-              { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
-              ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
-            ] : []}
-            headerColor={themes.inventory.itemHeaderColor}
-            headerTextColor={themes.inventory.itemHeaderTextColor}
-            badgeColor={themes.inventory.badgeColor}
-            editButtonColor={themes.inventory.editButtonColor}
-            editButtonTextColor={themes.inventory.editButtonTextColor}
-            deleteButtonColor={themes.inventory.deleteButtonColor}
-            deleteButtonTextColor={themes.inventory.deleteButtonTextColor}
-          />
-        </View>
+      <DynamicItemModal
+        visible={detailModalVisible}
+        onClose={() => setDetailModalVisible(false)}
+        currentItem={currentItem}
+        openEditModal={openEditModal}
+        handleDelete={handleDelete}
+        mainTitleField={{ label: 'Nombre', value: currentItem?.nombre || '' }}
+        badges={[
+          {
+            label: 'Stock',
+            value: currentItem?.otrosN1 ? currentItem.otrosN1 > 0 : false,
+            activeIcon: 'ellipse',
+            inactiveIcon: 'close-circle',
+            color: themes.inventory.badgeColor
+          }
+        ]}
+        statusField={{
+          value: currentItem ? !currentItem.suspendido : false,
+          activeText: 'Activo',
+          inactiveText: 'Inactivo'
+        }}
+        systemFields={currentItem ? [
+          { label: 'ID', value: String(currentItem.id) },
+          { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
+          { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
+          ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
+        ] : []}
+        headerColor={themes.inventory.itemHeaderColor}
+        headerTextColor={themes.inventory.itemHeaderTextColor}
+        badgeColor={themes.inventory.badgeColor}
+        editButtonColor={themes.inventory.editButtonColor}
+        editButtonTextColor={themes.inventory.editButtonTextColor}
+        deleteButtonColor={themes.inventory.deleteButtonColor}
+        deleteButtonTextColor={themes.inventory.deleteButtonTextColor}
+      />
+    </View>
   );
 };
 

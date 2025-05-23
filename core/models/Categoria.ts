@@ -1,11 +1,9 @@
 export interface Categoria {
     id: number;
     nombre: string;
-    aplicaVentas: boolean;
-    aplicaCompras: boolean;
+    equipo: string;
     suspendido: boolean;
     otrosF1: string;
-    equipo: string;
     otrosN1: number;
     otrosN2: number;
     otrosC1: null;

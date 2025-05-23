@@ -2,94 +2,188 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { Categoria } from '@/core/models/Categoria';
+import { Almacen } from '@/core/models/Almacen';
 
-type Article = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  category: string;
-  code: string;
-  imageUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'unidad';
 
-type ItemArticleProps = {
-  item: Article;
-  onView: (article: Article) => void;
-  onEdit: (article: Article) => void;
-  onDelete: (article: Article) => void;
-  formatPrice: (price: number) => string;
-  getCategoryName: (categoryId: string) => string;
-};
-
-export default function ItemArticle({ 
-  item, 
-  onView, 
-  onEdit, 
-  onDelete, 
-  formatPrice, 
-  getCategoryName 
-}: ItemArticleProps) {
-  return (
-    <Animated.View
-      entering={FadeIn.duration(300)}
-      className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-200"
-    >
-      <View className="flex-row">
-        {/* Imagen del artículo */}
-        <View className="mr-3">
-          <View className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden items-center justify-center">
-            {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} className="w-full h-full" />
-            ) : (
-              <Ionicons name="cube-outline" size={28} color="#9ca3af" />
-            )}
-          </View>
-          <View className="absolute top-0 right-0 bg-purple-100 rounded-full px-1.5 py-0.5">
-            <Text className="text-xs text-pruple-900 font-medium">{item.stock}</Text>
-          </View>
-        </View>
-        
-        {/* Información del artículo */}
-        <View className="flex-1">
-          <Text className="text-gray-800 font-semibold">{item.name}</Text>
-          <Text className="text-gray-600 text-xs mt-1" numberOfLines={2}>{item.description}</Text>
-          
-          <View className="flex-row mt-2 items-center">
-            <Text className="text-purple-900 font-bold">{formatPrice(item.price)}</Text>
-            <View className="bg-gray-100 rounded-full px-2 py-0.5 ml-2">
-              <Text className="text-xs text-gray-600">{getCategoryName(item.category)}</Text>
-            </View>
-            <Text className="text-xs text-gray-500 ml-auto">{item.code}</Text>
-          </View>
-        </View>
-      </View>
-      
-      {/* Acciones */}
-      <View className="flex-row mt-3 pt-3 border-t border-gray-100 justify-end">
-        <TouchableOpacity
-          className="mr-4"
-          onPress={() => onView(item)}
-        >
-          <Ionicons name="eye-outline" size={20} color="#1e40af" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          className="mr-4"
-          onPress={() => onEdit(item)}
-        >
-          <Ionicons name="create-outline" size={20} color="#059669" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          onPress={() => onDelete(item)}
-        >
-          <Ionicons name="trash-outline" size={20} color="#dc2626" />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
+interface BaseItem {
+  id: number;
+  nombre: string;
+  suspendido: boolean;
+  fechaRegistro: string;
+  usuarioRegistroNombre: string;
+  fechaModificacion: string;
+  usuarioModificacionNombre: string;
 }
+
+interface ItemProps {
+  item: BaseItem;
+  category: CategoryId;
+  onPress: (item: any) => void;
+}
+
+const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }> = ({ item, onPress }) => {
+  return (
+    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+      <TouchableOpacity
+        onPress={() => onPress(item)}
+        activeOpacity={0.7}
+      >
+        <View className="p-4">
+          <View className="mb-2">
+            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-between items-center mt-1">
+            <View className="flex-row space-x-2">
+              <View className="flex-row items-center">
+                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                  {item.aplicaVentas ? (
+                    <>
+                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                    </>
+                  ) : (
+                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                  )}
+                </View>
+                <Text className="text-sm text-gray-800 ml-1">Ventas</Text>
+              </View>
+
+              <View className="flex-row items-center">
+                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                  {item.aplicaCompras ? (
+                    <>
+                      <Ionicons name="ellipse" size={14} color="#00FF15FF" />
+                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                    </>
+                  ) : (
+                    <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
+                  )}
+                </View>
+                <Text className="text-sm text-gray-800 ml-1">Compras</Text>
+              </View>
+            </View>
+
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-xs text-gray-400 mt-2">
+            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Creado por: {item.usuarioRegistroNombre}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => void }> = ({ item, onPress }) => {
+  return (
+    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+      <TouchableOpacity
+        onPress={() => onPress(item)}
+        activeOpacity={0.7}
+      >
+        <View className="p-4">
+          <View className="mb-2">
+            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-between items-center mt-1">
+            <View className="flex-row items-center">
+              <Text className="text-sm text-gray-600">Equipo: {item.equipo || 'No especificado'}</Text>
+            </View>
+
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-xs text-gray-400 mt-2">
+            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Creado por: {item.usuarioRegistroNombre}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const ItemDefault: React.FC<ItemProps> = ({ item, category, onPress }) => {
+  return (
+    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+      <TouchableOpacity
+        onPress={() => onPress(item)}
+        activeOpacity={0.7}
+      >
+        <View className="p-4">
+          <View className="mb-2">
+            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+          </View>
+          <View className="flex-row justify-end items-center mt-1">
+            <View className={`px-2 py-1 rounded-full ${item.suspendido
+              ? 'bg-red-100 border border-red-600'
+              : 'bg-green-100 border border-green-600'
+              }`}>
+              <Text className={`text-xs font-medium ${item.suspendido
+                ? 'text-red-600'
+                : 'text-green-600'
+                }`}>
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-xs text-gray-400 mt-2">
+            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Creado por: {item.usuarioRegistroNombre}
+          </Text>
+          <Text className="text-xs text-gray-400">
+            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const ItemArticle: React.FC<ItemProps> = ({ item, category, onPress }) => {
+  switch (category) {
+    case 'almacen':
+      return <ItemAlmacen item={item as Almacen} onPress={onPress} />;
+    case 'categoria':
+      return <ItemCategoria item={item as Categoria} onPress={onPress} />;
+    default:
+      return <ItemDefault item={item} category={category} onPress={onPress} />;
+  }
+};
