@@ -41,8 +41,6 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "tipodeimpuesto":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "seccion":{

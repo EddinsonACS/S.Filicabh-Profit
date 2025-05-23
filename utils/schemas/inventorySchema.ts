@@ -50,7 +50,6 @@ export const inventorySchema = {
   }),
   tipodeimpuesto: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
   }),
   seccion: z.object({
     ...baseSchema,

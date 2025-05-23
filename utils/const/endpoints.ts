@@ -53,6 +53,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/color/${id}`,
       "update": (id: number) => `/api/color/${id}`,
       "delete": (id: number) => `/api/color/${id}`
+    },
+    "tipoDeImpuesto":{
+      "list": "/api/tipodeimpuesto",
+      "create": "/api/tipodeimpuesto",
+      "getOne": (id: number) => `/api/tipodeimpuesto/${id}`,
+      "update": (id: number) => `/api/tipodeimpuesto/${id}`,
+      "delete": (id: number) => `/api/tipodeimpuesto/${id}`
     }
   },
   "sells":{
