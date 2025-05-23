@@ -1,16 +1,19 @@
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { categoriaApi } from '@/data/api/Inventario/categoriaApi';
 import { Categoria } from '@/core/models/Categoria';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
+import { endpoints } from '@/utils/const/endpoints';
+import { createApiService } from '@/data/api/apiGeneric';
+
+const apiCategoria = createApiService<Categoria>();
 
 export const useCategoria = () => {
 
   const useGetCategoriaList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Categoria>, Error>({
       queryKey: ['categoria', 'list', page, size],
-      queryFn: () => categoriaApi.getList(page, size),
+      queryFn: () => apiCategoria.getList(endpoints.inventory.categoria.list, page, size),
       onSettled: (_: ListDataResponse<Categoria> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -26,7 +29,7 @@ export const useCategoria = () => {
   const useGetCategoriaItem = (id: number) => {
     return useQuery<Categoria, Error>({
       queryKey: ['categoria', 'item', id],
-      queryFn: () => categoriaApi.getOne(id),
+      queryFn: () => apiCategoria.getOne(endpoints.inventory.categoria.getOne(id)),
       enabled: !!id,
       onSettled: (_: Categoria | undefined, error: Error | null) => {
         if (error) {
@@ -59,7 +62,7 @@ export const useCategoria = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo'
         };
-        return categoriaApi.create(data);
+        return apiCategoria.create(endpoints.inventory.categoria.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
@@ -85,6 +88,7 @@ export const useCategoria = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Categoria> = {
+          id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -97,7 +101,7 @@ export const useCategoria = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo'
         };
-        return categoriaApi.update(id, data);
+        return apiCategoria.update(endpoints.inventory.categoria.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
@@ -119,7 +123,7 @@ export const useCategoria = () => {
 
   const useDeleteCategoria = () => {
     return useMutation({
-      mutationFn: (id: number) => categoriaApi.delete(id),
+      mutationFn: (id: number) => apiCategoria.delete(endpoints.inventory.categoria.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
         Alert.alert(

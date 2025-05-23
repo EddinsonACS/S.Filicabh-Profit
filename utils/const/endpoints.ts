@@ -46,6 +46,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/talla/${id}`,
       "update": (id: number) => `/api/talla/${id}`,
       "delete": (id: number) => `/api/talla/${id}`
+    },
+    "color":{
+      "list": "/api/color",
+      "create": "/api/color",
+      "getOne": (id: number) => `/api/color/${id}`,
+      "update": (id: number) => `/api/color/${id}`,
+      "delete": (id: number) => `/api/color/${id}`
     }
   },
   "sells":{

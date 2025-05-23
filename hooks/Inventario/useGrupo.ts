@@ -1,16 +1,20 @@
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { grupoApi } from '@/data/api/Inventario/grupoApi';
 import { Grupo } from '@/core/models/Grupo';
+import { createApiService } from '@/data/api/apiGeneric';
+import { endpoints } from '@/utils/const/endpoints';
+
+const apiGrupo = createApiService<Grupo>();
 
 export const useGrupo = () => {
 
   const useGetGrupoList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Grupo>, Error>({
       queryKey: ['grupo', 'list', page, size],
-      queryFn: () => grupoApi.getList(page, size),
+      queryFn: () => apiGrupo.getList(endpoints.inventory.grupo.list, page, size),
       onSettled: (_: ListDataResponse<Grupo> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -26,7 +30,7 @@ export const useGrupo = () => {
   const useGetGrupoItem = (id: number) => {
     return useQuery<Grupo, Error>({
       queryKey: ['grupo', 'item', id],
-      queryFn: () => grupoApi.getOne(id),
+      queryFn: () => apiGrupo.getOne(endpoints.inventory.grupo.getOne(id)),
       enabled: !!id,
       onSettled: (_: Grupo | undefined, error: Error | null) => {
         if (error) {
@@ -60,7 +64,7 @@ export const useGrupo = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo'
         };
-        return grupoApi.create(data);
+        return apiGrupo.create(endpoints.inventory.grupo.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
@@ -86,6 +90,7 @@ export const useGrupo = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Grupo> = {
+          id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           codigoCategoria: formData.codigoCategoria || 0,
@@ -99,7 +104,7 @@ export const useGrupo = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo'
         };
-        return grupoApi.update(id, data);
+        return apiGrupo.update(endpoints.inventory.grupo.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
@@ -121,7 +126,7 @@ export const useGrupo = () => {
 
   const useDeleteGrupo = () => {
     return useMutation({
-      mutationFn: (id: number) => grupoApi.delete(id),
+      mutationFn: (id: number) => apiGrupo.delete(endpoints.inventory.grupo.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
         Alert.alert(

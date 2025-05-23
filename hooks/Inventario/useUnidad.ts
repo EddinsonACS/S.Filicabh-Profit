@@ -1,17 +1,21 @@
+
 import { useMutation, UseQueryOptions } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import ListDataResponse from '@/core/response/ListDataResponse';
 import { Alert } from 'react-native';
 import { Unidad } from '@/core/models/Unidad';
-import { unidadApi } from '@/data/api/Inventario/useUnidad';
 import { queryClient } from '@/utils/libs/queryClient';
+import { createApiService } from '@/data/api/apiGeneric';
+import { endpoints } from '@/utils/const/endpoints';
+
+const apiUnidad = createApiService<Unidad>();
 
 export const useUnidad   = () => {
 
   const useGetUnidadList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Unidad>, Error>({
       queryKey: ['unidad', 'list', page, size],
-      queryFn: () => unidadApi.getList(page, size),
+      queryFn: () => apiUnidad.getList(endpoints.inventory.unidad.list, page, size),
       onSettled: (_: ListDataResponse<Unidad> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -27,7 +31,7 @@ export const useUnidad   = () => {
   const useGetUnidadItem = (id: number) => {
     return useQuery<Unidad, Error>({
       queryKey: ['unidad', 'item', id],
-      queryFn: () => unidadApi.getOne(id),
+      queryFn: () => apiUnidad.getOne(endpoints.inventory.unidad.getOne(id)),
       enabled: !!id,
       onSettled: (_: Unidad | undefined, error: Error | null) => {
         if (error) {
@@ -60,7 +64,7 @@ export const useUnidad   = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
         };
-        return unidadApi.create(data);
+        return apiUnidad.create(endpoints.inventory.unidad.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
@@ -86,6 +90,7 @@ export const useUnidad   = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Unidad> = {
+          id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -98,7 +103,7 @@ export const useUnidad   = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
         };
-        return unidadApi.update(id, data);
+        return apiUnidad.update(endpoints.inventory.unidad.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
@@ -120,7 +125,7 @@ export const useUnidad   = () => {
 
   const useDeleteUnidad = () => {
     return useMutation({
-      mutationFn: (id: number) => unidadApi.delete(id),
+      mutationFn: (id: number) => apiUnidad.delete(endpoints.inventory.unidad.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
         Alert.alert(

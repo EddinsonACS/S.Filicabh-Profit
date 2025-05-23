@@ -2,15 +2,18 @@ import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { seccionApi } from '@/data/api/Inventario/seccionApi';
 import { Seccion } from '@/core/models/Seccion';
+import { createApiService } from '@/data/api/apiGeneric';
+import { endpoints } from '@/utils/const/endpoints';
+
+const apiSeccion = createApiService<Seccion>();
 
 export const useSeccion = () => {
 
   const useGetSeccionList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Seccion>, Error>({
       queryKey: ['seccion', 'list', page, size],
-      queryFn: () => seccionApi.getList(page, size),
+      queryFn: () => apiSeccion.getList(endpoints.inventory.seccion.list, page, size),
       onSettled: (_: ListDataResponse<Seccion> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -26,7 +29,7 @@ export const useSeccion = () => {
   const useGetSeccionItem = (id: number) => {
     return useQuery<Seccion, Error>({
       queryKey: ['seccion', 'item', id],
-      queryFn: () => seccionApi.getOne(id),
+      queryFn: () => apiSeccion.getOne(endpoints.inventory.seccion.getOne(id)),
       enabled: !!id,
       onSettled: (_: Seccion | undefined, error: Error | null) => {
         if (error) {
@@ -60,7 +63,7 @@ export const useSeccion = () => {
           equipo: 'equipo',
           codigoGrupo: formData.codigoGrupo || 0
         };
-        return seccionApi.create(data);
+        return apiSeccion.create(endpoints.inventory.seccion.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
@@ -86,6 +89,7 @@ export const useSeccion = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Seccion> = {
+          id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -96,10 +100,9 @@ export const useSeccion = () => {
           otrosC3: formData.otrosC3 || null,
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
-          equipo: 'equipo',
-          codigoGrupo: formData.codigoGrupo || 0
+          equipo: 'equipo'
         };
-        return seccionApi.update(id, data);
+        return apiSeccion.update(endpoints.inventory.seccion.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
@@ -121,7 +124,7 @@ export const useSeccion = () => {
 
   const useDeleteSeccion = () => {
     return useMutation({
-      mutationFn: (id: number) => seccionApi.delete(id),
+      mutationFn: (id: number) => apiSeccion.delete(endpoints.inventory.seccion.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
         Alert.alert(

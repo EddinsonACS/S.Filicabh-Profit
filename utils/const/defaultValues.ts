@@ -17,8 +17,6 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "color":{
         nombre: '',
-        aplicaVentas: false,
-        aplicaCompras: false,
         suspendido: false
     },
     "grupo":{

@@ -1,18 +1,18 @@
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { almacenApi } from '@/data/api/Inventario/almacenApi';
 import { Almacen } from '@/core/models/Almacen';
 import { Alert } from 'react-native';
 import { queryClient } from '@/utils/libs/queryClient';
 import ListDataResponse from '@/core/response/ListDataResponse';
-import { authStorage } from '@/data/global/authStorage';
+import { createApiService } from '@/data/api/apiGeneric';
+import { endpoints } from '@/utils/const/endpoints';
+const apiAlmacen = createApiService<Almacen>();
 
 export const useAlmacen = () => {
-  const { username } = authStorage();
 
   const useGetAlmacenList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Almacen>, Error>({
       queryKey: ['almacen', 'list', page, size],
-      queryFn: () => almacenApi.getList(page, size),
+      queryFn: () => apiAlmacen.getList(endpoints.inventory.almacen.list, page, size),
       onSettled: (_: ListDataResponse<Almacen> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -28,7 +28,7 @@ export const useAlmacen = () => {
   const useGetAlmacenItem = (id: number) => {
     return useQuery<Almacen, Error>({
       queryKey: ['almacen', 'item', id],
-      queryFn: () => almacenApi.getOne(id),
+      queryFn: () => apiAlmacen.getOne(endpoints.inventory.almacen.getOne(id)),
       enabled: !!id,
       onSettled: (_: Almacen | undefined, error: Error | null) => {
         if (error) {
@@ -63,7 +63,7 @@ export const useAlmacen = () => {
           otrosT1: null,
           equipo: "equipo"
         };
-        return almacenApi.create(data);
+        return apiAlmacen.create(endpoints.inventory.almacen.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
@@ -89,6 +89,7 @@ export const useAlmacen = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Almacen> = {
+          id: id,
           nombre: formData.nombre,
           aplicaVentas: formData.aplicaVentas || false,
           aplicaCompras: formData.aplicaCompras || false,
@@ -103,7 +104,7 @@ export const useAlmacen = () => {
           otrosT1: null,
           equipo: "equipo"
         };
-        return almacenApi.update(id, data);
+        return apiAlmacen.update(endpoints.inventory.almacen.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
@@ -125,7 +126,7 @@ export const useAlmacen = () => {
 
   const useDeleteAlmacen = () => {
     return useMutation({
-      mutationFn: (id: number) => almacenApi.delete(id),
+      mutationFn: (id: number) => apiAlmacen.delete(endpoints.inventory.almacen.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         Alert.alert(

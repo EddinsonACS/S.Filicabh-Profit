@@ -32,7 +32,6 @@ export const inventorySchema = {
   }),
   color: z.object({
     ...baseSchema,
-    ...ventasComprasSchema
   }),
   grupo: z.object({
     ...baseSchema,

@@ -3,15 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import ListDataResponse from '@/core/response/ListDataResponse';
 import { Alert } from 'react-native';
 import { Talla } from '@/core/models/Talla';
-import { tallaApi } from '@/data/api/Inventario/tallaApi';
 import { queryClient } from '@/utils/libs/queryClient';
+import { createApiService } from '@/data/api/apiGeneric';
+import { endpoints } from '@/utils/const/endpoints';
+
+const apiTalla = createApiService<Talla>();
 
 export const useTalla   = () => {
 
   const useGetTallaList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Talla>, Error>({
       queryKey: ['talla', 'list', page, size],
-      queryFn: () => tallaApi.getList(page, size),
+      queryFn: () => apiTalla.getList(endpoints.inventory.talla.list, page, size),
       onSettled: (_: ListDataResponse<Talla> | undefined, error: Error | null) => {
         if (error) {
           Alert.alert(
@@ -27,7 +30,7 @@ export const useTalla   = () => {
   const useGetTallaItem = (id: number) => {
     return useQuery<Talla, Error>({
       queryKey: ['talla', 'item', id],
-      queryFn: () => tallaApi.getOne(id),
+      queryFn: () => apiTalla.getOne(endpoints.inventory.talla.getOne(id)),
       enabled: !!id,
       onSettled: (_: Talla | undefined, error: Error | null) => {
         if (error) {
@@ -60,7 +63,7 @@ export const useTalla   = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
         };
-        return tallaApi.create(data);
+        return apiTalla.create(endpoints.inventory.talla.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
@@ -86,6 +89,7 @@ export const useTalla   = () => {
           throw new Error('El nombre es requerido');
         }
         const data: Partial<Talla> = {
+          id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -98,7 +102,7 @@ export const useTalla   = () => {
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
         };
-        return tallaApi.update(id, data);
+        return apiTalla.update(endpoints.inventory.talla.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
@@ -120,7 +124,7 @@ export const useTalla   = () => {
 
   const useDeleteTalla = () => {
     return useMutation({
-    mutationFn: (id: number) => tallaApi.delete(id),
+      mutationFn: (id: number) => apiTalla.delete(endpoints.inventory.talla.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
         Alert.alert(
