@@ -13,4 +13,8 @@ export interface Seccion {
   nombre: string;
   suspendido: boolean;
   codigoGrupo: number;
+  fechaRegistro: string;
+  usuarioRegistroNombre: string;
+  fechaModificacion: string;
+  usuarioModificacionNombre: string;
 }

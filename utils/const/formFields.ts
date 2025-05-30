@@ -6,7 +6,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'aplicaVentas',
@@ -34,7 +34,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'aplicaVentas',
@@ -62,7 +62,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -78,7 +78,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -94,7 +94,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del grupo',
-      description: 'Ingrese el nombre del grupo.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'codigoCategoria',
@@ -121,7 +121,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -137,7 +137,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -153,7 +153,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -175,7 +175,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -191,7 +191,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -218,7 +218,7 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'text' as const,
       required: true,
       placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del elemento de inventario.'
+      description: 'Ingrese el nombre del nuevo registro'
     },
     {
       name: 'suspendido',
@@ -236,7 +236,7 @@ export const FORM_FIELDS_FINANZAS = {
       label: 'Nombre del Banco',
       type: 'text' as const,
       required: true,
-      placeholder: 'Ingrese el nombre del banco',
+      placeholder: 'Ingrese el nombre del nuevo registro',
       description: 'Nombre completo del banco'
     },
     {
@@ -252,7 +252,7 @@ export const FORM_FIELDS_FINANZAS = {
       label: 'Nombre de la Caja',
       type: 'text' as const,
       required: true,
-      placeholder: 'Ingrese el nombre de la caja',
+      placeholder: 'Ingrese el nombre del nuevo registro',
       description: 'Nombre descriptivo de la caja'
     },
     {
@@ -279,7 +279,7 @@ export const FORM_FIELDS_FINANZAS = {
       label: 'Número de Cuenta',
       type: 'text' as const,
       required: true,
-      placeholder: 'Ingrese el número de cuenta',
+      placeholder: 'Ingrese el número del nuevo registro',
       description: 'Número de cuenta bancaria'
     },
     {

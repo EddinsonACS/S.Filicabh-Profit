@@ -199,12 +199,6 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
                   </View>
                 ))}
               </View>
-              <View className={`p-2 rounded-full ${statusField.value
-                ? 'bg-green-100 border border-green-600'
-                : 'bg-red-100 border border-red-600'
-                }`}>
-                <Text className={`font-bold ${statusField.value ? 'text-green-600' : 'text-red-600'}`}>{statusField.value ? statusField.activeText : statusField.inactiveText}</Text>
-              </View>
             </View>
           </View>
 

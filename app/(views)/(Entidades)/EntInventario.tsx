@@ -787,6 +787,8 @@ const EntInventario: React.FC = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <ItemArticle
+        dataCategory={categoriasData?.data || []}
+        dataGrupo={gruposData?.data || []}
         item={item}
         category={selectedCategory}
         onPress={showItemDetails}

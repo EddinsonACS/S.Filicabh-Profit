@@ -62,7 +62,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const { control, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: isEditing && currentItem ? currentItem : defaultValues
   });
@@ -364,7 +364,6 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                   style={{ backgroundColor: buttonColor }}
                   className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
                   onPress={handleSubmit(onSubmit)}
-                  disabled={!isValid || !isDirty}
                 >
                   <Ionicons name="save-outline" size={18} color={buttonTextColor} />
                   <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
