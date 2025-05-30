@@ -12,7 +12,7 @@ interface ApiServiceConfig<T, U = Partial<T>> {
 export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
   return {
     getList: async (url: string, page: number, pageSize: number): Promise<ListDataResponse<T>> => {
-      const response = await api.get(`${url}?page=${page}&pageSize=${pageSize}`);
+      const response = await api.get(`${url}?pageNumber=${page}&pageSize=${pageSize}`);
       return response.data;
     },
 

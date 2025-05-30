@@ -25,7 +25,7 @@ import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { ItemArticle } from '@/components/Inventario/ItemArticle';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 const CATEGORIES = [
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
@@ -238,138 +238,81 @@ const EntInventario: React.FC = () => {
 
   // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
-    if (selectedCategory === 'almacen' && almacenData) {
-      const totalPages = Math.ceil(almacenData.totalRegistros / PAGE_SIZE);
+    // Función auxiliar para manejar la acumulación de datos de manera consistente
+    const processData = (data: any) => {
+      if (!data) return;
+      
+      const totalPages = data.totalPaginas;
       setHasMore(currentPage < totalPages);
       
+      // Si es la primera página, simplemente establecemos los datos
       if (currentPage === 1) {
-        setAccumulatedItems(almacenData.data);
+        setAccumulatedItems(data.data || []);
       } else {
+        // Para páginas posteriores, acumulamos los nuevos elementos
         setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = almacenData.data.filter(item => !existingIds.has(item.id));
+          if (!data.data || data.data.length === 0) {
+            return prev;
+          }
+          
+          // Creamos un mapa de IDs existentes para una búsqueda más eficiente
+          const existingIds = new Map(prev.map((item: any) => [item.id, true]));
+          
+          // Filtramos solo los elementos nuevos que no existen en la lista actual
+          const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
+          
+          // Verificamos que realmente hay nuevos elementos para agregar
+          if (newItems.length === 0) {
+            return prev;
+          }
+          
+          // Combinamos los elementos anteriores con los nuevos
           return [...prev, ...newItems];
         });
       }
-    } else if (selectedCategory === 'categoria' && categoriaData) {
-      const totalPages = Math.ceil(categoriaData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(categoriaData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = categoriaData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'grupo' && grupoData) {
-      const totalPages = Math.ceil(grupoData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(grupoData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = grupoData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'seccion' && seccionData) {
-      const totalPages = Math.ceil(seccionData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(seccionData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = seccionData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'unidad' && unidadData) {
-      const totalPages = Math.ceil(unidadData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(unidadData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = unidadData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'talla' && tallaData) {
-      const totalPages = Math.ceil(tallaData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(tallaData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = tallaData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'color' && colorData) {
-      const totalPages = Math.ceil(colorData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(colorData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = colorData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'tipodeimpuesto' && tipoDeImpuestoData) {
-      const totalPages = Math.ceil(tipoDeImpuestoData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(tipoDeImpuestoData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = tipoDeImpuestoData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'tipodearticulo' && tipoDeArticuloData) {
-      const totalPages = Math.ceil(tipoDeArticuloData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(tipoDeArticuloData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = tipoDeArticuloData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
-    } else if (selectedCategory === 'origen' && origenData) {
-      const totalPages = Math.ceil(origenData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(origenData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = origenData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
+    };
+
+
+    // Aplicamos la función auxiliar según la categoría seleccionada
+    switch (selectedCategory) {
+      case 'almacen':
+        processData(almacenData);
+        break;
+      case 'categoria':
+        processData(categoriaData);
+        break;
+      case 'grupo':
+        processData(grupoData);
+        break;
+      case 'seccion':
+        processData(seccionData);
+        break;
+      case 'unidad':
+        processData(unidadData);
+        break;
+      case 'talla':
+        processData(tallaData);
+        break;
+      case 'color':
+        processData(colorData);
+        break;
+      case 'tipodeimpuesto':
+        processData(tipoDeImpuestoData);
+        break;
+      case 'tipodearticulo':
+        processData(tipoDeArticuloData);
+        break;
+      case 'origen':
+        processData(origenData);
+        break;
+      default:
+        break;
     }
-  }, [almacenData, categoriaData, grupoData, seccionData, unidadData, tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, currentPage, selectedCategory]);
+  }, [
+    almacenData, categoriaData, grupoData, seccionData, unidadData, 
+    tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, 
+    currentPage, selectedCategory, PAGE_SIZE
+  ]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -422,7 +365,7 @@ const EntInventario: React.FC = () => {
     if (hasMore && !isLoading) {
       setCurrentPage(prev => prev + 1);
     }
-  }, [hasMore, isLoading]);
+  }, [hasMore, isLoading, currentPage]);
 
   const handleCreate = (formData: any) => {
     if (selectedCategory === 'almacen') {

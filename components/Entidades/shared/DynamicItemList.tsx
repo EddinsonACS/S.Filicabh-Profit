@@ -33,11 +33,9 @@ const DynamicItemList = <T,>({
     if (!hasMore) return null;
     return (
       <View className="py-4 items-center">
-        {selectedCategory === "almacen" && (
           <View className="flex-row items-center">
             <ActivityIndicator size="small" color="#581c87" />
           </View>
-        )}
       </View>
     );
   };
