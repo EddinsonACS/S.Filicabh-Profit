@@ -15,7 +15,7 @@ const codigoCategoriaSchema = {
 };
 
 const codigoGrupoSchema = {
-  codigoGrupo: z.number().min(1, 'Debe seleccionar un grupo')
+  codigoGrupo: z.number({required_error: 'Debe seleccionar un grupo'}).min(1, 'Debe seleccionar un grupo')
 };
 
 const manejaInventarioSchema = {

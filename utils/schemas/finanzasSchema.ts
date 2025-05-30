@@ -8,8 +8,8 @@ const baseSchema = {
 const baseCuentaBancariaSchema = {
     nroCuenta: z.string().min(1, 'El número de cuenta es requerido'),
     tipoDeCuenta: z.string().min(1, 'El tipo de cuenta es requerido'),
-    codigoMoneda: z.number().min(1, 'El código de moneda es requerido'),
-    codigoBanco: z.number().min(1, 'El código de banco es requerido'),
+    codigoMoneda: z.number({required_error: 'El código de moneda es requerido'}).min(1, 'El código de moneda es requerido'),
+    codigoBanco: z.number({required_error: 'El código de banco es requerido'}).min(1, 'El código de banco es requerido'),
     sucursal: z.string().min(1, 'La sucursal es requerida'),
     direccion: z.string().min(1, 'La dirección es requerida'),
     nombreEjecutivo: z.string().min(1, 'El nombre del ejecutivo es requerido'),
@@ -23,7 +23,7 @@ export const finanzasSchema = {
   }),
   caja: z.object({
     ...baseSchema,
-    codigoMoneda: z.number().min(1, 'La moneda es requerida'),
+    codigoMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
   }),
   cuentaBancaria: z.object({
     ...baseCuentaBancariaSchema,
