@@ -400,6 +400,8 @@ const EntFinanzas: React.FC = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <ItemArticle
+        dataMoneda={monedasData?.data || []}
+        dataBanco={bancosData?.data || []}
         item={item}
         category={selectedCategory}
         onPress={showItemDetails}

@@ -182,42 +182,78 @@ const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCat
 };
 
 const ItemDefault: React.FC<ItemProps> = ({ item, category, onPress, dataCategory, dataGrupo }) => {
+  const getIcon = () => {
+    switch (category) {
+      case 'articulo':
+        return 'cube';
+      case 'color':
+        return 'color-palette';
+      case 'origen':
+        return 'globe';
+      case 'talla':
+        return 'resize';
+      case 'tipodearticulo':
+        return 'pricetag';
+      case 'tipodeimpuesto':
+        return 'calculator';
+      case 'unidad':
+        return 'scale';
+      default:
+        return 'document-text';
+    }
+  };
+
   return (
-    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
-        <View className="p-4">
-          <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
-          </View>
-          <View className="flex-row justify-start items-center mt-1">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+    <TouchableOpacity
+      onPress={() => onPress(item)}
+      className="bg-white mb-2 rounded-lg shadow-sm border border-gray-200"
+    >
+      <View className="p-4">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center mr-3"
+              style={{ backgroundColor: '#E5E7EB' }}
+            >
+              <Ionicons
+                name={getIcon()}
+                size={20}
+                color="#374151"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-900 font-medium text-base">
+                {item.nombre}
+              </Text>
+              <Text className="text-gray-500 text-sm">
+                ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
               </Text>
             </View>
           </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
+          <View className="flex-row items-center">
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido ? 'bg-red-100' : 'bg-green-100'
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? 'text-red-700' : 'text-green-700'
+                }`}
+              >
+                {item.suspendido ? 'Inactivo' : 'Activo'}
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="#9CA3AF"
+              style={{ marginLeft: 8 }}
+            />
+          </View>
         </View>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
