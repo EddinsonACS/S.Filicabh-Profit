@@ -25,7 +25,7 @@ import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { ItemArticle } from '@/components/Inventario/ItemArticle';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const CATEGORIES = [
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
@@ -193,12 +193,9 @@ const EntInventario: React.FC = () => {
   const updateOrigenMutation = useUpdateOrigen();
   const deleteOrigenMutation = useDeleteOrigen();
 
-  // Obtener todas las categorías para el selector de grupos
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
-  // Obtener todos los grupos para el selector de secciones
   const { data: gruposData } = useGetGrupoList(1, 1000);
 
-  // Preparar los campos del formulario según la categoría seleccionada
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS_INVENTORY[selectedCategory];
     
@@ -229,51 +226,41 @@ const EntInventario: React.FC = () => {
     return fields;
   }, [selectedCategory, categoriasData, gruposData]);
 
-  // Reset pagination when category changes
   useEffect(() => {
     setCurrentPage(1);
     setHasMore(true);
     setAccumulatedItems([]);
   }, [selectedCategory]);
 
-  // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
-    // Función auxiliar para manejar la acumulación de datos de manera consistente
     const processData = (data: any) => {
       if (!data) return;
       
       const totalPages = data.totalPaginas;
       setHasMore(currentPage < totalPages);
       
-      // Si es la primera página, simplemente establecemos los datos
       if (currentPage === 1) {
         setAccumulatedItems(data.data || []);
       } else {
-        // Para páginas posteriores, acumulamos los nuevos elementos
         setAccumulatedItems(prev => {
           if (!data.data || data.data.length === 0) {
             return prev;
           }
           
-          // Creamos un mapa de IDs existentes para una búsqueda más eficiente
           const existingIds = new Map(prev.map((item: any) => [item.id, true]));
           
-          // Filtramos solo los elementos nuevos que no existen en la lista actual
           const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
           
-          // Verificamos que realmente hay nuevos elementos para agregar
           if (newItems.length === 0) {
             return prev;
           }
           
-          // Combinamos los elementos anteriores con los nuevos
           return [...prev, ...newItems];
         });
       }
     };
 
 
-    // Aplicamos la función auxiliar según la categoría seleccionada
     switch (selectedCategory) {
       case 'almacen':
         processData(almacenData);

@@ -158,45 +158,39 @@ const EntFinanzas: React.FC = () => {
 
   // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
+    const processData = (data: any) => {
+      if (!data) return;
+      
+      const totalPages = data.totalPaginas || Math.ceil(data.totalRegistros / PAGE_SIZE);
+      setHasMore(currentPage < totalPages);
+      
+      if (currentPage === 1) {
+        setAccumulatedItems(data.data || []);
+      } else {
+        setAccumulatedItems(prev => {
+          if (!data.data || data.data.length === 0) {
+            return prev;
+          }
+          
+          const existingIds = new Map(prev.map((item: any) => [item.id, true]));
+          
+          const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
+          
+          if (newItems.length === 0) {
+            return prev;
+          }
+          
+          return [...prev, ...newItems];
+        });
+      }
+    };
+    
     if (selectedCategory === 'banco' && bancoData) {
-      const totalPages = Math.ceil(bancoData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(bancoData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = bancoData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
+      processData(bancoData);
     } else if (selectedCategory === 'caja' && cajaData) {
-      const totalPages = Math.ceil(cajaData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(cajaData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = cajaData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
+      processData(cajaData);
     } else if (selectedCategory === 'cuentaBancaria' && cuentaBancariaData) {
-      const totalPages = Math.ceil(cuentaBancariaData.totalRegistros / PAGE_SIZE);
-      setHasMore(currentPage < totalPages);
-      
-      if (currentPage === 1) {
-        setAccumulatedItems(cuentaBancariaData.data);
-      } else {
-        setAccumulatedItems(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newItems = cuentaBancariaData.data.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-      }
+      processData(cuentaBancariaData);
     }
   }, [bancoData, cajaData, cuentaBancariaData, currentPage, selectedCategory]);
 
