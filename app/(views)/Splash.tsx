@@ -1,24 +1,46 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
+import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
+import axios from 'axios';
 
 export default function SplashScreen(): JSX.Element {
   const router = useRouter();
+  const { useGetAlmacenList } = useAlmacen();
+  const { isError, isSuccess, isLoading, error } = useGetAlmacenList(1,1);
+  const hasCheckedSession = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const checkSession = async () => {
+      if (hasCheckedSession.current) return;
+      
       const notNew = await AsyncStorage.getItem("not_new");
+      const token = await AsyncStorage.getItem("authToken");
+
       if (!notNew) {
-        router.replace("/Onboarding")
-      } else {
-        router.replace("/Login");
+        router.replace("/Onboarding");
+        return;
       }
 
-    }, 2000);
+      if (!token) {
+        router.replace("/Login");
+        return;
+      }
 
-    return () => clearTimeout(timer);
-  }, []);
+      if (isSuccess) {
+        router.replace("/(views)/Entrepise");
+      } else if (isError && axios.isAxiosError(error) && error.response?.status === 401) {
+        router.replace("/Login");
+      }
+      
+      hasCheckedSession.current = true;
+    };
+
+    if (!isLoading) {
+      checkSession();
+    }
+  }, [error, isLoading]);
 
   const splashIcon: ImageSourcePropType = require("../../assets/splash-icon.png");
 

@@ -1,41 +1,11 @@
-import { Stack, router } from 'expo-router';
-import React, { useEffect, useState, useRef } from 'react';
+import { Stack } from 'expo-router';
+import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TailwindProvider } from "tailwindcss-react-native";
 import { AppProvider } from '../../components/InitStage/AppContext';
 import AppWrapper from '../../components/InitStage/AppWrapper';
-import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ViewsLayout() {
-  const { useGetAlmacenList } = useAlmacen();
-  const { isError, isSuccess, isLoading } = useGetAlmacenList(1,1);
-  const hasCheckedSession = useRef(false);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      if (hasCheckedSession.current) return;
-      
-      const token = await AsyncStorage.getItem("authToken");
-      if (!token) {
-        router.replace("/Splash");
-      } else if (isSuccess) {
-        router.replace("/Entrepise");
-      } else if (isError) {
-        router.replace("/Splash");
-      }
-      hasCheckedSession.current = true;
-    };
-
-    if (!isLoading) {
-      checkSession();
-    }
-  }, [isLoading]);
-
-  if (isLoading) {
-    return null;
-  }
-
   return (
     <TailwindProvider platform="native">
         <AppProvider>
