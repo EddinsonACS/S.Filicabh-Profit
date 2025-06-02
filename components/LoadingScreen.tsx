@@ -1,60 +1,66 @@
-import React, { useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { enterpriseStore } from '@/data/global/entrepiseStore';
+import { getCurrentSectionColor, SECTION_COLORS, SectionType } from '@/utils/colorManager';
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Text, View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
   FadeIn,
   SlideInUp,
-  withSequence
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming
 } from 'react-native-reanimated';
-import { enterpriseStore } from '@/data/global/entrepiseStore';
 
 interface LoadingScreenProps {
   message?: string;
-  color?: string | {
-    primary: string;
-    secondary: string;
-    tertiary: string;
-  };
+  color?: string | SectionType;
 }
 
-// Color mapping for sections
-const colorMappings: Record<string, any> = {
-  blue: {
-    primary: 'bg-blue-900',
-    secondary: 'bg-blue-700',
-    tertiary: 'bg-blue-600',
-    accent: 'bg-blue-500',
-    text: 'text-blue-200',
-    iconBg: 'bg-blue-800',
-    progressBg: 'bg-blue-700'
-  },
-  green: {
-    primary: 'bg-green-900',
-    secondary: 'bg-green-700',
-    tertiary: 'bg-green-600',
-    accent: 'bg-green-500',
-    text: 'text-green-200',
-    iconBg: 'bg-green-800',
-    progressBg: 'bg-green-700'
-  },
-  purple: {
-    primary: 'bg-purple-900',
-    secondary: 'bg-purple-700',
-    tertiary: 'bg-purple-600',
-    accent: 'bg-purple-500',
-    text: 'text-purple-200',
-    iconBg: 'bg-purple-800',
-    progressBg: 'bg-purple-700'
+// Función para convertir color hex a clases Tailwind
+const getColorClasses = (color: string) => {
+  switch (color) {
+    case SECTION_COLORS.sales: // Verde
+      return {
+        primary: 'bg-green-900',
+        secondary: 'bg-green-700',
+        tertiary: 'bg-green-600',
+        accent: 'bg-green-500',
+        text: 'text-green-200',
+        iconBg: 'bg-green-800',
+        progressBg: 'bg-green-700'
+      };
+    case SECTION_COLORS.inventory: // Morado
+      return {
+        primary: 'bg-purple-900',
+        secondary: 'bg-purple-700',
+        tertiary: 'bg-purple-600',
+        accent: 'bg-purple-500',
+        text: 'text-purple-200',
+        iconBg: 'bg-purple-800',
+        progressBg: 'bg-purple-700'
+      };
+    case SECTION_COLORS.home:
+    case SECTION_COLORS.entities:
+    case SECTION_COLORS.finance:
+    default: // Azul
+      return {
+        primary: 'bg-blue-900',
+        secondary: 'bg-blue-700',
+        tertiary: 'bg-blue-600',
+        accent: 'bg-blue-500',
+        text: 'text-blue-200',
+        iconBg: 'bg-blue-800',
+        progressBg: 'bg-blue-700'
+      };
   }
 };
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({
   message = "",
-  color = "blue"
+  color
 }) => {
   // Animation values
   const rotation = useSharedValue(0);
@@ -62,11 +68,26 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const progressWidth = useSharedValue(10);
   const opacity = useSharedValue(0);
   const { selectedEnterprise } = enterpriseStore();
+  const pathname = usePathname();
 
-  // Get the color theme based on the color prop
-  const colorTheme = typeof color === 'string'
-    ? colorMappings[color] || colorMappings.blue
-    : color;
+  // Determinar el color a usar
+  const getActiveColor = () => {
+    if (color && typeof color === 'string') {
+      // Si es un tipo de sección, usar el color correspondiente
+      if (Object.keys(SECTION_COLORS).includes(color)) {
+        return SECTION_COLORS[color as SectionType];
+      }
+      // Si es "green", "purple", "blue", mapear a los colores correctos
+      if (color === 'green') return SECTION_COLORS.sales;
+      if (color === 'purple') return SECTION_COLORS.inventory;
+      if (color === 'blue') return SECTION_COLORS.home;
+    }
+    // Por defecto, usar el color de la sección actual
+    return getCurrentSectionColor(pathname);
+  };
+
+  const activeColor = getActiveColor();
+  const colorTheme = getColorClasses(activeColor);
 
   useEffect(() => {
     rotation.value = withRepeat(

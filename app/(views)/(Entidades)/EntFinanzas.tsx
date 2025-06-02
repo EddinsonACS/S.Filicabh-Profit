@@ -1,23 +1,24 @@
+import ItemArticle from '@/components/Entidades/Finanzas/ItemArticle';
+import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
+import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
+import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
+import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
+import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
+import { themes } from '@/components/Entidades/shared/theme';
+import { useNotificationContext } from '@/contexts/NotificationContext';
+import { useBanco } from '@/hooks/Finanzas/useBanco';
+import { useCaja } from '@/hooks/Finanzas/useCaja';
+import { useCuentaBancaria } from '@/hooks/Finanzas/useCuentaBancaria';
+import { useMoneda } from '@/hooks/Ventas/useMoneda';
+import { DEFAULT_VALUES_FINANZAS } from '@/utils/const/defaultValues';
+import { FORM_FIELDS_FINANZAS } from '@/utils/const/formFields';
+import { finanzasSchema } from '@/utils/schemas/finanzasSchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
-import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
-import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
-import { themes } from '@/components/Entidades/shared/theme';
-import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
-import { FORM_FIELDS_FINANZAS } from '@/utils/const/formFields';
-import { DEFAULT_VALUES_FINANZAS } from '@/utils/const/defaultValues';
-import ItemArticle from '@/components/Entidades/Finanzas/ItemArticle';
-import { useBanco } from '@/hooks/Finanzas/useBanco';
-import { useCaja } from '@/hooks/Finanzas/useCaja';
-import { useCuentaBancaria } from '@/hooks/Finanzas/useCuentaBancaria';
-import { finanzasSchema } from '@/utils/schemas/finanzasSchema';
-import { useMoneda } from '@/hooks/Ventas/useMoneda';
 
 const PAGE_SIZE = 10;
 
@@ -61,6 +62,16 @@ const EntFinanzas: React.FC = () => {
 
   const {useGetMonedaList} = useMoneda();
 
+  // Usar el nuevo sistema de notificaciones
+  const { 
+    showCreateSuccess, 
+    showUpdateSuccess, 
+    showDeleteSuccess,
+    showCreateError, 
+    showUpdateError, 
+    showDeleteError,
+    showLoadError 
+  } = useNotificationContext();
 
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -75,9 +86,9 @@ const EntFinanzas: React.FC = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
 
   // React Query hooks
-  const { data: bancoData, isLoading: isLoadingBanco } = useGetBancoList(currentPage, PAGE_SIZE);
-  const { data: cajaData, isLoading: isLoadingCaja } = useGetCajaList(currentPage, PAGE_SIZE);
-  const { data: cuentaBancariaData, isLoading: isLoadingCuentaBancaria } = useGetCuentaBancariaList(currentPage, PAGE_SIZE);
+  const { data: bancoData, isLoading: isLoadingBanco, error: bancoError } = useGetBancoList(currentPage, PAGE_SIZE);
+  const { data: cajaData, isLoading: isLoadingCaja, error: cajaError } = useGetCajaList(currentPage, PAGE_SIZE);
+  const { data: cuentaBancariaData, isLoading: isLoadingCuentaBancaria, error: cuentaBancariaError } = useGetCuentaBancariaList(currentPage, PAGE_SIZE);
 
   const createBancoMutation = useCreateBanco();
   const updateBancoMutation = useUpdateBanco();
@@ -92,9 +103,28 @@ const EntFinanzas: React.FC = () => {
   const deleteCuentaBancariaMutation = useDeleteCuentaBancaria();
 
   // Obtener todas las monedas para los selectores
-  const { data: monedasData } = useGetMonedaList(1, 1000);
+  const { data: monedasData, error: monedasError } = useGetMonedaList(1, 1000);
   // Obtener todos los bancos para el selector de cuentas bancarias
-  const { data: bancosData } = useGetBancoList(1, 1000);
+  const { data: bancosData, error: bancosError } = useGetBancoList(1, 1000);
+
+  // Mostrar errores de carga
+  useEffect(() => {
+    if (bancoError && selectedCategory === 'banco') {
+      showLoadError('la lista de bancos');
+    }
+    if (cajaError && selectedCategory === 'caja') {
+      showLoadError('la lista de cajas');
+    }
+    if (cuentaBancariaError && selectedCategory === 'cuentaBancaria') {
+      showLoadError('la lista de cuentas bancarias');
+    }
+    if (monedasError) {
+      showLoadError('la lista de monedas');
+    }
+    if (bancosError) {
+      showLoadError('la lista de bancos para el selector');
+    }
+  }, [bancoError, cajaError, cuentaBancariaError, monedasError, bancosError, selectedCategory, showLoadError]);
 
   // Lista de tipos de cuenta bancaria
   const tiposCuentaBancaria = [
@@ -248,9 +278,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el banco');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el banco');
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -264,9 +296,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la caja');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la caja');
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -281,9 +315,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la cuenta bancaria');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la cuenta bancaria');
         }
       });
     }
@@ -299,9 +335,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el banco');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el banco');
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -315,9 +353,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la caja');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la caja');
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -332,9 +372,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la cuenta bancaria');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la cuenta bancaria');
         }
       });
     }
@@ -349,9 +391,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el banco');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el banco');
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -360,9 +404,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la caja');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la caja');
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -371,9 +417,11 @@ const EntFinanzas: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la cuenta bancaria');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la cuenta bancaria');
         }
       });
     }
@@ -518,6 +566,7 @@ const EntFinanzas: React.FC = () => {
         editButtonTextColor={themes.finanzas.editButtonTextColor}
         deleteButtonColor={themes.finanzas.deleteButtonColor}
         deleteButtonTextColor={themes.finanzas.deleteButtonTextColor}
+        deleteButtonBorderColor={themes.finanzas.deleteButtonBorderColor}
       />
     </View>
   );

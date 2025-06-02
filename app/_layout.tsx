@@ -1,3 +1,4 @@
+import { AppNotificationProvider } from '@/components/common/NotificationProvider';
 import { queryClient } from '@/utils/libs/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
@@ -25,8 +26,10 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Slot />
-      <StatusBar style="auto" />
+      <AppNotificationProvider>
+        <Slot />
+        <StatusBar style="auto" />
+      </AppNotificationProvider>
     </QueryClientProvider>
   );
 }

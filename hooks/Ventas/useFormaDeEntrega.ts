@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiFormaDeEntrega = createApiService<FormaDeEntrega>();
 
@@ -18,10 +17,6 @@ export const useFormaDeEntrega = () => {
             queryFn: () => apiFormaDeEntrega.getList(endpoints.sales.formadeentrega.list, page, size),
             onSettled: (_: ListDataResponse<FormaDeEntrega> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de formas de entrega. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching forma de entrega list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useFormaDeEntrega = () => {
             enabled: !!id,
             onSettled: (_: FormaDeEntrega | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la forma de entrega. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching forma de entrega item:', error);
                 }
             }
@@ -70,10 +61,8 @@ export const useFormaDeEntrega = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['formadeentrega', 'list'] });
-                Alert.alert('Éxito', 'Forma de entrega creada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear la forma de entrega. Por favor, intente nuevamente.');
                 console.error('Error creating forma de entrega:', error);
             }
         });
@@ -104,10 +93,8 @@ export const useFormaDeEntrega = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['formadeentrega', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['formadeentrega', 'item', variables.id] });
-                Alert.alert('Éxito', 'Forma de entrega actualizada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar la forma de entrega. Por favor, intente nuevamente.');
                 console.error('Error updating forma de entrega:', error);
             }
         });
@@ -118,10 +105,8 @@ export const useFormaDeEntrega = () => {
             mutationFn: (id: number) => apiFormaDeEntrega.delete(endpoints.sales.formadeentrega.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['formadeentrega', 'list'] });
-                Alert.alert('Éxito', 'Forma de entrega eliminada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar la forma de entrega. Por favor, intente nuevamente.');
                 console.error('Error deleting forma de entrega:', error);
             }
         });

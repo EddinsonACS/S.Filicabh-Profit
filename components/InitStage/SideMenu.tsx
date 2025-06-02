@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Platform,
@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { getCurrentSectionColor, isRouteActive, SECTION_COLORS } from '../../utils/colorManager';
+import { useAppContext } from './AppContext';
 
 type SideMenuProps = {
   isVisible: boolean;
@@ -36,6 +38,7 @@ type MenuItem = {
 export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
   const router = useRouter();
   const currentPath = usePathname();
+  const { currentEntitySection } = useAppContext();
   const [expandedMainItem, setExpandedMainItem] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
@@ -53,18 +56,17 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
   // Check if a menu item is active
   const isActive = (route?: string): boolean => {
     if (!route) return false;
-
-    return currentPath === route || currentPath.startsWith(route + '/');
+    return isRouteActive(currentPath, route);
   };
 
+  // Obtener el color activo usando el sistema centralizado
   const getActiveColor = (): string => {
-    if (currentPath.startsWith('/Ventas')) {
-      return '#006626FF';
-    } else if (currentPath.startsWith('/Inventario')) {
-      return '#581c87';
-    } else {
-      return '#1e3a8a';
+    // Si estamos en entidades y hay una sección específica seleccionada, usar esa
+    if (currentPath.includes('/Entidades') && currentEntitySection) {
+      return SECTION_COLORS[currentEntitySection];
     }
+    // Sino, usar el sistema de detección automática
+    return getCurrentSectionColor(currentPath);
   };
 
   const navigateTo = async (route: string) => {

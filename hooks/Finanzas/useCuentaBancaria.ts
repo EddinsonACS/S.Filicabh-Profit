@@ -1,10 +1,9 @@
+import CuentaBancaria from '@/core/models/Finanzas/CuentaBancaria';
 import ListDataResponse from '@/core/response/ListDataResponse';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
-import CuentaBancaria  from '@/core/models/Finanzas/CuentaBancaria';
 
 const apiCuentaBancaria = createApiService<CuentaBancaria>();
 
@@ -15,10 +14,6 @@ export const useCuentaBancaria = () => {
       queryFn: () => apiCuentaBancaria.getList(endpoints.finanzas.cuentaBancaria.list, page, size),
       onSettled: (_: ListDataResponse<CuentaBancaria> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de cuentas bancarias. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching cuentaBancaria list:', error);
         }
       }
@@ -32,10 +27,6 @@ export const useCuentaBancaria = () => {
       enabled: !!id,
       onSettled: (_: CuentaBancaria | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el item de cuenta bancaria. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching cuentaBancaria item:', error);
         }
       }
@@ -83,17 +74,11 @@ export const useCuentaBancaria = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['cuentaBancaria', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Cuenta bancaria creada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear la cuenta bancaria. Por favor, intente nuevamente.'
-        );
         console.error('Error creating cuentaBancaria item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -131,17 +116,11 @@ export const useCuentaBancaria = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['cuentaBancaria', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['cuentaBancaria', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Cuenta bancaria actualizada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la cuenta bancaria. Por favor, intente nuevamente.'
-        );
         console.error('Error updating cuentaBancaria item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -151,17 +130,11 @@ export const useCuentaBancaria = () => {
       mutationFn: (id: number) => apiCuentaBancaria.delete(endpoints.finanzas.cuentaBancaria.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['cuentaBancaria', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Cuenta bancaria eliminada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar la cuenta bancaria. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting cuentaBancaria item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };

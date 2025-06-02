@@ -4,7 +4,7 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+
 const apiAlmacen = createApiService<Almacen>();
 
 export const useAlmacen = () => {
@@ -15,10 +15,6 @@ export const useAlmacen = () => {
       queryFn: () => apiAlmacen.getList(endpoints.inventory.almacen.list, page, size),
       onSettled: (_: ListDataResponse<Almacen> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de inventario. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching almacen list:', error);
         }
       }
@@ -32,10 +28,6 @@ export const useAlmacen = () => {
       enabled: !!id,
       onSettled: (_: Almacen | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el item del inventario. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching almacen item:', error);
         }
       }
@@ -67,16 +59,8 @@ export const useAlmacen = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de almacen creado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el item de inventario. Por favor, intente nuevamente.'
-        );
         console.error('Error creating inventory item:', error);
       }
     });
@@ -109,16 +93,8 @@ export const useAlmacen = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['almacen', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Item de inventario actualizado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el item de inventario. Por favor, intente nuevamente.'
-        );
         console.error('Error updating almacen item:', error);
       }
     });
@@ -129,17 +105,9 @@ export const useAlmacen = () => {
       mutationFn: (id: number) => apiAlmacen.delete(endpoints.inventory.almacen.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['almacen', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de almacen eliminado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el item de inventario. Por favor, intente nuevamente.'
-        );
-          console.error('Error deleting almacen item:', error);
+        console.error('Error deleting almacen item:', error);
       }
     });
   };

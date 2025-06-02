@@ -1,29 +1,30 @@
+import { ItemArticle } from '@/components/Entidades/Inventario/ItemArticle';
+import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
+import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
+import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
+import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
+import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
+import { themes } from '@/components/Entidades/shared/theme';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useCategoria } from '@/hooks/Inventario/useCategoria';
-import { useGrupo } from '@/hooks/Inventario/useGrupo';
-import { useSeccion } from '@/hooks/Inventario/useSeccion';
-import { useUnidad } from '@/hooks/Inventario/useUnidad';
-import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useColor } from '@/hooks/Inventario/useColor';
-import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
-import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
+import { useGrupo } from '@/hooks/Inventario/useGrupo';
 import { useOrigen } from '@/hooks/Inventario/useOrigen';
+import { useSeccion } from '@/hooks/Inventario/useSeccion';
+import { useTalla } from '@/hooks/Inventario/useTalla';
+import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
+import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
+import { useUnidad } from '@/hooks/Inventario/useUnidad';
+import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
+import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, Text, TouchableOpacity, View } from 'react-native';
-import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
-import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
-import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
-import { themes } from '@/components/Entidades/shared/theme';
-import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
-import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
-import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
-import { ItemArticle } from '@/components/Inventario/ItemArticle';
+import { BackHandler, View } from 'react-native';
 
 const PAGE_SIZE = 10;
 
@@ -58,6 +59,15 @@ type CategoryId = keyof typeof CATEGORY_TITLES;
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
+  const { 
+    showCreateSuccess, 
+    showUpdateSuccess, 
+    showDeleteSuccess,
+    showCreateError, 
+    showUpdateError, 
+    showDeleteError,
+    showLoadError 
+  } = useNotificationContext();
   const {
     useGetAlmacenList,
     useCreateAlmacen,
@@ -361,9 +371,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el almacén');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el almacén');
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -372,9 +384,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la categoría');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la categoría');
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -383,9 +397,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el grupo');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el grupo');
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -394,9 +410,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la sección');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la sección');
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -405,9 +423,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la unidad');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la unidad');
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -416,9 +436,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('la talla');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('la talla');
         }
       });
     } else if (selectedCategory === 'color') {
@@ -427,9 +449,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el color');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el color');
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -438,9 +462,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el tipo de impuesto');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el tipo de impuesto');
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -449,9 +475,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el tipo de artículo');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el tipo de artículo');
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -460,9 +488,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => [createdItem, ...prev]);
           setCurrentPage(1);
           setHasMore(true);
+          showCreateSuccess('el origen');
         },
         onError: () => {
           setCurrentPage(1);
+          showCreateError('el origen');
         }
       });
     }
@@ -478,9 +508,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el almacén');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el almacén');
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -489,9 +521,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la categoría');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la categoría');
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -500,9 +534,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el grupo');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el grupo');
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -511,9 +547,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la sección');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la sección');
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -522,9 +560,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la unidad');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la unidad');
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -533,9 +573,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('la talla');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('la talla');
         }
       });
     } else if (selectedCategory === 'color') {
@@ -544,9 +586,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el color');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el color');
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -555,9 +599,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el tipo de impuesto');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el tipo de impuesto');
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -566,9 +612,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el tipo de artículo');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el tipo de artículo');
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -577,9 +625,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => 
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
+          showUpdateSuccess('el origen');
         },
         onError: () => {
           setCurrentPage(1);
+          showUpdateError('el origen');
         }
       });
     }
@@ -595,9 +645,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el almacén');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el almacén');
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -606,9 +658,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la categoría');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la categoría');
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -617,9 +671,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el grupo');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el grupo');
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -628,9 +684,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la sección');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la sección');
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -639,9 +697,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la unidad');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la unidad');
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -650,9 +710,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('la talla');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('la talla');
         }
       });
     } else if (selectedCategory === 'color') {
@@ -661,9 +723,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el color');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el color');
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -672,9 +736,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el tipo de impuesto');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el tipo de impuesto');
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -683,9 +749,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el tipo de artículo');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el tipo de artículo');
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -694,9 +762,11 @@ const EntInventario: React.FC = () => {
           setAccumulatedItems(prev => prev.filter(item => item.id !== id));
           setCurrentPage(1);
           setHasMore(true);
+          showDeleteSuccess('el origen');
         },
         onError: () => {
           setCurrentPage(1);
+          showDeleteError('el origen');
         }
       });
     }
@@ -834,6 +904,7 @@ const EntInventario: React.FC = () => {
         editButtonTextColor={themes.inventory.editButtonTextColor}
         deleteButtonColor={themes.inventory.deleteButtonColor}
         deleteButtonTextColor={themes.inventory.deleteButtonTextColor}
+        deleteButtonBorderColor={themes.inventory.deleteButtonBorderColor}
       />
     </View>
   );

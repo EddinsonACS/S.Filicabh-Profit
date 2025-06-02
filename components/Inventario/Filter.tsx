@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, TextInput, TouchableOpacity, ScrollView, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { SlideInUp } from 'react-native-reanimated';
 
 type Category = {
@@ -14,6 +14,7 @@ type FilterProps = {
   categories: Category[];
   currentCategory: string | null;
   onCategoryChange: (categoryId: string | null) => void;
+  sectionColor?: string;
 };
 
 export default function Filter({
@@ -22,16 +23,24 @@ export default function Filter({
   categories,
   currentCategory,
   onCategoryChange,
+  sectionColor = '#7c3aed', // Color por defecto de inventario
 }: FilterProps) {
+  
+  // Color más oscuro para el fondo del buscador
+  const darkerColor = `${sectionColor}CC`;
+  
   return (
     <>
       {/* Buscador */}
-      <View className="bg-purple-900 rounded-xl flex-row items-center p-3">
+      <View 
+        className="rounded-xl flex-row items-center p-3"
+        style={{ backgroundColor: darkerColor }}
+      >
         <Ionicons name="search-outline" size={20} color="#ffffff" />
         <TextInput
           className="flex-1 text-white ml-2"
           placeholder="Buscar artículo..."
-          placeholderTextColor="#ffffff"
+          placeholderTextColor="rgba(255,255,255,0.7)"
           value={searchQuery}
           onChangeText={onSearchChange}
         />
@@ -52,27 +61,29 @@ export default function Filter({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16 }}
         >
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              className={`px-4 py-2 mr-2 rounded-full border ${
-                currentCategory === category.id || (category.id === 'all' && !currentCategory)
-                  ? 'bg-white border-purple-900'
-                  : 'bg-purple-300 border-purple-900'
-              }`}
-              onPress={() => onCategoryChange(category.id === 'all' ? null : category.id)}
-            >
-              <Text
-                className={
-                  currentCategory === category.id || (category.id === 'all' && !currentCategory)
-                    ? 'text-purple-900'
-                    : 'text-purple-600'
-                }
+          {categories.map((category) => {
+            const isActive = currentCategory === category.id || (category.id === 'all' && !currentCategory);
+            return (
+              <TouchableOpacity
+                key={category.id}
+                className={`px-4 py-2 mr-2 rounded-full border`}
+                style={{
+                  backgroundColor: isActive ? 'white' : 'rgba(255,255,255,0.3)',
+                  borderColor: sectionColor,
+                }}
+                onPress={() => onCategoryChange(category.id === 'all' ? null : category.id)}
               >
-                {category.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={{
+                    color: isActive ? sectionColor : 'white',
+                    fontWeight: isActive ? 'bold' : 'normal'
+                  }}
+                >
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </Animated.View>
     </>

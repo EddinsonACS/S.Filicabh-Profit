@@ -1,48 +1,50 @@
 import { useAcuerdoDePago } from '@/hooks/Ventas/useAcuerdoDePago';
 import { useCiudad } from '@/hooks/Ventas/useCiudad';
-import { useRegion } from '@/hooks/Ventas/useRegion';
-import { usePais } from '@/hooks/Ventas/usePais';
 import { useFormaDeEntrega } from '@/hooks/Ventas/useFormaDeEntrega';
+import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
+import { useMoneda } from '@/hooks/Ventas/useMoneda';
+import { usePais } from '@/hooks/Ventas/usePais';
+import { useRegion } from '@/hooks/Ventas/useRegion';
+import { useRubro } from '@/hooks/Ventas/useRubro';
+import { useSector } from '@/hooks/Ventas/useSector';
+import { useTasaDeCambio } from '@/hooks/Ventas/useTasaDeCambio';
 import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
 import { useTipoVendedor } from '@/hooks/Ventas/useTipoVendedor';
 import { useVendedor } from '@/hooks/Ventas/useVendedor';
-import { useMoneda } from '@/hooks/Ventas/useMoneda';
-import { useTasaDeCambio } from '@/hooks/Ventas/useTasaDeCambio';
-import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
-import { useSector } from '@/hooks/Ventas/useSector';
-import { useRubro } from '@/hooks/Ventas/useRubro';
 
 import { AcuerdoDePago } from '@/core/models/Ventas/AcuerdoDePago';
 import { Ciudad } from '@/core/models/Ventas/Ciudad';
-import { Region } from '@/core/models/Ventas/Region';
-import { Pais } from '@/core/models/Ventas/Pais';
 import { FormaDeEntrega } from '@/core/models/Ventas/FormaDeEntrega';
+import { ListaDePrecio } from '@/core/models/Ventas/ListaDePrecio';
+import { Moneda } from '@/core/models/Ventas/Moneda';
+import { Pais } from '@/core/models/Ventas/Pais';
+import { Region } from '@/core/models/Ventas/Region';
+import { Rubro } from '@/core/models/Ventas/Rubro';
+import { Sector } from '@/core/models/Ventas/Sector';
+import { TasaDeCambio } from '@/core/models/Ventas/TasaDeCambio';
 import { TipoPersona } from '@/core/models/Ventas/TipoPersona';
 import { TipoVendedor } from '@/core/models/Ventas/TipoVendedor';
 import { Vendedor } from '@/core/models/Ventas/Vendedor';
-import { Moneda } from '@/core/models/Ventas/Moneda';
-import { TasaDeCambio } from '@/core/models/Ventas/TasaDeCambio';
-import { ListaDePrecio } from '@/core/models/Ventas/ListaDePrecio';
-import { Sector } from '@/core/models/Ventas/Sector';
-import { Rubro } from '@/core/models/Ventas/Rubro';
 
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, Text, TouchableOpacity, View } from 'react-native';
+import { BackHandler, View } from 'react-native';
 import { z } from 'zod';
 
 // Import dynamic components
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
-import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
-import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
-import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
+import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
+import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
+import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
+import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { themes } from '@/components/Entidades/shared/theme';
+import ItemArticle from '@/components/Entidades/Ventas/ItemArticle';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 
 // Interfaces auxiliares
 interface BaseEntity {
@@ -591,6 +593,7 @@ type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoP
 const EntVentas: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
+  const { showSuccess, showError } = useNotificationContext();
 
   // Hooks de entidades
   const {
@@ -979,21 +982,34 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Acuerdo de pago creado correctamente.');
           },
           onError: (error) => {
             console.error('Error creating:', error); // Debug log
             setCurrentPage(1);
+            showError('Error', 'No se pudo crear el acuerdo de pago. Por favor, intente nuevamente.');
           }
         });
         break;
       case 'ciudad':
+        console.log('🏙️ Creating ciudad with data:', formData); // DEBUG
         createCiudadMutation.mutate(formData, {
           onSuccess: (createdItem) => {
+            console.log('✅ Ciudad created successfully:', createdItem);
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            console.log('🎉 About to show success notification'); // DEBUG
+            showSuccess('¡Éxito!', 'Ciudad creada correctamente.');
+            console.log('✨ Success notification called'); // DEBUG
           },
-          onError: () => setCurrentPage(1)
+          onError: (error) => {
+            console.error('❌ Error creating ciudad:', error);
+            setCurrentPage(1);
+            console.log('🚨 About to show error notification'); // DEBUG
+            showError('Error', 'No se pudo crear la ciudad. Por favor, intente nuevamente.');
+            console.log('💥 Error notification called'); // DEBUG
+          }
         });
         break;
       case 'region':
@@ -1002,8 +1018,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Región creada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear la región. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'pais':
@@ -1012,8 +1032,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'País creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el país. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'formadeentrega':
@@ -1022,8 +1046,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Forma de entrega creada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear la forma de entrega. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipopersona':
@@ -1032,8 +1060,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Tipo de persona creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el tipo de persona. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipovendedor':
@@ -1042,8 +1074,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Tipo de vendedor creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el tipo de vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'vendedor':
@@ -1052,8 +1088,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Vendedor creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'moneda':
@@ -1062,8 +1102,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Moneda creada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear la moneda. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tasadecambio':
@@ -1072,8 +1116,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Tasa de cambio creada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear la tasa de cambio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'listadeprecio':
@@ -1082,8 +1130,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Lista de precio creada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear la lista de precio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'sector':
@@ -1092,8 +1144,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Sector creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el sector. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'rubro':
@@ -1102,8 +1158,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => [createdItem, ...prev]);
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Éxito!', 'Rubro creado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo crear el rubro. Por favor, intente nuevamente.');
+          }
         });
         break;
       default:
@@ -1126,8 +1186,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Acuerdo de pago actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el acuerdo de pago. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'ciudad':
@@ -1136,8 +1200,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Ciudad actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la ciudad. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'region':
@@ -1146,8 +1214,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Región actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la región. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'pais':
@@ -1156,8 +1228,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'País actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el país. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'formadeentrega':
@@ -1166,8 +1242,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Forma de entrega actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la forma de entrega. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipopersona':
@@ -1176,8 +1256,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Tipo de persona actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el tipo de persona. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipovendedor':
@@ -1186,8 +1270,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Tipo de vendedor actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el tipo de vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'vendedor':
@@ -1196,8 +1284,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Vendedor actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'moneda':
@@ -1206,8 +1298,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Moneda actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la moneda. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tasadecambio':
@@ -1216,8 +1312,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Tasa de cambio actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la tasa de cambio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'listadeprecio':
@@ -1226,8 +1326,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Lista de precio actualizada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar la lista de precio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'sector':
@@ -1236,8 +1340,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Sector actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el sector. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'rubro':
@@ -1246,8 +1354,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => 
               prev.map(item => item.id === currentItem.id ? updatedItem : item)
             );
+            showSuccess('¡Actualizado!', 'Rubro actualizado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo actualizar el rubro. Por favor, intente nuevamente.');
+          }
         });
         break;
     }
@@ -1264,8 +1376,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Acuerdo de pago eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el acuerdo de pago. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'ciudad':
@@ -1274,8 +1390,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Ciudad eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la ciudad. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'region':
@@ -1284,8 +1404,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Región eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la región. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'pais':
@@ -1294,8 +1418,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'País eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el país. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'formadeentrega':
@@ -1304,8 +1432,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Forma de entrega eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la forma de entrega. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipopersona':
@@ -1314,8 +1446,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Tipo de persona eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el tipo de persona. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tipovendedor':
@@ -1324,8 +1460,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Tipo de vendedor eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el tipo de vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'vendedor':
@@ -1334,8 +1474,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Vendedor eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el vendedor. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'moneda':
@@ -1344,8 +1488,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Moneda eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la moneda. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'tasadecambio':
@@ -1354,8 +1502,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Tasa de cambio eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la tasa de cambio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'listadeprecio':
@@ -1364,8 +1516,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Lista de precio eliminada correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar la lista de precio. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'sector':
@@ -1374,8 +1530,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Sector eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el sector. Por favor, intente nuevamente.');
+          }
         });
         break;
       case 'rubro':
@@ -1384,8 +1544,12 @@ const EntVentas: React.FC = () => {
             setAccumulatedItems(prev => prev.filter(item => item.id !== id));
             setCurrentPage(1);
             setHasMore(true);
+            showSuccess('¡Eliminado!', 'Rubro eliminado correctamente.');
           },
-          onError: () => setCurrentPage(1)
+          onError: () => {
+            setCurrentPage(1);
+            showError('Error', 'No se pudo eliminar el rubro. Por favor, intente nuevamente.');
+          }
         });
         break;
     }
@@ -1404,80 +1568,12 @@ const EntVentas: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: ItemUnion }) => {
-    const entityName = getEntityName(item);
-    const isSuspended = getEntitySuspended(item);
-    
     return (
-      <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-        <TouchableOpacity
-          onPress={() => showItemDetails(item)}
-          activeOpacity={0.7}
-        >
-          <View className="p-4">
-            <View className="mb-2">
-              <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>
-                {entityName}
-              </Text>
-            </View>
-            <View className="flex-row justify-between items-center mt-1">
-              {selectedCategory === 'acuerdodepago' && (
-                <Text className="text-sm text-gray-600">Días: {(item as AcuerdoDePago).dias}</Text>
-              )}
-              {selectedCategory === 'tasadecambio' && (
-                <Text className="text-sm text-gray-600">
-                  Venta: {(item as TasaDeCambio).tasaVenta} | Compra: {(item as TasaDeCambio).tasaCompra}
-                </Text>
-              )}
-              {selectedCategory === 'vendedor' && (
-                <Text className="text-sm text-gray-600">{(item as Vendedor).email}</Text>
-              )}
-              {selectedCategory === 'pais' && (
-                <Text className="text-sm text-gray-600">Código: {(item as Pais).codigo}</Text>
-              )}
-              {selectedCategory === 'moneda' && (
-                <Text className="text-sm text-gray-600">Código: {(item as Moneda).codigo}</Text>
-              )}
-              
-              {/* Solo mostrar estado para entidades que tienen suspendido */}
-              {selectedCategory !== 'tasadecambio' && (
-                <View className={`px-2 py-1 rounded-full ${isSuspended
-                  ? 'bg-red-100 border border-red-600'
-                  : 'bg-green-100 border border-green-600'
-                  }`}>
-                  <Text className={`text-xs font-medium ${isSuspended
-                    ? 'text-red-600'
-                    : 'text-green-600'
-                    }`}>
-                    {isSuspended ? 'Inactivo' : 'Activo'}
-                  </Text>
-                </View>
-              )}
-              
-              {/* Para TasaDeCambio mostrar fecha en lugar de estado */}
-              {selectedCategory === 'tasadecambio' && (
-                <View className="px-2 py-1 rounded-full bg-blue-100 border border-blue-600">
-                  <Text className="text-xs font-medium text-blue-600">
-                    {new Date((item as TasaDeCambio).fecha).toLocaleDateString()}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text className="text-xs text-gray-400 mt-2">
-              ID: {item.id} · Creado: {item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : 'N/A'}
-            </Text>
-            {item.usuarioRegistroNombre && (
-              <Text className="text-xs text-gray-400">
-                Creado por: {item.usuarioRegistroNombre}
-              </Text>
-            )}
-            {item.fechaModificacion && (
-              <Text className="text-xs text-gray-400">
-                Última modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-              </Text>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
+      <ItemArticle
+        item={item}
+        selectedCategory={selectedCategory}
+        onPress={showItemDetails}
+      />
     );
   };
 
@@ -1533,7 +1629,7 @@ const EntVentas: React.FC = () => {
             }}
           />
         ) : isLoading && currentPage === 1 ? (
-          <DynamicLoadingState />
+          <DynamicLoadingState color={themes.sales.buttonColor} />
         ) : (
           <DynamicItemList
             items={filteredItems}
@@ -1605,6 +1701,7 @@ const EntVentas: React.FC = () => {
         editButtonTextColor={themes.sales.editButtonTextColor}
         deleteButtonColor={themes.sales.deleteButtonColor}
         deleteButtonTextColor={themes.sales.deleteButtonTextColor}
+        deleteButtonBorderColor={themes.sales.deleteButtonBorderColor}
       />
     </View>
   );

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { usePathname } from 'expo-router';
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { Animated, Easing, TouchableOpacity, View } from 'react-native';
+import { getCurrentSectionColor, SECTION_COLORS } from '../../utils/colorManager';
 import { isPublicRoute } from '../navigation';
 import { useAppContext } from './AppContext';
 import NavBar from './NavBar';
@@ -12,7 +13,7 @@ interface AppWrapperProps {
 }
 
 export default function AppWrapper({ children }: AppWrapperProps) {
-  const { isSideMenuOpen, toggleSideMenu, closeSideMenu } = useAppContext();
+  const { isSideMenuOpen, toggleSideMenu, closeSideMenu, currentEntitySection } = useAppContext();
   const pathname = usePathname();
 
   // Animation values
@@ -20,17 +21,6 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const menuWidth = 288;
   const isPublic = isPublicRoute(pathname);
-
-  // Get active section color based on current path
-  const getActiveSectionColor = () => {
-    if (pathname.startsWith('/Ventas')) {
-      return '#007C2DFF';
-    } else if (pathname.startsWith('/Inventario')) {
-      return '#581c87';
-    } else {
-      return '#1e3a8a';
-    }
-  };
 
   // Control animation SideMenu
   useEffect(() => {
@@ -83,8 +73,17 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     return <>{children}</>;
   }
 
-  // Active section color
-  const activeColor = getActiveSectionColor();
+  // Active section color usando el sistema centralizado
+  const getActiveColor = () => {
+    // Si estamos en entidades y hay una sección específica seleccionada, usar esa
+    if (pathname.includes('/Entidades') && currentEntitySection) {
+      return SECTION_COLORS[currentEntitySection];
+    }
+    // Sino, usar el sistema de detección automática
+    return getCurrentSectionColor(pathname);
+  };
+  
+  const activeColor = getActiveColor();
 
   return (
     <View className="flex-1 bg-[#F9F8FD] relative">

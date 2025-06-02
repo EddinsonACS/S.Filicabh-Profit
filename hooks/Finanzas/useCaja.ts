@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiCaja = createApiService<Caja>();
 
@@ -15,10 +14,6 @@ export const useCaja = () => {
       queryFn: () => apiCaja.getList(endpoints.finanzas.caja.list, page, size),
       onSettled: (_: ListDataResponse<Caja> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de cajas. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching caja list:', error);
         }
       }
@@ -32,10 +27,6 @@ export const useCaja = () => {
       enabled: !!id,
       onSettled: (_: Caja | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el item de caja. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching caja item:', error);
         }
       }
@@ -69,17 +60,11 @@ export const useCaja = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['caja', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de caja creado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el item de caja. Por favor, intente nuevamente.'
-        );
         console.error('Error creating caja item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -110,17 +95,11 @@ export const useCaja = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['caja', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['caja', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Item de caja actualizado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el item de caja. Por favor, intente nuevamente.'
-        );
         console.error('Error updating caja item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -130,17 +109,11 @@ export const useCaja = () => {
       mutationFn: (id: number) => apiCaja.delete(endpoints.finanzas.caja.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['caja', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de caja eliminado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el item de caja. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting caja item:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };

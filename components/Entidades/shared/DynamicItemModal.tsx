@@ -1,6 +1,7 @@
+import { useNotificationContext } from '@/contexts/NotificationContext';
+import { Ionicons } from '@expo/vector-icons';
 import React, { memo, useEffect, useRef } from 'react';
 import {
-  Alert,
   Animated,
   Dimensions,
   Modal,
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
@@ -47,6 +47,7 @@ export interface DynamicItemModalProps {
   editButtonTextColor: string;
   deleteButtonColor: string;
   deleteButtonTextColor: string;
+  deleteButtonBorderColor: string;
 }
 
 const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
@@ -65,7 +66,8 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
   editButtonColor,
   editButtonTextColor,
   deleteButtonColor,
-  deleteButtonTextColor
+  deleteButtonTextColor,
+  deleteButtonBorderColor
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -126,14 +128,14 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
 
   if (!currentItem) return null;
 
+  const { showDeleteConfirmation } = useNotificationContext();
+
   const confirmDelete = () => {
-    Alert.alert(
-      'Confirmar eliminación',
-      `¿Estás seguro de eliminar "${mainTitleField.value}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => handleDelete(currentItem.id) }
-      ]
+    onClose();
+    showDeleteConfirmation(
+      'elemento',
+      mainTitleField.value,
+      () => handleDelete(currentItem.id)
     );
   };
 
@@ -236,7 +238,11 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
           <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
             <View className="flex-row space-x-4 mt-1">
               <TouchableOpacity
-                style={{ backgroundColor: deleteButtonColor }}
+                style={{ 
+                  backgroundColor: deleteButtonColor,
+                  borderColor: deleteButtonBorderColor,
+                  borderWidth: 2
+                }}
                 className="flex-1 py-3 rounded-lg flex-row justify-center items-center"
                 onPress={confirmDelete}
               >

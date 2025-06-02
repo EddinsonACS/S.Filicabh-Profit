@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { getCurrentSectionColor, isRouteActive, isTabDisabled, SECTION_COLORS } from '../../utils/colorManager';
+import { useAppContext } from './AppContext';
 
 type NavBarProps = {
   onMenuPress?: () => void;
@@ -10,6 +12,7 @@ type NavBarProps = {
 export default function NavBar({ onMenuPress }: NavBarProps) {
   const router = useRouter();
   const currentPath = usePathname();
+  const { currentEntitySection } = useAppContext();
 
   // Tabs with section colors
   const tabs = [
@@ -19,9 +22,24 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
     { name: 'Entidades', icon: 'menu-outline', route: '/Entidades', color: '#1e3a8a'},
   ];
 
+  // Obtener el color activo usando el sistema centralizado
+  const getActiveColor = (): string => {
+    // Si estamos en entidades y hay una sección específica seleccionada, usar esa
+    if (currentPath.includes('/Entidades') && currentEntitySection) {
+      return SECTION_COLORS[currentEntitySection];
+    }
+    // Sino, usar el sistema de detección automática
+    return getCurrentSectionColor(currentPath);
+  };
+
   // Manejar la navegación de forma segura
   const handleNavigation = (tab: any) => {
     try {
+      // Verificar si el tab está deshabilitado
+      if (isTabDisabled(tab.name)) {
+        return; // No hacer nada si está deshabilitado
+      }
+
       if (tab.isMenu && onMenuPress) {
         onMenuPress();
       } else if (tab.route) {
@@ -35,7 +53,7 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
   // Verificar si el tab está activo
   const isActive = (tab: any) => {
     if (tab.isMenu) return false;
-    return currentPath === tab.route;
+    return isRouteActive(currentPath, tab.route);
   };
 
   return (
@@ -48,21 +66,29 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
     }}>
       {tabs.map((tab) => {
         const active = isActive(tab);
+        const disabled = isTabDisabled(tab.name);
+        
         return (
           <TouchableOpacity
             key={tab.name}
-            style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}
+            style={{ 
+              flex: 1, 
+              alignItems: 'center', 
+              paddingVertical: 4,
+              opacity: disabled ? 0.4 : 1 // Reducir opacidad si está deshabilitado
+            }}
             onPress={() => handleNavigation(tab)}
+            disabled={disabled}
           >
             <Ionicons
               name={tab.icon as any}
               size={24}
-              color={active ? tab.color : '#666'}
+              color={active ? getActiveColor() : '#666'}
             />
             <Text style={{
               fontSize: 12,
               marginTop: 4,
-              color: active ? tab.color : '#666',
+              color: active ? getActiveColor() : '#666',
               fontWeight: active ? 'bold' : 'normal'
             }}>
               {tab.name}

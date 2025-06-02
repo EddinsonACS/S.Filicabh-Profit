@@ -1,4 +1,5 @@
 import { ArticleFormData } from '@/utils/schemas/articleSchema';
+import { usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -8,6 +9,7 @@ import Filter from '../../../components/Inventario/Filter';
 import FormNewArticle from '../../../components/Inventario/FormNewArticle';
 import ListArticle from '../../../components/Inventario/ListArticle';
 import LoadingScreen from '../../../components/LoadingScreen';
+import { getCurrentSectionColor } from '../../../utils/colorManager';
 
 // Tipos para artículos
 type Article = {
@@ -27,6 +29,7 @@ type Article = {
 type ModalState = 'closed' | 'create' | 'edit' | 'view' | 'delete';
 
 export default function Inventario() {
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +38,9 @@ export default function Inventario() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+
+  // Obtener el color de la sección actual
+  const sectionColor = getCurrentSectionColor(pathname);
 
   // Categorías de artículos
   const categories = [
@@ -253,7 +259,8 @@ export default function Inventario() {
       {/* Cabecera */}
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="bg-purple-700 pt-4 pb-5 px-4"
+        className="pt-4 pb-5 px-4"
+        style={{ backgroundColor: sectionColor }}
       >
         <Text className="text-white text-2xl font-bold mb-4">Inventario</Text>
 
@@ -264,6 +271,7 @@ export default function Inventario() {
           categories={categories}
           currentCategory={currentCategory}
           onCategoryChange={setCurrentCategory}
+          sectionColor={sectionColor}
         />
       </Animated.View>
 

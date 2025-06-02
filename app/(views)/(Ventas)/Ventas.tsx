@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LoadingScreen from '../../../components/LoadingScreen';
+import { getCurrentSectionColor } from '../../../utils/colorManager';
 
 // Tipos para las opciones del menú
 type MenuOption = {
@@ -24,8 +25,8 @@ const menuOptions: MenuOption[] = [
         title: 'Agentes Comerciales',
         description: 'Gestiona tus clientes y leads de ventas',
         icon: 'people-outline',
-        color: '#1e40af',
-        bgColor: '#dbeafe',
+        color: '#007C2DFF',
+        bgColor: '#dcfce7',
         route: '/Ventas/AgentesComerciales'
     },
     {
@@ -33,8 +34,8 @@ const menuOptions: MenuOption[] = [
         title: 'Pedidos',
         description: 'Crea y administra pedidos de clientes',
         icon: 'cart-outline',
-        color: '#059669',
-        bgColor: '#d1fae5',
+        color: '#007C2DFF',
+        bgColor: '#dcfce7',
         route: '/Ventas/Pedidos'
     },
     {
@@ -42,8 +43,8 @@ const menuOptions: MenuOption[] = [
         title: 'Cobros',
         description: 'Gestiona pagos y estado de cuenta',
         icon: 'cash-outline',
-        color: '#7e22ce',
-        bgColor: '#f3e8ff',
+        color: '#007C2DFF',
+        bgColor: '#dcfce7',
         route: '/Ventas/Cobros'
     },
     {
@@ -51,8 +52,8 @@ const menuOptions: MenuOption[] = [
         title: 'Retenciones',
         description: 'Administra retenciones de impuestos',
         icon: 'document-text-outline',
-        color: '#b45309',
-        bgColor: '#fef3c7',
+        color: '#007C2DFF',
+        bgColor: '#dcfce7',
         route: '/Ventas/Retenciones'
     }
 ];
@@ -76,9 +77,13 @@ enum ViewType {
 
 export default function Ventas() {
     const router = useRouter();
+    const pathname = usePathname();
     const insets = useSafeAreaInsets();
     const [isLoading, setIsLoading] = useState(true);
     const [viewType, setViewType] = useState<ViewType>(ViewType.Grid);
+
+    // Obtener el color de la sección actual
+    const sectionColor = getCurrentSectionColor(pathname);
 
     // Simulamos carga inicial
     React.useEffect(() => {
@@ -125,14 +130,16 @@ export default function Ventas() {
             {/* Cabecera */}
             <Animated.View
                 entering={FadeIn.duration(400)}
-                className="bg-green-700 pt-4 pb-5 px-4"
+                className="pt-4 pb-5 px-4"
+                style={{ backgroundColor: sectionColor }}
             >
                 <View className="flex-row justify-between items-center">
                     <Text className="text-white text-2xl font-bold">Ventas</Text>
 
                     <View className="flex-row">
                         <TouchableOpacity
-                            className="w-10 h-10 rounded-full bg-green-900 items-center justify-center mr-2"
+                            className="w-10 h-10 rounded-full items-center justify-center mr-2"
+                            style={{ backgroundColor: `${sectionColor}CC` }}
                             onPress={toggleViewType}
                         >
                             <Ionicons
@@ -146,13 +153,19 @@ export default function Ventas() {
 
                 {/* Resumen */}
                 <View className="flex-row mt-5 justify-between">
-                    <View className="bg-green-900 rounded-xl p-3" style={{ width: '48%' }}>
-                        <Text className="text-blue-100 text-sm">Ventas del mes</Text>
+                    <View 
+                        className="rounded-xl p-3" 
+                        style={{ width: '48%', backgroundColor: `${sectionColor}CC` }}
+                    >
+                        <Text className="text-white text-sm opacity-80">Ventas del mes</Text>
                         <Text className="text-white text-xl font-bold">$430,500</Text>
                     </View>
 
-                    <View className="bg-green-900 rounded-xl p-3" style={{ width: '48%' }}>
-                        <Text className="text-blue-100 text-sm">Pedidos pendientes</Text>
+                    <View 
+                        className="rounded-xl p-3" 
+                        style={{ width: '48%', backgroundColor: `${sectionColor}CC` }}
+                    >
+                        <Text className="text-white text-sm opacity-80">Pedidos pendientes</Text>
                         <Text className="text-white text-xl font-bold">12</Text>
                     </View>
                 </View>
@@ -198,13 +211,13 @@ export default function Ventas() {
                                     }`}
                                 onPress={() => navigateTo(option.route)}
                             >
-                                <View style={{ backgroundColor: option.bgColor }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
-                                    <Ionicons name={option.icon} size={20} color={option.color} />
+                                <View style={{ backgroundColor: option.bgColor }} className="w-12 h-12 rounded-full items-center justify-center mr-4">
+                                    <Ionicons name={option.icon} size={24} color={option.color} />
                                 </View>
 
                                 <View className="flex-1">
-                                    <Text className="text-gray-800 font-medium">{option.title}</Text>
-                                    <Text className="text-gray-600 text-xs mt-1">{option.description}</Text>
+                                    <Text className="text-gray-800 font-semibold mb-1">{option.title}</Text>
+                                    <Text className="text-gray-600 text-sm">{option.description}</Text>
                                 </View>
 
                                 <Ionicons name="chevron-forward" size={20} color="#9ca3af" />

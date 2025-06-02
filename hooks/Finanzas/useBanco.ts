@@ -4,7 +4,7 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+
 const apiBanco = createApiService<Banco>();
 
 export const useBanco = () => {
@@ -15,10 +15,6 @@ export const useBanco = () => {
       queryFn: () => apiBanco.getList(endpoints.finanzas.banco.list, page, size),
       onSettled: (_: ListDataResponse<Banco> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de inventario. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching banco list:', error);
         }
       }
@@ -32,10 +28,6 @@ export const useBanco = () => {
       enabled: !!id,
       onSettled: (_: Banco | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el item del banco. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching banco item:', error);
         }
       }
@@ -48,34 +40,29 @@ export const useBanco = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        const data: Omit<Banco, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
+        const data: Omit<Banco, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
-          otrosN1: 0,
-          otrosN2: 0,
-          otrosC1: null,
-          otrosC2: null,
-          otrosC3: null,
-          otrosC4: null,
-          otrosT1: null,
-          equipo: "equipo"
+          otrosN1: formData.otrosN1 || 0,
+          otrosN2: formData.otrosN2 || 0,
+          otrosC1: formData.otrosC1 || null,
+          otrosC2: formData.otrosC2 || null,
+          otrosC3: formData.otrosC3 || null,
+          otrosC4: formData.otrosC4 || null,
+          otrosT1: formData.otrosT1 || null,
+          usuario: 1,
+          equipo: 'equipo'
         };
         return apiBanco.create(endpoints.finanzas.banco.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['banco', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de banco creado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el item de banco. Por favor, intente nuevamente.'
-        );
-        console.error('Error creating banco item:', error);
+        console.error('Error creating banco:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -91,31 +78,26 @@ export const useBanco = () => {
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
-          otrosN1: 0,
-          otrosN2: 0,
-          otrosC1: null,
-          otrosC2: null,
-          otrosC3: null,
-          otrosC4: null,
-          otrosT1: null,
-          equipo: "equipo"
+          otrosN1: formData.otrosN1 || 0,
+          otrosN2: formData.otrosN2 || 0,
+          otrosC1: formData.otrosC1 || null,
+          otrosC2: formData.otrosC2 || null,
+          otrosC3: formData.otrosC3 || null,
+          otrosC4: formData.otrosC4 || null,
+          otrosT1: formData.otrosT1 || null,
+          usuario: 1,
+          equipo: 'equipo'
         };
         return apiBanco.update(endpoints.finanzas.banco.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['banco', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['banco', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Item de banco actualizado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el item de banco. Por favor, intente nuevamente.'
-        );
-        console.error('Error updating banco item:', error);
+        console.error('Error updating banco:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -125,17 +107,11 @@ export const useBanco = () => {
       mutationFn: (id: number) => apiBanco.delete(endpoints.finanzas.banco.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['banco', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Item de banco eliminado correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el item de inventario. Por favor, intente nuevamente.'
-        );
-        console.error('Error deleting banco item:', error);
+        console.error('Error deleting banco:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };

@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiCategoria = createApiService<Categoria>();
 
@@ -16,10 +15,6 @@ export const useCategoria = () => {
       queryFn: () => apiCategoria.getList(endpoints.inventory.categoria.list, page, size),
       onSettled: (_: ListDataResponse<Categoria> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching categoria list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useCategoria = () => {
       enabled: !!id,
       onSettled: (_: Categoria | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la categoría. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching categoria item:', error);
         }
       }
@@ -66,17 +57,11 @@ export const useCategoria = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Categoría creada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error creating categoria:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -106,17 +91,11 @@ export const useCategoria = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['categoria', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Categoría actualizada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating categoria:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };
@@ -126,17 +105,11 @@ export const useCategoria = () => {
       mutationFn: (id: number) => apiCategoria.delete(endpoints.inventory.categoria.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['categoria', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Categoría eliminada correctamente.'
-        );
+        // Notificación manejada desde el componente
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting categoria:', error);
+        // Notificación de error manejada desde el componente
       }
     });
   };

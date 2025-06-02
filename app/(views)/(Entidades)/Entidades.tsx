@@ -1,32 +1,57 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { usePathname } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
     SafeAreaView,
+    ScrollView,
     Text,
     TouchableOpacity,
-    View,
-    ScrollView
+    View
 } from 'react-native';
+import { useAppContext } from '../../../components/InitStage/AppContext';
+import { SECTION_COLORS } from '../../../utils/colorManager';
 import CrudFinanzas from './EntFinanzas';
 import CrudInventario from './EntInventario';
 import CrudVentas from './EntVentas';
 
-// Define section colors
-const SECTION_COLORS = {
-    home: "#1e3a8a",
-    inventory: "#581c87",
-    sales: "#15803d",
-    finance: "#1e3a8a",
-    profile: "#1e3a8a"
-};
-
 const Entidades: React.FC = () => {
     const [selectedTab, setSelectedTab] = useState('home');
+    const currentPath = usePathname();
+    const { setCurrentEntitySection } = useAppContext();
 
     // Get current section color
     const getCurrentColor = () => {
-        return SECTION_COLORS[selectedTab as keyof typeof SECTION_COLORS] || SECTION_COLORS.home;
+        // Si estamos en una subsección específica, usar su color
+        if (selectedTab === 'inventory') {
+            return SECTION_COLORS.inventory;
+        } else if (selectedTab === 'sales') {
+            return SECTION_COLORS.sales;
+        } else if (selectedTab === 'finance') {
+            return SECTION_COLORS.finance;
+        }
+        // Por defecto, usar el color de entidades
+        return SECTION_COLORS.entities;
     };
+
+    // Comunicar cambios de sección al contexto global
+    useEffect(() => {
+        if (selectedTab === 'inventory') {
+            setCurrentEntitySection('inventory');
+        } else if (selectedTab === 'sales') {
+            setCurrentEntitySection('sales');
+        } else if (selectedTab === 'finance') {
+            setCurrentEntitySection('finance');
+        } else {
+            setCurrentEntitySection('entities');
+        }
+    }, [selectedTab, setCurrentEntitySection]);
+
+    // Limpiar el contexto cuando nos vamos de entidades
+    useEffect(() => {
+        return () => {
+            setCurrentEntitySection(null);
+        };
+    }, [setCurrentEntitySection]);
 
     // Renderizar el contenido según la pestaña seleccionada
     const renderContent = () => {
@@ -141,7 +166,7 @@ const Entidades: React.FC = () => {
                     <Ionicons
                         name="home"
                         size={24}
-                        color={selectedTab === 'home' ? SECTION_COLORS.home : "#6b7280"}
+                        color={selectedTab === 'home' ? SECTION_COLORS.entities : "#6b7280"}
                     />
                     <Text
                         className={`text-xs ${selectedTab === 'home' ? "text-blue-800" : "text-gray-500"}`}
@@ -201,7 +226,7 @@ const Entidades: React.FC = () => {
                     <Ionicons
                         name="person-outline"
                         size={24}
-                        color={selectedTab === 'profile' ? SECTION_COLORS.profile : "#6b7280"}
+                        color={selectedTab === 'profile' ? SECTION_COLORS.entities : "#6b7280"}
                     />
                     <Text
                         className={`text-xs ${selectedTab === 'profile' ? "text-blue-800" : "text-gray-500"}`}

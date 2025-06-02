@@ -4,22 +4,17 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
-const colorApiGeneric = createApiService<Color>();
+const apiColor = createApiService<Color>();
 
-export const useColor   = () => {
+export const useColor = () => {
 
   const useGetColorList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Color>, Error>({
       queryKey: ['color', 'list', page, size],
-      queryFn: () => colorApiGeneric.getList(endpoints.inventory.color.list, page, size),
+      queryFn: () => apiColor.getList(endpoints.inventory.color.list, page, size),
       onSettled: (_: ListDataResponse<Color> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching color list:', error);
         }
       }
@@ -29,14 +24,10 @@ export const useColor   = () => {
   const useGetColorItem = (id: number) => {
     return useQuery<Color, Error>({
       queryKey: ['color', 'item', id],
-      queryFn: () => colorApiGeneric.getOne(endpoints.inventory.color.getOne(id)),
+      queryFn: () => apiColor.getOne(endpoints.inventory.color.getOne(id)),
       enabled: !!id,
       onSettled: (_: Color | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el color. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching color item:', error);
         }
       }
@@ -49,7 +40,7 @@ export const useColor   = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        const data: Omit<Color, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
+        const data: Omit<Color, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -60,22 +51,15 @@ export const useColor   = () => {
           otrosC3: formData.otrosC3 || null,
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
-          equipo: 'equipo',
+          usuario: 1,
+          equipo: 'equipo'
         };
-        return colorApiGeneric.create(endpoints.inventory.color.create, data);
+        return apiColor.create(endpoints.inventory.color.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['color', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Color creada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el color. Por favor, intente nuevamente.'
-        );
         console.error('Error creating color:', error);
       }
     });
@@ -99,23 +83,16 @@ export const useColor   = () => {
           otrosC3: formData.otrosC3 || null,
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
-          equipo: 'equipo',
+          usuario: 1,
+          equipo: 'equipo'
         };
-        return colorApiGeneric.update(endpoints.inventory.color.update(id), data);
+        return apiColor.update(endpoints.inventory.color.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['color', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['color', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Color actualizada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el color. Por favor, intente nuevamente.'
-        );
         console.error('Error updating color:', error);
       }
     });
@@ -123,19 +100,11 @@ export const useColor   = () => {
 
   const useDeleteColor = () => {
     return useMutation({
-      mutationFn: (id: number) => colorApiGeneric.delete(endpoints.inventory.color.delete(id)),
+      mutationFn: (id: number) => apiColor.delete(endpoints.inventory.color.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['color', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Color eliminada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el color. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting color:', error);
       }
     });
