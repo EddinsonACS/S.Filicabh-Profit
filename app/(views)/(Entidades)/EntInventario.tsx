@@ -23,6 +23,7 @@ import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, View } from 'react-native';
@@ -60,8 +61,10 @@ const CATEGORY_TITLES = {
 type CategoryId = keyof typeof CATEGORY_TITLES | 'articulo';
 
 const EntInventario: React.FC = () => {
+  const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const navigation = useNavigation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { 
     showCreateSuccess, 
     showUpdateSuccess, 
@@ -150,6 +153,23 @@ const EntInventario: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
 
+  useEffect(() => {
+    const backAction = () => {
+      if (formModalVisible) {
+        setFormModalVisible(false);
+        setBackendFormError(null); // Clear backend error when modal is closed by back button
+        return true; // Prevent default behavior (exit app)
+      }
+      return false; // Default behavior
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [formModalVisible]);
 
   // React Query hooks
   const { data: almacenData, isLoading: isLoadingAlmacen } = useGetAlmacenList(currentPage, PAGE_SIZE);
@@ -192,14 +212,6 @@ const EntInventario: React.FC = () => {
   const updateGrupoMutation = useUpdateGrupo();
   const deleteGrupoMutation = useDeleteGrupo();
 
-  const createSeccionMutation = useCreateSeccion();
-  const updateSeccionMutation = useUpdateSeccion();
-  const deleteSeccionMutation = useDeleteSeccion();
-
-  const createUnidadMutation = useCreateUnidad();
-  const updateUnidadMutation = useUpdateUnidad();
-  const deleteUnidadMutation = useDeleteUnidad();
-
   const createTallaMutation = useCreateTalla();
   const updateTallaMutation = useUpdateTalla();
   const deleteTallaMutation = useDeleteTalla();
@@ -219,6 +231,14 @@ const EntInventario: React.FC = () => {
   const createOrigenMutation = useCreateOrigen();
   const updateOrigenMutation = useUpdateOrigen();
   const deleteOrigenMutation = useDeleteOrigen();
+
+  const createSeccionMutation = useCreateSeccion();
+  const updateSeccionMutation = useUpdateSeccion();
+  const deleteSeccionMutation = useDeleteSeccion();
+
+  const createUnidadMutation = useCreateUnidad();
+  const updateUnidadMutation = useUpdateUnidad();
+  const deleteUnidadMutation = useDeleteUnidad();
 
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
   const { data: gruposData } = useGetGrupoList(1, 1000);
@@ -403,326 +423,174 @@ const EntInventario: React.FC = () => {
     }
   }, [hasMore, isLoading, currentPage]);
 
-  const handleCreate = (formData: any) => {
-    if (selectedCategory === 'almacen') {
-      createAlmacenMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el almacén');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'categoria') {
-      createCategoriaMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la categoría');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'grupo') {
-      createGrupoMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el grupo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'seccion') {
-      createSeccionMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la sección');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'unidad') {
-      createUnidadMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la unidad');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'talla') {
-      createTallaMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la talla');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'color') {
-      createColorMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el color');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'tipodeimpuesto') {
-      createTipoDeImpuestoMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el tipo de impuesto');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'tipodearticulo') {
-      createTipoDeArticuloMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el tipo de artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'origen') {
-      createOrigenMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el origen');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'articulo') {
-      createArticuloMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    }
-    setFormModalVisible(false);
+const handleCreate = async (formData: any): Promise<boolean> => {
+    setBackendFormError(null);
+    return new Promise((resolve) => {
+      const commonOnSuccess = (createdItem: any, entityName: string) => {
+        // queryClient.invalidateQueries({ queryKey: [selectedCategory] }); // Add queryClient for this
+        setAccumulatedItems(prev => [createdItem, ...prev]);
+        setCurrentPage(1);
+        setHasMore(true);
+        showCreateSuccess(`el ${entityName.toLowerCase()}`);
+        resolve(true);
+      };
+
+      const commonOnError = (error: any, entityType: string) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || `Error al crear ${entityType.toLowerCase()}`;
+        setBackendFormError(errorMessage);
+        resolve(false);
+      };
+
+      if (selectedCategory === 'almacen') {
+        createAlmacenMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.almacen),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.almacen)
+        });
+      } else if (selectedCategory === 'categoria') {
+        createCategoriaMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.categoria),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.categoria)
+        });
+      } else if (selectedCategory === 'grupo') {
+        createGrupoMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.grupo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.grupo)
+        });
+      } else if (selectedCategory === 'seccion') {
+        createSeccionMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.seccion),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.seccion)
+        });
+      } else if (selectedCategory === 'unidad') {
+        createUnidadMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.unidad),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.unidad)
+        });
+      } else if (selectedCategory === 'talla') {
+        createTallaMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.talla),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.talla)
+        });
+      } else if (selectedCategory === 'color') {
+        createColorMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.color),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.color)
+        });
+      } else if (selectedCategory === 'tipodeimpuesto') {
+        createTipoDeImpuestoMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.tipodeimpuesto),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.tipodeimpuesto)
+        });
+      } else if (selectedCategory === 'tipodearticulo') {
+        createTipoDeArticuloMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.tipodearticulo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.tipodearticulo)
+        });
+      } else if (selectedCategory === 'origen') {
+        createOrigenMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.origen),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.origen)
+        });
+      } else if (selectedCategory === 'articulo') {
+        createArticuloMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.articulo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.articulo)
+        });
+      } else {
+        console.error("Categoría no manejada en handleCreate:", selectedCategory);
+        setBackendFormError("Error interno: Categoría no reconocida.");
+        resolve(false);
+      }
+    });
   };
 
-  const handleUpdate = (formData: any) => {
-    if (!currentItem) return;
-
-    if (selectedCategory === 'almacen') {
-      updateAlmacenMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el almacén');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'categoria') {
-      updateCategoriaMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la categoría');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'grupo') {
-      updateGrupoMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el grupo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'seccion') {
-      updateSeccionMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la sección');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'unidad') {
-      updateUnidadMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la unidad');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'talla') {
-      updateTallaMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la talla');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'color') {
-      updateColorMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el color');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'tipodeimpuesto') {
-      updateTipoDeImpuestoMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el tipo de impuesto');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'tipodearticulo') {
-      updateTipoDeArticuloMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el tipo de artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'origen') {
-      updateOrigenMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el origen');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'articulo') {
-      updateArticuloMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
+  const handleUpdate = async (formData: any): Promise<boolean> => {
+    if (!currentItem) {
+      setBackendFormError("Error: No hay un ítem seleccionado para actualizar.");
+      return Promise.resolve(false);
     }
+    setBackendFormError(null);
 
-    setFormModalVisible(false);
-    setDetailModalVisible(false);
+    return new Promise((resolve) => {
+      const commonOnSuccess = (updatedItem: any, entityName: string) => {
+        queryClient.invalidateQueries({ queryKey: [selectedCategory, currentItem.id] });
+        // queryClient.invalidateQueries({ queryKey: [selectedCategory] }); // Add queryClient for this
+        setAccumulatedItems(prev =>
+          prev.map(item => (item.id === currentItem.id ? updatedItem : item))
+        );
+        showUpdateSuccess(`el ${entityName.toLowerCase()}`);
+        resolve(true);
+      };
+
+      const commonOnError = (error: any, entityType: string) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || `Error al actualizar ${entityType.toLowerCase()}`;
+        setBackendFormError(errorMessage);
+        resolve(false);
+      };
+
+      const mutationData = { id: currentItem.id, ...formData };
+
+      if (selectedCategory === 'almacen') {
+        updateAlmacenMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.almacen),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.almacen)
+        });
+      } else if (selectedCategory === 'categoria') {
+        updateCategoriaMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.categoria),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.categoria)
+        });
+      } else if (selectedCategory === 'grupo') {
+        updateGrupoMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.grupo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.grupo)
+        });
+      } else if (selectedCategory === 'seccion') {
+        updateSeccionMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.seccion),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.seccion)
+        });
+      } else if (selectedCategory === 'unidad') {
+        updateUnidadMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.unidad),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.unidad)
+        });
+      } else if (selectedCategory === 'talla') {
+        updateTallaMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.talla),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.talla)
+        });
+      } else if (selectedCategory === 'color') {
+        updateColorMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.color),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.color)
+        });
+      } else if (selectedCategory === 'tipodeimpuesto') {
+        updateTipoDeImpuestoMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.tipodeimpuesto),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.tipodeimpuesto)
+        });
+      } else if (selectedCategory === 'tipodearticulo') {
+        updateTipoDeArticuloMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.tipodearticulo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.tipodearticulo)
+        });
+      } else if (selectedCategory === 'origen') {
+        updateOrigenMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.origen),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.origen)
+        });
+      } else if (selectedCategory === 'articulo') {
+        updateArticuloMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.articulo),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.articulo)
+        });
+      } else {
+        console.error("Categoría no manejada en handleUpdate:", selectedCategory);
+        setBackendFormError("Error interno: Categoría no reconocida.");
+        resolve(false);
+      }
+    });
   };
 
   const handleDelete = (id: number) => {
@@ -890,6 +758,7 @@ const EntInventario: React.FC = () => {
   };
 
   const openEditModal = (item: any) => {
+    setBackendFormError(null); // Clear backend error when opening for edit
     setCurrentItem(item);
     setIsEditing(true);
     setFormModalVisible(true);
@@ -936,6 +805,7 @@ const EntInventario: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onAddPress={() => {
+          setBackendFormError(null);
           setCurrentItem(null);
           setIsEditing(false);
           setFormModalVisible(true);
@@ -967,7 +837,11 @@ const EntInventario: React.FC = () => {
 
       <DynamicFormModal
         visible={formModalVisible}
-        onClose={() => setFormModalVisible(false)}
+        onClose={() => {
+          setFormModalVisible(false);
+          setBackendFormError(null); // Clear backend error when modal is closed
+        }}
+        backendError={backendFormError}
         isEditing={isEditing}
         currentItem={currentItem}
         handleCreate={handleCreate}

@@ -18,12 +18,13 @@ interface FormField {
 }
 
 interface DynamicFormModalProps {
+  backendError?: string | null;
   visible: boolean;
   onClose: () => void;
   isEditing: boolean;
   currentItem: any;
-  handleCreate: (data: any) => void;
-  handleUpdate: (data: any) => void;
+  handleCreate: (data: any) => Promise<boolean>; // Returns true on success, false on error
+  handleUpdate: (data: any) => Promise<boolean>; // Returns true on success, false on error
   selectedCategory: string;
   schema: z.ZodType<any>;
   defaultValues: Record<string, any>;
@@ -56,7 +57,8 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   buttonColor,
   buttonTextColor,
   switchActiveColor,
-  switchInactiveColor
+  switchInactiveColor,
+  backendError
 }) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -133,14 +135,19 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     })
   ).current;
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
+    let success = false;
     if (isEditing) {
-      handleUpdate(data);
+      success = await handleUpdate(data); 
     } else {
-      handleCreate(data);
+      success = await handleCreate(data);
     }
-    reset();
-    onClose();
+
+    if (success) {
+      reset(); 
+      onClose(); 
+    }
+    // If not successful, the modal remains open, and the parent component is expected to pass the backendError prop.
   };
 
   // Separar campos de texto/número, switches y selects
@@ -320,6 +327,17 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                   )}
                 </View>
               ))}
+
+              {/* Display Backend Error */}
+              {backendError && (
+                <View className="my-3 p-3 bg-red-100 border border-red-300 rounded-lg shadow-sm">
+                  <View className="flex-row items-center">
+                    <Ionicons name="alert-circle-outline" size={20} color="#c81e1e" />
+                    <Text className="text-red-700 text-sm ml-2 font-medium">Error de Servidor</Text>
+                  </View>
+                  <Text className="text-red-600 text-sm mt-1 ml-1">{backendError}</Text>
+                </View>
+              )}
 
               {/* Tarjeta de switches */}
               {switchFields.length > 0 && (
