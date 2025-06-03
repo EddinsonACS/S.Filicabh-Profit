@@ -344,8 +344,8 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                 <View className="bg-gray-50 rounded-lg p-4 mb-4">
                   <Text className="text-gray-800 font-medium mb-3">Configuración general</Text>
                   {switchFields.map((field, idx) => (
-                    <View key={field.name} className={`flex-row justify-between items-center py-2 ${idx < switchFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
-                      <View>
+                    <View key={field.name} className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
+                      <View className="w-3/4">
                         <Text className="text-gray-700 font-medium">{field.label}</Text>
                         {field.description && (
                           <Text className="text-gray-500 text-xs">{field.description}</Text>

@@ -1,5 +1,6 @@
 import { AcuerdoDePago } from '@/core/models/Ventas/AcuerdoDePago';
 import { Ciudad } from '@/core/models/Ventas/Ciudad';
+import { FiguraComercial } from '@/core/models/Ventas/FiguraComercial';
 import { FormaDeEntrega } from '@/core/models/Ventas/FormaDeEntrega';
 import { ListaDePrecio } from '@/core/models/Ventas/ListaDePrecio';
 import { Moneda } from '@/core/models/Ventas/Moneda';
@@ -14,9 +15,9 @@ import { Vendedor } from '@/core/models/Ventas/Vendedor';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-type CategoryId = 'acuerdodepago' | 'ciudad' | 'region' | 'pais' | 'formadeentrega' | 'tipopersona' | 'tipovendedor' | 'vendedor' | 'moneda' | 'tasadecambio' | 'listadeprecio' | 'sector' | 'rubro';
+type CategoryId = 'acuerdodepago' | 'ciudad' | 'region' | 'pais' | 'formadeentrega' | 'tipopersona' | 'tipovendedor' | 'vendedor' | 'moneda' | 'tasadecambio' | 'listadeprecio' | 'sector' | 'rubro' | 'figuracomercial';
 
-type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoPersona | TipoVendedor | Vendedor | Moneda | TasaDeCambio | ListaDePrecio | Sector | Rubro;
+type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoPersona | TipoVendedor | Vendedor | Moneda | TasaDeCambio | ListaDePrecio | Sector | Rubro | FiguraComercial;
 
 interface ItemArticleProps {
   item: ItemUnion;

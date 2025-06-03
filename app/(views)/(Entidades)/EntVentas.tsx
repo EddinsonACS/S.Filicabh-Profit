@@ -11,6 +11,7 @@ import { useTasaDeCambio } from '@/hooks/Ventas/useTasaDeCambio';
 import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
 import { useTipoVendedor } from '@/hooks/Ventas/useTipoVendedor';
 import { useVendedor } from '@/hooks/Ventas/useVendedor';
+import { useFiguraComercial } from '@/hooks/Ventas/useFiguraComercial';
 
 import { AcuerdoDePago } from '@/core/models/Ventas/AcuerdoDePago';
 import { Ciudad } from '@/core/models/Ventas/Ciudad';
@@ -25,6 +26,7 @@ import { TasaDeCambio } from '@/core/models/Ventas/TasaDeCambio';
 import { TipoPersona } from '@/core/models/Ventas/TipoPersona';
 import { TipoVendedor } from '@/core/models/Ventas/TipoVendedor';
 import { Vendedor } from '@/core/models/Ventas/Vendedor';
+import { FiguraComercial } from '@/core/models/Ventas/FiguraComercial';
 
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -80,7 +82,8 @@ const CATEGORIES = [
   { id: 'tasadecambio', label: 'Tasa de Cambio', icon: 'swap-horizontal' as const },
   { id: 'listadeprecio', label: 'Lista de Precio', icon: 'pricetag' as const },
   { id: 'sector', label: 'Sector', icon: 'layers' as const },
-  { id: 'rubro', label: 'Rubro', icon: 'albums' as const }
+  { id: 'rubro', label: 'Rubro', icon: 'albums' as const },
+  { id: 'figuracomercial', label: 'Figura Comercial', icon: 'people' as const } // Added icon: 'people' as a placeholder, adjust if needed
 ];
 
 const CATEGORY_TITLES = {
@@ -96,7 +99,8 @@ const CATEGORY_TITLES = {
   tasadecambio: 'Tasa de Cambio',
   listadeprecio: 'Lista de Precio',
   sector: 'Sector',
-  rubro: 'Rubro'
+  rubro: 'Rubro',
+  figuracomercial: 'Figura Comercial'
 };
 
 // Configuración de campos de formulario por entidad
@@ -439,6 +443,37 @@ const FORM_FIELDS = {
       required: false,
       description: 'Indica si el rubro está suspendido.'
     }
+  ],
+  figuracomercial: [
+    { name: 'nombre', label: 'Nombre', type: 'text' as const, required: true, placeholder: 'Nombre de la figura comercial', description: 'Ingrese el nombre completo o razón social.' },
+    { name: 'rif', label: 'RIF', type: 'text' as const, required: true, placeholder: 'Ej: J-12345678-9', description: 'Registro de Información Fiscal.' },
+    { name: 'nit', label: 'NIT', type: 'text' as const, placeholder: 'NIT (si aplica)', description: 'Número de Identificación Tributaria.', required: true },
+    { name: 'personaContacto', label: 'Persona Contacto', type: 'text' as const, placeholder: 'Nombre del contacto principal', description: 'Persona a contactar en la empresa.', required: true },
+    { name: 'telefono', label: 'Teléfono', type: 'text' as const, placeholder: 'Ej: 0412-1234567', description: 'Número de teléfono principal.', required: true },
+    { name: 'email', label: 'Email Principal', type: 'text' as const, placeholder: 'correo@ejemplo.com', description: 'Dirección de correo electrónico principal.', required: true },
+    { name: 'emailAlterno', label: 'Email Alterno', type: 'text' as const, placeholder: 'correo.alterno@ejemplo.com', description: 'Dirección de correo electrónico alternativa.', required: false },
+    { name: 'descripcionFiguraComercial', label: 'Descripción', type: 'text' as const, placeholder: 'Descripción adicional', description: 'Notas o descripción relevante sobre la figura comercial.', required: false },
+    { name: 'codigoPais', label: 'País', type: 'select' as const, required: true, placeholder: 'Seleccione un país', description: 'País de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoCiudad', label: 'Ciudad', type: 'select' as const, required: true, placeholder: 'Seleccione una ciudad', description: 'Ciudad de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoRubro', label: 'Rubro', type: 'select' as const, required: true, placeholder: 'Seleccione un rubro', description: 'Rubro principal de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoSector', label: 'Sector', type: 'select' as const, required: true, placeholder: 'Seleccione un sector', description: 'Sector de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoVendedor', label: 'Vendedor Asignado', type: 'select' as const, required: true, placeholder: 'Seleccione un vendedor', description: 'Vendedor asignado a esta figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoAcuerdoDePago', label: 'Acuerdo de Pago', type: 'select' as const, required: true, placeholder: 'Seleccione acuerdo', description: 'Acuerdo de pago predeterminado.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'codigoTipoPersona', label: 'Tipo de Persona', type: 'select' as const, required: true, placeholder: 'Seleccione tipo persona', description: 'Clasificación del tipo de persona.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'activoVentas', label: 'Activo para Ventas', type: 'switch' as const, description: 'Indica si está activo para transacciones de ventas.', required: false },
+    { name: 'activoCompras', label: 'Activo para Compras', type: 'switch' as const, description: 'Indica si está activo para transacciones de compras.', required: false },
+    { name: 'esCasaMatriz', label: 'Es Casa Matriz', type: 'switch' as const, description: 'Indica si esta figura es la casa matriz.', required: false },
+    { name: 'codigoFiguraComercialCasaMatriz', label: 'Casa Matriz (Si aplica)', type: 'select' as const, placeholder: 'Seleccione casa matriz', description: 'Figura comercial que es la casa matriz (si esta es una sucursal).', optionsData: [], optionLabel: 'nombre', optionValue: 'id', required: true },
+    { name: 'direccionComercial', label: 'Dirección Comercial', type: 'text' as const, placeholder: 'Dirección comercial completa', description: 'Dirección fiscal o comercial.', required: true },
+    { name: 'direccionEntrega', label: 'Dirección de Entrega', type: 'text' as const, placeholder: 'Dirección para entregas', description: 'Dirección predeterminada para envío de mercancía.', required: true },
+    { name: 'codigoMonedaLimiteCreditoVentas', label: 'Moneda Límite Crédito (Ventas)', type: 'select' as const, required: true, placeholder: 'Seleccione moneda', description: 'Moneda para el límite de crédito en ventas.', optionsData: [], optionLabel: 'codigo', optionValue: 'codigo' },
+    { name: 'montolimiteCreditoVentas', label: 'Monto Límite Crédito (Ventas)', type: 'number' as const, required: true, placeholder: '0.00', description: 'Monto del límite de crédito para ventas.' },
+    { name: 'codigoMonedaLimiteCreditoCompras', label: 'Moneda Límite Crédito (Compras)', type: 'select' as const, required: true, placeholder: 'Seleccione moneda', description: 'Moneda para el límite de crédito en compras.', optionsData: [], optionLabel: 'codigo', optionValue: 'codigo' },
+    { name: 'montolimiteCreditoCompras', label: 'Monto Límite Crédito (Compras)', type: 'number' as const, required: true, placeholder: '0.00', description: 'Monto del límite de crédito para compras.' },
+    { name: 'porceRetencionIva', label: '% Retención IVA', type: 'number' as const, placeholder: '0.00', description: 'Porcentaje de retención de IVA aplicable.', required: false },
+    { name: 'aplicaRetVentasAuto', label: 'Aplica Ret. Ventas Auto.', type: 'switch' as const, description: 'Aplicar retenciones automáticamente en ventas.', required: false },
+    { name: 'aplicaRetComprasAuto', label: 'Aplica Ret. Compras Auto.', type: 'switch' as const, description: 'Aplicar retenciones automáticamente en compras.', required: false },
+    { name: 'suspendido', label: 'Suspendido', type: 'switch' as const, description: 'Indica si la figura comercial está suspendida.', required: false }
   ]
 };
 
@@ -511,6 +546,37 @@ const DEFAULT_VALUES = {
   rubro: {
     nombre: '',
     codigoListaPrecio: 0,
+    suspendido: false
+  },
+  figuracomercial: {
+    nombre: '',
+    rif: '',
+    nit: '',
+    personaContacto: '',
+    telefono: '',
+    email: '',
+    emailAlterno: '',
+    descripcionFiguraComercial: '',
+    codigoPais: 0,
+    codigoCiudad: 0,
+    codigoRubro: 0,
+    codigoSector: 0,
+    codigoVendedor: 0,
+    codigoAcuerdoDePago: 0,
+    codigoTipoPersona: 0,
+    activoVentas: true,
+    activoCompras: true,
+    esCasaMatriz: false,
+    codigoFiguraComercialCasaMatriz: 0,
+    direccionComercial: '',
+    direccionEntrega: '',
+    codigoMonedaLimiteCreditoVentas: '',
+    montolimiteCreditoVentas: 0,
+    codigoMonedaLimiteCreditoCompras: '',
+    montolimiteCreditoCompras: 0,
+    porceRetencionIva: 0,
+    aplicaRetVentasAuto: false,
+    aplicaRetComprasAuto: false,
     suspendido: false
   }
 };
@@ -585,11 +651,42 @@ const SCHEMAS = {
     nombre: z.string().min(1, 'El nombre es requerido'),
     codigoListaPrecio: z.number().min(1, 'La lista de precio es requerida'),
     suspendido: z.boolean()
+  }),
+  figuracomercial: z.object({
+    nombre: z.string({required_error: 'El nombre es requerido'}),
+    rif: z.string({required_error: 'El RIF es requerido'}),
+    nit: z.string({required_error: 'El NIT es requerido'}),
+    personaContacto: z.string({required_error: 'La persona de contacto es requerida'}),
+    telefono: z.string({required_error: 'El teléfono es requerido'}),
+    email: z.string({required_error: 'El email es requerido'}).email('Email inválido'), 
+    emailAlterno: z.string({required_error: 'El email alterno es requerido'}).email('Email inválido'), 
+    descripcionFiguraComercial: z.string({required_error: 'La descripción es requerida'}),
+    codigoPais: z.number({required_error: 'El país es requerido'}).min(1, 'El país es requerido'),
+    codigoCiudad: z.number({required_error: 'La ciudad es requerida'}).min(1, 'La ciudad es requerida'),
+    codigoRubro: z.number({required_error: 'El rubro es requerido'}).min(1, 'El rubro es requerido'),
+    codigoSector: z.number({required_error: 'El sector es requerido'}).min(1, 'El sector es requerido'),
+    codigoVendedor: z.number({required_error: 'El vendedor es requerido'}).min(1, 'El vendedor es requerido'),
+    codigoAcuerdoDePago: z.number({required_error: 'El acuerdo de pago es requerido'}).min(1, 'El acuerdo de pago es requerido'),
+    codigoTipoPersona: z.number({required_error: 'El tipo de persona es requerido'}).min(1, 'El tipo de persona es requerido'),
+    activoVentas: z.boolean(),
+    activoCompras: z.boolean(),
+    esCasaMatriz: z.boolean(),
+    codigoFiguraComercialCasaMatriz: z.number({required_error: 'La casa matriz es requerida'}),
+    direccionComercial: z.string({required_error: 'La dirección comercial es requerida'}),
+    direccionEntrega: z.string({required_error: 'La dirección de entrega es requerida'}),
+    codigoMonedaLimiteCreditoVentas: z.string({required_error: 'Moneda límite crédito ventas es requerida'}).min(1, 'Moneda límite crédito ventas es requerida'),
+    montolimiteCreditoVentas: z.number({required_error: 'Monto límite crédito ventas es requerido'}),
+    codigoMonedaLimiteCreditoCompras: z.string({required_error: 'Moneda límite crédito compras es requerida'}).min(1, 'Moneda límite crédito compras es requerida'),
+    montolimiteCreditoCompras: z.number({required_error: 'Monto límite crédito compras es requerido'}),
+    porceRetencionIva: z.number({required_error: 'Porcentaje retención IVA es requerido'}).min(0, 'Porcentaje retención IVA debe ser >= 0').max(100, 'Porcentaje retención IVA debe ser <= 100'),
+    aplicaRetVentasAuto: z.boolean(),
+    aplicaRetComprasAuto: z.boolean(),
+    suspendido: z.boolean()
   })
 };
 
 type CategoryId = keyof typeof CATEGORY_TITLES;
-type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoPersona | TipoVendedor | Vendedor | Moneda | TasaDeCambio | ListaDePrecio | Sector | Rubro;
+type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoPersona | TipoVendedor | Vendedor | Moneda | TasaDeCambio | ListaDePrecio | Sector | Rubro | FiguraComercial;
 
 const EntVentas: React.FC = () => {
   const navigation = useNavigation();
@@ -689,6 +786,13 @@ const EntVentas: React.FC = () => {
     useDeleteRubro
   } = useRubro();
 
+  const {
+    useGetFiguraComercialList,
+    useCreateFiguraComercial,
+    useUpdateFiguraComercial,
+    useDeleteFiguraComercial
+  } = useFiguraComercial();
+
   // MUTACIONES - NIVEL SUPERIOR DEL COMPONENTE
   const createAcuerdoDePagoMutation = useCreateAcuerdoDePago();
   const updateAcuerdoDePagoMutation = useUpdateAcuerdoDePago();
@@ -742,6 +846,10 @@ const EntVentas: React.FC = () => {
   const updateRubroMutation = useUpdateRubro();
   const deleteRubroMutation = useDeleteRubro();
 
+  const createFiguraComercialMutation = useCreateFiguraComercial();
+  const updateFiguraComercialMutation = useUpdateFiguraComercial();
+  const deleteFiguraComercialMutation = useDeleteFiguraComercial();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -770,11 +878,20 @@ const EntVentas: React.FC = () => {
   const { data: listaDePrecioData, isLoading: isLoadingListaDePrecio } = useGetListaDePrecioList(currentPage, PAGE_SIZE);
   const { data: sectorData, isLoading: isLoadingSector } = useGetSectorList(currentPage, PAGE_SIZE);
   const { data: rubroData, isLoading: isLoadingRubro } = useGetRubroList(currentPage, PAGE_SIZE);
+  const { data: figuraComercialData, isLoading: isLoadingFiguraComercial } = useGetFiguraComercialList(currentPage, PAGE_SIZE);
 
   // Datos adicionales para selectores
   const { data: regionesData } = useGetRegionList(1, 1000);
   const { data: monedasData } = useGetMonedaList(1, 1000);
   const { data: listasDePrecioData } = useGetListaDePrecioList(1, 1000);
+  const { data: paisesOptionsData } = useGetPaisList(1, 1000);
+  const { data: ciudadesOptionsData } = useGetCiudadList(1, 1000);
+  const { data: rubrosOptionsData } = useGetRubroList(1, 1000);
+  const { data: sectoresOptionsData } = useGetSectorList(1, 1000);
+  const { data: vendedoresOptionsData } = useGetVendedorList(1, 1000);
+  const { data: acuerdosDePagoOptionsData } = useGetAcuerdoDePagoList(1, 1000);
+  const { data: tiposPersonaOptionsData } = useGetTipoPersonaList(1, 1000);
+  const { data: figurasComercialesOptionsData } = useGetFiguraComercialList(1, 1000);
 
   // Reset pagination when category changes
   useEffect(() => {
@@ -827,6 +944,9 @@ const EntVentas: React.FC = () => {
       case 'rubro':
         currentData = rubroData;
         break;
+      case 'figuracomercial':
+        currentData = figuraComercialData;
+        break;
     }
 
     if (currentData) {
@@ -843,7 +963,7 @@ const EntVentas: React.FC = () => {
         });
       }
     }
-  }, [acuerdoDePagoData, ciudadData, regionData, paisData, formaDeEntregaData, tipoPersonaData, tipoVendedorData, vendedorData, monedaData, tasaDeCambioData, listaDePrecioData, sectorData, rubroData, currentPage, selectedCategory]);
+  }, [acuerdoDePagoData, ciudadData, regionData, paisData, formaDeEntregaData, tipoPersonaData, tipoVendedorData, vendedorData, monedaData, tasaDeCambioData, listaDePrecioData, sectorData, rubroData, figuraComercialData, currentPage, selectedCategory]);
 
   const navigateToModules = () => {
     router.replace('/Entidades');
@@ -887,6 +1007,7 @@ const EntVentas: React.FC = () => {
       case 'listadeprecio': return isLoadingListaDePrecio;
       case 'sector': return isLoadingSector;
       case 'rubro': return isLoadingRubro;
+      case 'figuracomercial': return isLoadingFiguraComercial;
       default: return false;
     }
   })();
@@ -970,9 +1091,46 @@ const EntVentas: React.FC = () => {
         return field;
       });
     }
+
+    if (selectedCategory === 'figuracomercial') {
+      return fields.map(field => {
+        if (field.name === 'codigoPais' && paisesOptionsData?.data) {
+          return { ...field, options: paisesOptionsData.data };
+        }
+        if (field.name === 'codigoCiudad' && ciudadesOptionsData?.data) {
+          return { ...field, options: ciudadesOptionsData.data };
+        }
+        if (field.name === 'codigoRubro' && rubrosOptionsData?.data) {
+          return { ...field, options: rubrosOptionsData.data };
+        }
+        if (field.name === 'codigoSector' && sectoresOptionsData?.data) {
+          return { ...field, options: sectoresOptionsData.data };
+        }
+        if (field.name === 'codigoVendedor' && vendedoresOptionsData?.data) {
+          return { ...field, options: vendedoresOptionsData.data };
+        }
+        if (field.name === 'codigoAcuerdoDePago' && acuerdosDePagoOptionsData?.data) {
+          return { ...field, options: acuerdosDePagoOptionsData.data };
+        }
+        if (field.name === 'codigoTipoPersona' && tiposPersonaOptionsData?.data) {
+          return { ...field, options: tiposPersonaOptionsData.data };
+        }
+        if (field.name === 'codigoFiguraComercialCasaMatriz' && figurasComercialesOptionsData?.data) {
+          // Filter out the current item if editing, to prevent self-selection as casa matriz
+          const filteredFiguras = currentItem && figurasComercialesOptionsData.data
+            ? figurasComercialesOptionsData.data.filter(fc => fc.id !== currentItem.id)
+            : figurasComercialesOptionsData?.data;
+          return { ...field, options: filteredFiguras || [] };
+        }
+        if ((field.name === 'codigoMonedaLimiteCreditoVentas' || field.name === 'codigoMonedaLimiteCreditoCompras') && monedasData?.data) {
+          return { ...field, options: monedasData.data };
+        }
+        return field;
+      });
+    }
     
     return fields;
-  }, [selectedCategory, regionesData, monedasData, listasDePrecioData]);
+  }, [selectedCategory, regionesData, monedasData, listasDePrecioData, paisesOptionsData, ciudadesOptionsData, rubrosOptionsData, sectoresOptionsData, vendedoresOptionsData, acuerdosDePagoOptionsData, tiposPersonaOptionsData, figurasComercialesOptionsData, currentItem]);
 
   const handleCreate = async (formData: any): Promise<boolean> => {
   setBackendFormError(null);
@@ -1070,6 +1228,12 @@ const EntVentas: React.FC = () => {
         createRubroMutation.mutate(formData, {
           onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Rubro'),
           onError: (error: any) => commonOnError(error, 'Rubro')
+        });
+        break;
+      case 'figuracomercial':
+        createFiguraComercialMutation.mutate(formData, {
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Figura Comercial'),
+          onError: (error: any) => commonOnError(error, 'Figura Comercial')
         });
         break;
       default:
@@ -1185,6 +1349,12 @@ const handleUpdate = async (formData: any): Promise<boolean> => {
           onError: (error: any) => commonOnError(error, 'Rubro')
         });
         break;
+      case 'figuracomercial':
+        updateFiguraComercialMutation.mutate({ id: currentItem.id, formData }, {
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Figura Comercial'),
+          onError: (error: any) => commonOnError(error, 'Figura Comercial')
+        });
+        break;
       default:
         console.warn('Unhandled category for update:', selectedCategory);
         setBackendFormError(`Categoría no manejada para la actualización: ${selectedCategory}`);
@@ -1287,6 +1457,12 @@ const handleDelete = (id: number) => {
       deleteRubroMutation.mutate(id, {
         onSuccess: () => commonOnSuccess('Rubro'),
         onError: (err: any) => commonOnError(err, 'Rubro'),
+      });
+      break;
+    case 'figuracomercial':
+      deleteFiguraComercialMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Figura Comercial'),
+        onError: (err: any) => commonOnError(err, 'Figura Comercial'),
       });
       break;
     default:

@@ -174,6 +174,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/rubro/${id}`,
       "update": (id: number) => `/api/rubro/${id}`,
       "delete": (id: number) => `/api/rubro/${id}`
+    },
+    "figuraComercial":{
+      "list": "/api/figuracomercial",
+      "create": "/api/figuracomercial",
+      "getOne": (id: number) => `/api/figuracomercial/${id}`,
+      "update": (id: number) => `/api/figuracomercial/${id}`,
+      "delete": (id: number) => `/api/figuracomercial/${id}`
     }
   },
   "finanzas": {
