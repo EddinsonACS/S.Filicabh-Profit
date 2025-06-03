@@ -67,10 +67,8 @@ const EntFinanzas: React.FC = () => {
     showCreateSuccess, 
     showUpdateSuccess, 
     showDeleteSuccess,
-    showCreateError, 
-    showUpdateError, 
-    showDeleteError,
-    showLoadError 
+    showError,
+    showLoadError, 
   } = useNotificationContext();
 
   // State management
@@ -280,9 +278,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el banco');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el banco');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -298,9 +297,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la caja');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la caja');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -317,9 +317,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la cuenta bancaria');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la cuenta bancaria');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }
@@ -337,9 +338,10 @@ const EntFinanzas: React.FC = () => {
           );
           showUpdateSuccess('el banco');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el banco');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -355,9 +357,10 @@ const EntFinanzas: React.FC = () => {
           );
           showUpdateSuccess('la caja');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la caja');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -374,9 +377,10 @@ const EntFinanzas: React.FC = () => {
           );
           showUpdateSuccess('la cuenta bancaria');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la cuenta bancaria');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }
@@ -393,9 +397,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el banco');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el banco');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'caja') {
@@ -406,9 +411,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la caja');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la caja');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'cuentaBancaria') {
@@ -419,9 +425,10 @@ const EntFinanzas: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la cuenta bancaria');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la cuenta bancaria');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }

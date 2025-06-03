@@ -984,10 +984,10 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Acuerdo de pago creado correctamente.');
           },
-          onError: (error) => {
+          onError: (error:any) => {
             console.error('Error creating:', error); // Debug log
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el acuerdo de pago. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1003,11 +1003,11 @@ const EntVentas: React.FC = () => {
             showSuccess('¡Éxito!', 'Ciudad creada correctamente.');
             console.log('✨ Success notification called'); // DEBUG
           },
-          onError: (error) => {
+          onError: (error:any) => {
             console.error('❌ Error creating ciudad:', error);
             setCurrentPage(1);
             console.log('🚨 About to show error notification'); // DEBUG
-            showError('Error', 'No se pudo crear la ciudad. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
             console.log('💥 Error notification called'); // DEBUG
           }
         });
@@ -1020,9 +1020,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Región creada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear la región. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1034,9 +1034,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'País creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el país. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1048,9 +1048,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Forma de entrega creada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear la forma de entrega. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1062,9 +1062,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Tipo de persona creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el tipo de persona. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1076,9 +1076,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Tipo de vendedor creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el tipo de vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1090,9 +1090,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Vendedor creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1104,9 +1104,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Moneda creada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear la moneda. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1118,9 +1118,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Tasa de cambio creada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear la tasa de cambio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1132,9 +1132,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Lista de precio creada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear la lista de precio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1146,9 +1146,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Sector creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el sector. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1160,9 +1160,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Éxito!', 'Rubro creado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo crear el rubro. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1188,9 +1188,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Acuerdo de pago actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el acuerdo de pago. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1202,9 +1202,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Ciudad actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la ciudad. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1216,9 +1216,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Región actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la región. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1230,9 +1230,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'País actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el país. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1244,9 +1244,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Forma de entrega actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la forma de entrega. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1258,9 +1258,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Tipo de persona actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el tipo de persona. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1272,9 +1272,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Tipo de vendedor actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el tipo de vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1286,9 +1286,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Vendedor actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1300,9 +1300,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Moneda actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la moneda. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1314,9 +1314,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Tasa de cambio actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la tasa de cambio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1328,9 +1328,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Lista de precio actualizada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar la lista de precio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1342,9 +1342,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Sector actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el sector. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1356,9 +1356,9 @@ const EntVentas: React.FC = () => {
             );
             showSuccess('¡Actualizado!', 'Rubro actualizado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo actualizar el rubro. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1378,9 +1378,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Acuerdo de pago eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el acuerdo de pago. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1392,9 +1392,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Ciudad eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la ciudad. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1406,9 +1406,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Región eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la región. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1420,9 +1420,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'País eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el país. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1434,9 +1434,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Forma de entrega eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la forma de entrega. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1448,9 +1448,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Tipo de persona eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el tipo de persona. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1462,9 +1462,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Tipo de vendedor eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el tipo de vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1476,9 +1476,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Vendedor eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el vendedor. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1490,9 +1490,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Moneda eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la moneda. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1504,9 +1504,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Tasa de cambio eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la tasa de cambio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1518,9 +1518,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Lista de precio eliminada correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar la lista de precio. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1532,9 +1532,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Sector eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el sector. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;
@@ -1546,9 +1546,9 @@ const EntVentas: React.FC = () => {
             setHasMore(true);
             showSuccess('¡Eliminado!', 'Rubro eliminado correctamente.');
           },
-          onError: () => {
+          onError: (error:any) => {
             setCurrentPage(1);
-            showError('Error', 'No se pudo eliminar el rubro. Por favor, intente nuevamente.');
+            showError('Error', error.response?.data.mensaje);
           }
         });
         break;

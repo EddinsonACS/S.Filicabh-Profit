@@ -66,7 +66,7 @@ const EntInventario: React.FC = () => {
     showCreateError, 
     showUpdateError, 
     showDeleteError,
-    showLoadError 
+    showError 
   } = useNotificationContext();
   const {
     useGetAlmacenList,
@@ -373,9 +373,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el almacén');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el almacén');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -386,9 +387,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la categoría');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la categoría');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -399,9 +401,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el grupo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el grupo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -412,9 +415,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la sección');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la sección');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -425,9 +429,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la unidad');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la unidad');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -438,9 +443,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('la talla');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('la talla');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'color') {
@@ -451,9 +457,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el color');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el color');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -464,9 +471,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el tipo de impuesto');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el tipo de impuesto');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -477,9 +485,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el tipo de artículo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el tipo de artículo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -490,9 +499,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showCreateSuccess('el origen');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showCreateError('el origen');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }
@@ -510,9 +520,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el almacén');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el almacén');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -523,9 +534,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('la categoría');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la categoría');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -536,9 +548,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el grupo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el grupo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -549,9 +562,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('la sección');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la sección');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -562,9 +576,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('la unidad');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la unidad');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -575,9 +590,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('la talla');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('la talla');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'color') {
@@ -588,9 +604,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el color');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el color');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -601,9 +618,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el tipo de impuesto');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el tipo de impuesto');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -614,9 +632,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el tipo de artículo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el tipo de artículo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -627,9 +646,10 @@ const EntInventario: React.FC = () => {
           );
           showUpdateSuccess('el origen');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showUpdateError('el origen');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }
@@ -647,9 +667,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el almacén');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el almacén');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'categoria') {
@@ -660,9 +681,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la categoría');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la categoría');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'grupo') {
@@ -673,9 +695,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el grupo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el grupo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'seccion') {
@@ -686,9 +709,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la sección');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la sección');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'unidad') {
@@ -699,9 +723,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la unidad');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la unidad');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'talla') {
@@ -712,9 +737,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('la talla');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('la talla');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'color') {
@@ -725,9 +751,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el color');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el color');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
@@ -738,9 +765,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el tipo de impuesto');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el tipo de impuesto');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'tipodearticulo') {
@@ -751,9 +779,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el tipo de artículo');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el tipo de artículo');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     } else if (selectedCategory === 'origen') {
@@ -764,9 +793,10 @@ const EntInventario: React.FC = () => {
           setHasMore(true);
           showDeleteSuccess('el origen');
         },
-        onError: () => {
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
           setCurrentPage(1);
-          showDeleteError('el origen');
+          showError("Error", error.response?.data.mensaje);
         }
       });
     }
