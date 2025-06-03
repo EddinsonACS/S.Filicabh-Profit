@@ -896,6 +896,10 @@ const EntInventario: React.FC = () => {
       <ItemArticle
         dataCategory={categoriasData?.data || []}
         dataGrupo={gruposData?.data || []}
+        dataColor={coloresDataArticulo?.data || []}
+        dataTalla={tallasDataArticulo?.data || []}
+        dataTipoArticulo={tiposArticuloDataArticulo?.data || []}
+        dataTipoImpuesto={impuestosDataArticulo?.data || []}
         item={item}
         category={selectedCategory}
         onPress={showItemDetails}

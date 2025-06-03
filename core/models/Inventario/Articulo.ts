@@ -34,4 +34,8 @@ export interface Articulo {
   puntoMaximo: number,
   suspendido: boolean,
   presentaciones: number[]
+  fechaRegistro: string;
+  usuarioRegistroNombre: string;
+  fechaModificacion: string;
+  usuarioModificacionNombre: string;
 }
