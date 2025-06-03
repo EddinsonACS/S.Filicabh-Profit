@@ -74,6 +74,13 @@ export const endpoints = {
       "getOne": (id: number) => `/api/origen/${id}`,
       "update": (id: number) => `/api/origen/${id}`,
       "delete": (id: number) => `/api/origen/${id}`
+    },
+    "articulo":{
+      "list": "/api/articulo",
+      "create": "/api/articulo",
+      "getOne": (id: number) => `/api/articulo/${id}`,
+      "update": (id: number) => `/api/articulo/${id}`,
+      "delete": (id: number) => `/api/articulo/${id}`
     }
   },
   "sales": {

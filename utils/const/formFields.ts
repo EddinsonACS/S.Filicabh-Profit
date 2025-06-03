@@ -33,25 +33,192 @@ export const FORM_FIELDS_INVENTORY = {
       label: 'Nombre',
       type: 'text' as const,
       required: true,
-      placeholder: 'Nombre del item',
-      description: 'Ingrese el nombre del nuevo registro'
+      placeholder: 'Nombre del artículo',
+      description: 'Ingrese el nombre del nuevo artículo'
     },
     {
-      name: 'aplicaVentas',
-      label: 'Aplica Ventas',
-      type: 'switch' as const,
-      description: 'El artículo está disponible para ventas'
+      name: 'descripcion',
+      label: 'Descripción',
+      type: 'textarea' as const,
+      required: false,
+      placeholder: 'Descripción del artículo',
+      description: 'Ingrese una descripción detallada del artículo'
     },
     {
-      name: 'aplicaCompras',
-      label: 'Aplica Compras',
+      name: 'codigoArticulo',
+      label: 'Código de Artículo',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Código del artículo',
+      description: 'Ingrese el código del artículo'
+    },
+    {
+      name: 'codigoModelo',
+      label: 'Código de Modelo',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Código del modelo',
+      description: 'Ingrese el código del modelo'
+    },
+    {
+      name: 'codigoBarra',
+      label: 'Código de Barra',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Código de barra',
+      description: 'Ingrese el código de barra'
+    },
+    {
+      name: 'codigoGrupo',
+      label: 'Grupo',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione el grupo',
+      description: 'Seleccione el grupo al que pertenece el artículo',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoColor',
+      label: 'Color',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione el color',
+      description: 'Seleccione el color del artículo',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoTalla',
+      label: 'Talla',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione la talla',
+      description: 'Seleccione la talla del artículo',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoTipoArticulo',
+      label: 'Tipo de Artículo',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione el tipo de artículo',
+      description: 'Seleccione el tipo de artículo',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoImpuesto',
+      label: 'Impuesto',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione el impuesto',
+      description: 'Seleccione el impuesto aplicado',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'peso',
+      label: 'Peso',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Peso del artículo',
+      description: 'Ingrese el peso del artículo'
+    },
+    {
+      name: 'volumen',
+      label: 'Volumen',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Volumen del artículo',
+      description: 'Ingrese el volumen del artículo'
+    },
+    {
+      name: 'metroCubico',
+      label: 'Metro Cúbico',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Metros cúbicos',
+      description: 'Ingrese los metros cúbicos del artículo'
+    },
+    {
+      name: 'pie',
+      label: 'Pie',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Pies',
+      description: 'Ingrese los pies del artículo'
+    },
+    {
+      name: 'manejaLote',
+      label: 'Maneja Lote',
       type: 'switch' as const,
-      description: 'El artículo está disponible para compras'
+      required: false,
+      description: 'Indica si el artículo maneja lote'
+    },
+    {
+      name: 'manejaSerial',
+      label: 'Maneja Serial',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si el artículo maneja serial'
+    },
+    {
+      name: 'poseeGarantia',
+      label: 'Posee Garantía',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si el artículo posee garantía'
+    },
+    {
+      name: 'descripcionGarantia',
+      label: 'Descripción de Garantía',
+      type: 'textarea' as const,
+      required: false,
+      placeholder: 'Descripción de la garantía',
+      description: 'Ingrese la descripción de la garantía'
+    },
+    {
+      name: 'manejaPuntoMinimo',
+      label: 'Maneja Punto Mínimo',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si el artículo maneja punto mínimo'
+    },
+    {
+      name: 'puntoMinimo',
+      label: 'Punto Mínimo',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Punto mínimo',
+      description: 'Ingrese el punto mínimo del artículo'
+    },
+    {
+      name: 'manejaPuntoMaximo',
+      label: 'Maneja Punto Máximo',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si el artículo maneja punto máximo'
+    },
+    {
+      name: 'puntoMaximo',
+      label: 'Punto Máximo',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Punto máximo',
+      description: 'Ingrese el punto máximo del artículo'
     },
     {
       name: 'suspendido',
       label: 'Suspendido',
       type: 'switch' as const,
+      required: false,
       description: 'El artículo está inactivo'
     }
   ],
