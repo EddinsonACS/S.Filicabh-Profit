@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const baseSchema = {
-  nombre: z.string().min(1, 'El nombre es requerido'),
+  nombre: z.string({required_error: 'El nombre es requerido'}).min(1, 'El nombre es requerido'),
   suspendido: z.boolean()
 };
 
@@ -28,8 +28,29 @@ export const inventorySchema = {
     ...ventasComprasSchema
   }),
   articulo: z.object({
-    ...baseSchema,
-    ...ventasComprasSchema
+    nombre: z.string({required_error: 'El nombre es requerido'}).min(1, 'El nombre es requerido'),
+    descripcion: z.string({required_error: 'La descripción es requerida'}).optional(),
+    codigoArticulo: z.string({required_error: 'El código de artículo es requerido'}).optional(),
+    codigoModelo: z.string({required_error: 'El código de modelo es requerido'}).optional(),
+    codigoBarra: z.string({required_error: 'El código de barra es requerido'}).optional(),
+    codigoGrupo: z.number({required_error: 'Debe seleccionar un grupo'}).optional(),
+    codigoColor: z.number({required_error: 'Debe seleccionar un color'}).optional(),
+    codigoTalla: z.number({required_error: 'Debe seleccionar una talla'}).optional(),
+    codigoTipoArticulo: z.number({required_error: 'Debe seleccionar un tipo de artículo'}).optional(),
+    codigoImpuesto: z.number({required_error: 'Debe seleccionar un impuesto'}).optional(),
+    peso: z.number({required_error: 'El peso es requerido'}).optional(),
+    volumen: z.number({required_error: 'El volumen es requerido'}).optional(),
+    metroCubico: z.number({required_error: 'El metro cúbico es requerido'}).optional(),
+    pie: z.number({required_error: 'El pie es requerido'}).optional(),
+    manejaLote: z.boolean().optional(),
+    manejaSerial: z.boolean().optional(),
+    poseeGarantia: z.boolean().optional(),
+    descripcionGarantia: z.string({required_error: 'La descripción de la garantía es requerida'}).optional(),
+    manejaPuntoMinimo: z.boolean().optional(),
+    puntoMinimo: z.number({required_error: 'El punto mínimo es requerido'}).optional(),
+    manejaPuntoMaximo: z.boolean().optional(),
+    puntoMaximo: z.number({required_error: 'El punto máximo es requerido'}).optional(),
+    suspendido: z.boolean().optional(),
   }),
   categoria: z.object({
     ...baseSchema,
