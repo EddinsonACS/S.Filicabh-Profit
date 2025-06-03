@@ -45,6 +45,7 @@ import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { themes } from '@/components/Entidades/shared/theme';
 import ItemArticle from '@/components/Entidades/Ventas/ItemArticle';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Interfaces auxiliares
 interface BaseEntity {
@@ -594,6 +595,7 @@ const EntVentas: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
   const { showSuccess, showError } = useNotificationContext();
+  const queryClient = useQueryClient();
 
   // Hooks de entidades
   const {
@@ -752,6 +754,7 @@ const EntVentas: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<ItemUnion[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [backendFormError, setBackendFormError] = useState<string | null>(null);
 
   // React Query hooks basados en categoría seleccionada
   const { data: acuerdoDePagoData, isLoading: isLoadingAcuerdoDePago } = useGetAcuerdoDePagoList(currentPage, PAGE_SIZE);
@@ -849,6 +852,7 @@ const EntVentas: React.FC = () => {
   useEffect(() => {
     const backAction = () => {
       if (formModalVisible) {
+        setBackendFormError(null);
         setFormModalVisible(false);
         return true;
       }
@@ -970,211 +974,134 @@ const EntVentas: React.FC = () => {
     return fields;
   }, [selectedCategory, regionesData, monedasData, listasDePrecioData]);
 
-  const handleCreate = (formData: any) => {
+  const handleCreate = async (formData: any): Promise<boolean> => {
+  setBackendFormError(null);
+  return new Promise((resolve) => {
+    const commonOnSuccess = (createdItem: any, entityType: string) => {
+      queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+      setAccumulatedItems(prev => [createdItem, ...prev]);
+      setCurrentPage(1);
+      setHasMore(true);
+      showSuccess('¡Éxito!', `${entityType} creado correctamente.`);
+      resolve(true);
+    };
+    const commonOnError = (error: any, entityType: string) => {
+      const errorMessage = error.response?.data?.mensaje || error.message || `Error al crear ${entityType.toLowerCase()}`;
+      setBackendFormError(errorMessage);
+      resolve(false);
+    };
     console.log('Creating with data:', formData); // Debug log
     console.log('Selected category:', selectedCategory); // Debug log
 
     switch (selectedCategory) {
       case 'acuerdodepago':
         createAcuerdoDePagoMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            console.log('Created successfully:', createdItem); // Debug log
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Acuerdo de pago creado correctamente.');
-          },
-          onError: (error:any) => {
-            console.error('Error creating:', error); // Debug log
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Acuerdo de pago'),
+          onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
         });
         break;
       case 'ciudad':
-        console.log('🏙️ Creating ciudad with data:', formData); // DEBUG
         createCiudadMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            console.log('✅ Ciudad created successfully:', createdItem);
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            console.log('🎉 About to show success notification'); // DEBUG
-            showSuccess('¡Éxito!', 'Ciudad creada correctamente.');
-            console.log('✨ Success notification called'); // DEBUG
-          },
-          onError: (error:any) => {
-            console.error('❌ Error creating ciudad:', error);
-            setCurrentPage(1);
-            console.log('🚨 About to show error notification'); // DEBUG
-            showError('Error', error.response?.data.mensaje);
-            console.log('💥 Error notification called'); // DEBUG
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Ciudad'),
+          onError: (error: any) => commonOnError(error, 'Ciudad')
         });
         break;
       case 'region':
         createRegionMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Región creada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Región'),
+          onError: (error: any) => commonOnError(error, 'Región')
         });
         break;
       case 'pais':
         createPaisMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'País creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'País'),
+          onError: (error: any) => commonOnError(error, 'País')
         });
         break;
       case 'formadeentrega':
         createFormaDeEntregaMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Forma de entrega creada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Forma de entrega'),
+          onError: (error: any) => commonOnError(error, 'Forma de entrega')
         });
         break;
       case 'tipopersona':
         createTipoPersonaMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Tipo de persona creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de persona'),
+          onError: (error: any) => commonOnError(error, 'Tipo de persona')
         });
         break;
       case 'tipovendedor':
         createTipoVendedorMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Tipo de vendedor creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de vendedor'),
+          onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
         });
         break;
       case 'vendedor':
         createVendedorMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Vendedor creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Vendedor'),
+          onError: (error: any) => commonOnError(error, 'Vendedor')
         });
         break;
       case 'moneda':
         createMonedaMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Moneda creada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Moneda'),
+          onError: (error: any) => commonOnError(error, 'Moneda')
         });
         break;
       case 'tasadecambio':
         createTasaDeCambioMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Tasa de cambio creada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tasa de cambio'),
+          onError: (error: any) => commonOnError(error, 'Tasa de cambio')
         });
         break;
       case 'listadeprecio':
         createListaDePrecioMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Lista de precio creada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Lista de precio'),
+          onError: (error: any) => commonOnError(error, 'Lista de precio')
         });
         break;
       case 'sector':
         createSectorMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Sector creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Sector'),
+          onError: (error: any) => commonOnError(error, 'Sector')
         });
         break;
       case 'rubro':
         createRubroMutation.mutate(formData, {
-          onSuccess: (createdItem) => {
-            setAccumulatedItems(prev => [createdItem, ...prev]);
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Éxito!', 'Rubro creado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Rubro'),
+          onError: (error: any) => commonOnError(error, 'Rubro')
         });
         break;
       default:
-        console.error('Unknown category:', selectedCategory);
+        console.warn('Unhandled category for create:', selectedCategory);
+        setBackendFormError(`Categoría no manejada para la creación: ${selectedCategory}`);
+        resolve(false);
         break;
     }
-    setFormModalVisible(false);
-  };
+  });
+};
 
-  const handleUpdate = (formData: any) => {
-    if (!currentItem) return;
+const handleUpdate = async (formData: any): Promise<boolean> => {
+  setBackendFormError(null);
+  return new Promise((resolve) => {
+    if (!currentItem) {
+      resolve(false);
+      return;
+    }
+
+    const commonOnSuccess = (updatedItem: any, entityType: string) => {
+      queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+      setAccumulatedItems(prev => 
+        prev.map(item => item.id === currentItem.id ? updatedItem : item)
+      );
+      showSuccess('¡Actualizado!', `${entityType} actualizado correctamente.`);
+      resolve(true);
+    };
+    const commonOnError = (error: any, entityType: string) => {
+      const errorMessage = error.response?.data?.mensaje || error.message || `Error al actualizar ${entityType.toLowerCase()}`;
+      setBackendFormError(errorMessage);
+      resolve(false);
+    };
 
     console.log('Updating with data:', formData); // Debug log
     console.log('Current item:', currentItem); // Debug log
@@ -1182,379 +1109,193 @@ const EntVentas: React.FC = () => {
     switch (selectedCategory) {
       case 'acuerdodepago':
         updateAcuerdoDePagoMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Acuerdo de pago actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Acuerdo de pago'),
+          onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
         });
         break;
       case 'ciudad':
         updateCiudadMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Ciudad actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Ciudad'),
+          onError: (error: any) => commonOnError(error, 'Ciudad')
         });
         break;
       case 'region':
         updateRegionMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Región actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Región'),
+          onError: (error: any) => commonOnError(error, 'Región')
         });
         break;
       case 'pais':
         updatePaisMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'País actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'País'),
+          onError: (error: any) => commonOnError(error, 'País')
         });
         break;
       case 'formadeentrega':
         updateFormaDeEntregaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Forma de entrega actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Forma de entrega'),
+          onError: (error: any) => commonOnError(error, 'Forma de entrega')
         });
         break;
       case 'tipopersona':
         updateTipoPersonaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Tipo de persona actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de persona'),
+          onError: (error: any) => commonOnError(error, 'Tipo de persona')
         });
         break;
       case 'tipovendedor':
         updateTipoVendedorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Tipo de vendedor actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de vendedor'),
+          onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
         });
         break;
       case 'vendedor':
         updateVendedorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Vendedor actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Vendedor'),
+          onError: (error: any) => commonOnError(error, 'Vendedor')
         });
         break;
       case 'moneda':
         updateMonedaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Moneda actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Moneda'),
+          onError: (error: any) => commonOnError(error, 'Moneda')
         });
         break;
       case 'tasadecambio':
         updateTasaDeCambioMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Tasa de cambio actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tasa de cambio'),
+          onError: (error: any) => commonOnError(error, 'Tasa de cambio')
         });
         break;
       case 'listadeprecio':
         updateListaDePrecioMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Lista de precio actualizada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Lista de precio'),
+          onError: (error: any) => commonOnError(error, 'Lista de precio')
         });
         break;
       case 'sector':
         updateSectorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Sector actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Sector'),
+          onError: (error: any) => commonOnError(error, 'Sector')
         });
         break;
       case 'rubro':
         updateRubroMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => {
-            setAccumulatedItems(prev => 
-              prev.map(item => item.id === currentItem.id ? updatedItem : item)
-            );
-            showSuccess('¡Actualizado!', 'Rubro actualizado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Rubro'),
+          onError: (error: any) => commonOnError(error, 'Rubro')
         });
         break;
-    }
+      default:
+        console.warn('Unhandled category for update:', selectedCategory);
+        setBackendFormError(`Categoría no manejada para la actualización: ${selectedCategory}`);
+        resolve(false);
+        break;
+    } // End of handleUpdate's switch
+  }); // End of new Promise in handleUpdate
+}; // End of handleUpdate function
 
-    setFormModalVisible(false);
+const handleDelete = (id: number) => {
+  const commonOnSuccess = (entityType: string) => {
+    queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+    setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+    setCurrentPage(1);
+    setHasMore(true);
+    showSuccess('¡Eliminado!', `${entityType} eliminado correctamente.`);
     setDetailModalVisible(false);
   };
 
-  const handleDelete = (id: number) => {
-    switch (selectedCategory) {
-      case 'acuerdodepago':
-        deleteAcuerdoDePagoMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Acuerdo de pago eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'ciudad':
-        deleteCiudadMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Ciudad eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'region':
-        deleteRegionMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Región eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'pais':
-        deletePaisMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'País eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'formadeentrega':
-        deleteFormaDeEntregaMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Forma de entrega eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'tipopersona':
-        deleteTipoPersonaMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Tipo de persona eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'tipovendedor':
-        deleteTipoVendedorMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Tipo de vendedor eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'vendedor':
-        deleteVendedorMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Vendedor eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'moneda':
-        deleteMonedaMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Moneda eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'tasadecambio':
-        deleteTasaDeCambioMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Tasa de cambio eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'listadeprecio':
-        deleteListaDePrecioMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Lista de precio eliminada correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'sector':
-        deleteSectorMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Sector eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-      case 'rubro':
-        deleteRubroMutation.mutate(id, {
-          onSuccess: () => {
-            setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-            setCurrentPage(1);
-            setHasMore(true);
-            showSuccess('¡Eliminado!', 'Rubro eliminado correctamente.');
-          },
-          onError: (error:any) => {
-            setCurrentPage(1);
-            showError('Error', error.response?.data.mensaje);
-          }
-        });
-        break;
-    }
+  const commonOnError = (error: any, entityType: string) => {
+    const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityType.toLowerCase()}`;
+    showError('Error', errorMessage);
     setDetailModalVisible(false);
   };
+
+  switch (selectedCategory) {
+    case 'acuerdodepago':
+      deleteAcuerdoDePagoMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Acuerdo de pago'),
+        onError: (err: any) => commonOnError(err, 'Acuerdo de pago'),
+      });
+      break;
+    case 'ciudad':
+      deleteCiudadMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Ciudad'),
+        onError: (err: any) => commonOnError(err, 'Ciudad'),
+      });
+      break;
+    case 'region':
+      deleteRegionMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Región'),
+        onError: (err: any) => commonOnError(err, 'Región'),
+      });
+      break;
+    case 'pais':
+      deletePaisMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('País'),
+        onError: (err: any) => commonOnError(err, 'País'),
+      });
+      break;
+    case 'formadeentrega':
+      deleteFormaDeEntregaMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Forma de entrega'),
+        onError: (err: any) => commonOnError(err, 'Forma de entrega'),
+      });
+      break;
+    case 'tipopersona':
+      deleteTipoPersonaMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Tipo de persona'),
+        onError: (err: any) => commonOnError(err, 'Tipo de persona'),
+      });
+      break;
+    case 'tipovendedor':
+      deleteTipoVendedorMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Tipo de vendedor'),
+        onError: (err: any) => commonOnError(err, 'Tipo de vendedor'),
+      });
+      break;
+    case 'vendedor':
+      deleteVendedorMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Vendedor'),
+        onError: (err: any) => commonOnError(err, 'Vendedor'),
+      });
+      break;
+    case 'moneda':
+      deleteMonedaMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Moneda'),
+        onError: (err: any) => commonOnError(err, 'Moneda'),
+      });
+      break;
+    case 'tasadecambio':
+      deleteTasaDeCambioMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Tasa de cambio'),
+        onError: (err: any) => commonOnError(err, 'Tasa de cambio'),
+      });
+      break;
+    case 'listadeprecio':
+      deleteListaDePrecioMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Lista de precio'),
+        onError: (err: any) => commonOnError(err, 'Lista de precio'),
+      });
+      break;
+    case 'sector':
+      deleteSectorMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Sector'),
+        onError: (err: any) => commonOnError(err, 'Sector'),
+      });
+      break;
+    case 'rubro':
+      deleteRubroMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('Rubro'),
+        onError: (err: any) => commonOnError(err, 'Rubro'),
+      });
+      break;
+    default:
+      console.warn('Unhandled category for delete:', selectedCategory);
+      showError('Error', `Categoría no manejada para la eliminación: ${selectedCategory}`);
+      setDetailModalVisible(false);
+      break;
+  }
+};
 
   const showItemDetails = (item: ItemUnion) => {
     setCurrentItem(item);
@@ -1654,7 +1395,7 @@ const EntVentas: React.FC = () => {
 
       <DynamicFormModal
         visible={formModalVisible}
-        onClose={() => setFormModalVisible(false)}
+        onClose={() => { setFormModalVisible(false); setBackendFormError(null); }}
         isEditing={isEditing}
         currentItem={currentItem}
         handleCreate={handleCreate}
@@ -1670,6 +1411,7 @@ const EntVentas: React.FC = () => {
         buttonTextColor={themes.sales.formButtonTextColor}
         switchActiveColor={themes.sales.switchActiveColor}
         switchInactiveColor={themes.sales.switchInactiveColor}
+        backendError={backendFormError}
       />
 
       <DynamicItemModal

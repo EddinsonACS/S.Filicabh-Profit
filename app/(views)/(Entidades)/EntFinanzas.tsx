@@ -18,6 +18,7 @@ import { finanzasSchema } from '@/utils/schemas/finanzasSchema';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { BackHandler, View } from 'react-native';
 
 const PAGE_SIZE = 10;
@@ -70,6 +71,7 @@ const EntFinanzas: React.FC = () => {
     showError,
     showLoadError, 
   } = useNotificationContext();
+  const queryClient = useQueryClient();
 
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -82,6 +84,7 @@ const EntFinanzas: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
+  const [backendFormError, setBackendFormError] = useState<string | null>(null);
 
   // React Query hooks
   const { data: bancoData, isLoading: isLoadingBanco, error: bancoError } = useGetBancoList(currentPage, PAGE_SIZE);
@@ -230,6 +233,7 @@ const EntFinanzas: React.FC = () => {
     const backAction = () => {
       if (formModalVisible) {
         setFormModalVisible(false);
+        setBackendFormError(null);
         return true;
       }
       if (detailModalVisible) {
@@ -269,170 +273,147 @@ const EntFinanzas: React.FC = () => {
     }
   }, [hasMore, isLoading]);
 
-  const handleCreate = (formData: any) => {
-    if (selectedCategory === 'banco') {
-      createBancoMutation.mutate(formData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('el banco');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'caja') {
-      // Asegurarnos de que codigoMoneda sea un número
-      const cajaData = {
-        ...formData,
-        codigoMoneda: Number(formData.codigoMoneda)
+  const handleCreate = async (formData: any): Promise<boolean> => {
+    setBackendFormError(null);
+    return new Promise((resolve) => {
+      const commonOnSuccess = (createdItem: any, entityTypeString: string) => {
+        queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+        setAccumulatedItems(prev => [createdItem, ...prev]);
+        setCurrentPage(1);
+        setHasMore(true);
+        showCreateSuccess(entityTypeString);
+        resolve(true);
       };
-      createCajaMutation.mutate(cajaData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la caja');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'cuentaBancaria') {
-      // Asegurarnos de que codigoBanco y codigoMoneda sean números
-      const cuentaBancariaData = {
-        ...formData,
-        codigoBanco: Number(formData.codigoBanco),
-        codigoMoneda: Number(formData.codigoMoneda)
+      const commonOnError = (error: any) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || 'Error al crear el elemento.';
+        setBackendFormError(errorMessage);
+        resolve(false);
       };
-      createCuentaBancariaMutation.mutate(cuentaBancariaData, {
-        onSuccess: (createdItem) => {
-          setAccumulatedItems(prev => [createdItem, ...prev]);
-          setCurrentPage(1);
-          setHasMore(true);
-          showCreateSuccess('la cuenta bancaria');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    }
-    setFormModalVisible(false);
+
+      if (selectedCategory === 'banco') {
+        createBancoMutation.mutate(formData, {
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'el banco'),
+          onError: commonOnError
+        });
+      } else if (selectedCategory === 'caja') {
+        const cajaData = {
+          ...formData,
+          codigoMoneda: Number(formData.codigoMoneda)
+        };
+        createCajaMutation.mutate(cajaData, {
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'la caja'),
+          onError: commonOnError
+        });
+      } else if (selectedCategory === 'cuentaBancaria') {
+        const cuentaBancariaData = {
+          ...formData,
+          codigoBanco: Number(formData.codigoBanco),
+          codigoMoneda: Number(formData.codigoMoneda)
+        };
+        createCuentaBancariaMutation.mutate(cuentaBancariaData, {
+          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'la cuenta bancaria'),
+          onError: commonOnError
+        });
+      } else {
+        console.warn('Unhandled category for create:', selectedCategory);
+        setBackendFormError(`Categoría no manejada para la creación: ${selectedCategory}`);
+        resolve(false);
+      }
+    });
   };
 
-  const handleUpdate = (formData: any) => {
-    if (!currentItem) return;
+  const handleUpdate = async (formData: any): Promise<boolean> => {
+    setBackendFormError(null);
+    return new Promise((resolve) => {
+      if (!currentItem) {
+        setBackendFormError('No hay un elemento seleccionado para actualizar.');
+        resolve(false);
+        return;
+      }
 
-    if (selectedCategory === 'banco') {
-      updateBancoMutation.mutate({ id: currentItem.id, formData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('el banco');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'caja') {
-      // Asegurarnos de que codigoMoneda sea un número
-      const cajaData = {
-        ...formData,
-        codigoMoneda: Number(formData.codigoMoneda)
+      const commonOnSuccess = (updatedItem: any, entityTypeString: string) => {
+        queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+        setAccumulatedItems(prev =>
+          prev.map(item => (item.id === currentItem.id ? updatedItem : item))
+        );
+        showUpdateSuccess(entityTypeString);
+        resolve(true);
       };
-      updateCajaMutation.mutate({ id: currentItem.id, formData: cajaData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la caja');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    } else if (selectedCategory === 'cuentaBancaria') {
-      // Asegurarnos de que codigoBanco y codigoMoneda sean números
-      const cuentaBancariaData = {
-        ...formData,
-        codigoBanco: Number(formData.codigoBanco),
-        codigoMoneda: Number(formData.codigoMoneda)
+      const commonOnError = (error: any) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || 'Error al actualizar el elemento.';
+        setBackendFormError(errorMessage);
+        resolve(false);
       };
-      updateCuentaBancariaMutation.mutate({ id: currentItem.id, formData: cuentaBancariaData }, {
-        onSuccess: (updatedItem) => {
-          setAccumulatedItems(prev => 
-            prev.map(item => item.id === currentItem.id ? updatedItem : item)
-          );
-          showUpdateSuccess('la cuenta bancaria');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
-      });
-    }
-    setFormModalVisible(false);
-    setDetailModalVisible(false);
+
+      if (selectedCategory === 'banco') {
+        updateBancoMutation.mutate({ id: currentItem.id, formData }, {
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'el banco'),
+          onError: commonOnError
+        });
+      } else if (selectedCategory === 'caja') {
+        const cajaData = {
+          ...formData,
+          codigoMoneda: Number(formData.codigoMoneda)
+        };
+        updateCajaMutation.mutate({ id: currentItem.id, formData: cajaData }, {
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'la caja'),
+          onError: commonOnError
+        });
+      } else if (selectedCategory === 'cuentaBancaria') {
+        const cuentaBancariaData = {
+          ...formData,
+          codigoBanco: Number(formData.codigoBanco),
+          codigoMoneda: Number(formData.codigoMoneda)
+        };
+        updateCuentaBancariaMutation.mutate({ id: currentItem.id, formData: cuentaBancariaData }, {
+          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'la cuenta bancaria'),
+          onError: commonOnError
+        });
+      } else {
+        console.warn('Unhandled category for update:', selectedCategory);
+        setBackendFormError(`Categoría no manejada para la actualización: ${selectedCategory}`);
+        resolve(false);
+      }
+    });
   };
 
   const handleDelete = (id: number) => {
+    const commonOnSuccess = (entityTypeString: string) => {
+      queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+      setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+      setCurrentPage(1);
+      setHasMore(true);
+      showDeleteSuccess(entityTypeString);
+      setDetailModalVisible(false);
+    };
+
+    const commonOnError = (error: any, entityTypeString: string) => {
+      const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityTypeString.toLowerCase()}`;
+      showError("Error", errorMessage);
+      // Consider if modal should always close on delete error, currently it does.
+      setDetailModalVisible(false);
+    };
+
     if (selectedCategory === 'banco') {
       deleteBancoMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el banco');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el banco'),
+        onError: (err: any) => commonOnError(err, 'el banco')
       });
     } else if (selectedCategory === 'caja') {
       deleteCajaMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la caja');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la caja'),
+        onError: (err: any) => commonOnError(err, 'la caja')
       });
     } else if (selectedCategory === 'cuentaBancaria') {
       deleteCuentaBancariaMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la cuenta bancaria');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la cuenta bancaria'),
+        onError: (err: any) => commonOnError(err, 'la cuenta bancaria')
       });
+    } else {
+      console.warn('Unhandled category for delete:', selectedCategory);
+      showError("Error", `Categoría no manejada para la eliminación: ${selectedCategory}`);
+      setDetailModalVisible(false);
     }
-    setDetailModalVisible(false);
   };
 
   const showItemDetails = (item: any) => {
@@ -518,7 +499,10 @@ const EntFinanzas: React.FC = () => {
 
       <DynamicFormModal
         visible={formModalVisible}
-        onClose={() => setFormModalVisible(false)}
+        onClose={() => {
+          setFormModalVisible(false);
+          setBackendFormError(null);
+        }}
         isEditing={isEditing}
         currentItem={currentItem}
         handleCreate={handleCreate}
@@ -534,6 +518,7 @@ const EntFinanzas: React.FC = () => {
         buttonTextColor={themes.finanzas.formButtonTextColor}
         switchActiveColor={themes.finanzas.switchActiveColor}
         switchInactiveColor={themes.finanzas.switchInactiveColor}
+        backendError={backendFormError}
       />
 
       <DynamicItemModal
