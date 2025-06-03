@@ -63,9 +63,6 @@ const EntInventario: React.FC = () => {
     showCreateSuccess, 
     showUpdateSuccess, 
     showDeleteSuccess,
-    showCreateError, 
-    showUpdateError, 
-    showDeleteError,
     showError 
   } = useNotificationContext();
   const {
