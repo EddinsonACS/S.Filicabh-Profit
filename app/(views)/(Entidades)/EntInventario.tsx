@@ -336,12 +336,16 @@ const EntInventario: React.FC = () => {
       case 'origen':
         processData(origenData);
         break;
+      case 'articulo':
+        processData(articuloData);
+        break;
       default:
         break;
     }
   }, [
     almacenData, categoriaData, grupoData, seccionData, unidadData, 
     tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, 
+    articuloData,
     currentPage, selectedCategory, PAGE_SIZE
   ]);
 
@@ -380,7 +384,8 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'color' ? isLoadingColor :
                     selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
                     selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo :
-                    selectedCategory === 'origen' ? isLoadingOrigen : false;
+                    selectedCategory === 'origen' ? isLoadingOrigen :
+                    selectedCategory === 'articulo' ? isLoadingArticulo : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -891,7 +896,6 @@ const EntInventario: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    // Renderizado por defecto para otras entidades
     return (
       <ItemArticle
         dataCategory={categoriasData?.data || []}
