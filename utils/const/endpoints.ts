@@ -180,7 +180,7 @@ export const endpoints = {
       "create": "/api/figuracomercial",
       "getOne": (id: number) => `/api/figuracomercial/${id}`,
       "update": (id: number) => `/api/figuracomercial/${id}`,
-      "delete": (id: number) => `/api/figuracomercial/${id}`
+      "delete": (id: number) => `/api/figuracomercial/:codigo?id=${id}`
     }
   },
   "finanzas": {
