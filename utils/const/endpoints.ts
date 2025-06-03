@@ -96,7 +96,7 @@ export const endpoints = {
       "create": "/api/ciudad",
       "getOne": (id: number) => `/api/ciudad/${id}`,
       "update": (id: number) => `/api/ciudad/${id}`,
-      "delete": (id: number) => `/api/ciudad/${id}`
+      "delete": (id: number) => `/api/ciudad/:codigo?id=${id}`
     },
     "region": {
       "list": "/api/region",

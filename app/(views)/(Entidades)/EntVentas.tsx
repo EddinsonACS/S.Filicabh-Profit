@@ -279,7 +279,7 @@ const FORM_FIELDS = {
     name: 'telefono',
     label: 'Teléfono',
     type: 'text' as const,
-    required: false,
+    required: true,
     placeholder: 'Teléfono del vendedor',
     description: 'Ingrese el teléfono del vendedor.'
   },
@@ -287,7 +287,7 @@ const FORM_FIELDS = {
     name: 'email',
     label: 'Email',
     type: 'text' as const,
-    required: false,
+    required: true,
     placeholder: 'Email del vendedor',
     description: 'Ingrese el email del vendedor.'
   },
@@ -449,7 +449,7 @@ const FORM_FIELDS = {
     { name: 'rif', label: 'RIF', type: 'text' as const, required: true, placeholder: 'Ej: J-12345678-9', description: 'Registro de Información Fiscal.' },
     { name: 'nit', label: 'NIT', type: 'text' as const, placeholder: 'NIT (si aplica)', description: 'Número de Identificación Tributaria.', required: true },
     { name: 'personaContacto', label: 'Persona Contacto', type: 'text' as const, placeholder: 'Nombre del contacto principal', description: 'Persona a contactar en la empresa.', required: true },
-    { name: 'telefono', label: 'Teléfono', type: 'text' as const, placeholder: 'Ej: 0412-1234567', description: 'Número de teléfono principal.', required: true },
+    { name: 'telefono', label: 'Teléfono', type: 'number' as const, placeholder: 'Ej: 0412-1234567', description: 'Número de teléfono principal.', required: true },
     { name: 'email', label: 'Email Principal', type: 'text' as const, placeholder: 'correo@ejemplo.com', description: 'Dirección de correo electrónico principal.', required: true },
     { name: 'emailAlterno', label: 'Email Alterno', type: 'text' as const, placeholder: 'correo.alterno@ejemplo.com', description: 'Dirección de correo electrónico alternativa.', required: false },
     { name: 'descripcionFiguraComercial', label: 'Descripción', type: 'text' as const, placeholder: 'Descripción adicional', description: 'Notas o descripción relevante sobre la figura comercial.', required: false },
@@ -514,7 +514,7 @@ const DEFAULT_VALUES = {
   vendedor: {
     nombre: '',
     direccion: '',
-    telefono: '',
+    telefono: 0,
     email: '',
     esVendedor: false,
     esCobrador: false,
@@ -553,7 +553,7 @@ const DEFAULT_VALUES = {
     rif: '',
     nit: '',
     personaContacto: '',
-    telefono: '',
+    telefono: 0,
     email: '',
     emailAlterno: '',
     descripcionFiguraComercial: '',
@@ -1610,6 +1610,8 @@ const handleDelete = (id: number) => {
           { label: 'ID', value: String(currentItem.id) },
           { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : 'N/A' },
           { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || 'N/A' },
+          { label: 'Fecha Modificacion', value: currentItem.fechaModificacion ? new Date(currentItem.fechaModificacion).toLocaleDateString() : 'N/A' },
+          { label: 'Usuario Modificacion', value: currentItem.usuarioModificacionNombre || 'N/A' },
           ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
         ] : []}
         headerColor={themes.sales.itemHeaderColor}

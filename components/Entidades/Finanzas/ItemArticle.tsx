@@ -42,12 +42,11 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, category, onPress, data
           
           {/* Fila final - Información adicional y Estado en la misma fila */}
           <View className="flex-row justify-between items-center mb-2">
-            {/* Información adicional a la izquierda - si existe */}
-            <View className="flex-1 mr-2">
-              {subtitle && (
+            {subtitle && (
+              <View className="flex-1 mr-2">
                 <Text className="text-sm text-gray-600">{subtitle}</Text>
-              )}
-            </View>
+              </View>
+            )}
 
             {/* Estado a la derecha de la misma fila */}
             <View className={`px-2 py-1 rounded-full ${item.suspendido

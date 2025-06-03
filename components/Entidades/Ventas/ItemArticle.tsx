@@ -66,9 +66,10 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
           </View>
           
           {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between items-center mb-2">
-            {/* Información adicional a la izquierda */}
-            <View className="flex-1 mr-2">
+          <View className="flex-row justify-between mb-2">
+
+            {(selectedCategory == 'acuerdodepago' || selectedCategory == 'tasadecambio' || selectedCategory == 'vendedor' || selectedCategory == 'pais' || selectedCategory == 'moneda' || selectedCategory == 'figuracomercial') && (
+              <View className="flex mr-2">
               {selectedCategory === 'acuerdodepago' && (
                 <Text className="text-sm text-gray-600">Días: {(item as AcuerdoDePago).dias}</Text>
               )}
@@ -86,10 +87,20 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
               {selectedCategory === 'moneda' && (
                 <Text className="text-sm text-gray-600">Código: {(item as Moneda).codigo}</Text>
               )}
-            </View>
+              {selectedCategory === 'figuracomercial' && (
+                <View className="flex">
+                  <Text className="text-sm text-gray-600">Rif: {(item as FiguraComercial).rif}</Text>
+                  <Text className="text-sm text-gray-600">Nit: {(item as FiguraComercial).nit}</Text>
+                  <Text className="text-sm text-gray-600">Persona Contacto: {(item as FiguraComercial).personaContacto}</Text>
+                  <Text className="text-sm text-gray-600">Telefono: {(item as FiguraComercial).telefono}</Text>
+                  <Text className="text-sm text-gray-600">Email: {(item as FiguraComercial).email}</Text>
+                  <Text className="text-sm text-gray-600">Email Alterno: {(item as FiguraComercial).emailAlterno}</Text>
 
-            {/* Estado a la derecha de la misma fila */}
-            {selectedCategory !== 'tasadecambio' ? (
+                </View>
+              )}
+            </View>
+          )}
+            {selectedCategory !== 'tasadecambio'  ? (
               <View className={`px-2 py-1 rounded-full ${isSuspended
                 ? 'bg-red-100 border border-red-600'
                 : 'bg-green-100 border border-green-600'
