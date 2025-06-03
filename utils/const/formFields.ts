@@ -39,7 +39,7 @@ export const FORM_FIELDS_INVENTORY = {
     {
       name: 'descripcion',
       label: 'Descripción',
-      type: 'textarea' as const,
+      type: 'text' as const,
       required: false,
       placeholder: 'Descripción del artículo',
       description: 'Ingrese una descripción detallada del artículo'
@@ -179,7 +179,7 @@ export const FORM_FIELDS_INVENTORY = {
     {
       name: 'descripcionGarantia',
       label: 'Descripción de Garantía',
-      type: 'textarea' as const,
+      type: 'text' as const,
       required: false,
       placeholder: 'Descripción de la garantía',
       description: 'Ingrese la descripción de la garantía'

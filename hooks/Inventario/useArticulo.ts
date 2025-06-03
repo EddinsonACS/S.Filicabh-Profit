@@ -55,6 +55,7 @@ export const useArticulo = () => {
           usuario: 0,
           presentaciones: [],
         } as Omit<Articulo, 'id'>;
+        console.log(data);
         return apiArticulo.create(endpoints.inventory.articulo.create, data);
       },
       onSuccess: () => {

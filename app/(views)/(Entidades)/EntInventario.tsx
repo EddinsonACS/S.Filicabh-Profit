@@ -18,6 +18,7 @@ import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
 import { useUnidad } from '@/hooks/Inventario/useUnidad';
+import { useArticulo } from '@/hooks/Inventario/useArticulo';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
@@ -38,7 +39,8 @@ const CATEGORIES = [
   { id: 'tipodearticulo', label: 'Tipo de Artículo', icon: 'cube-outline' as const },
   { id: 'tipodeimpuesto', label: 'Tipo de Impuesto', icon: 'calculator' as const },
   { id: 'seccion', label: 'Sección', icon: 'layers' as const },
-  { id: 'unidad', label: 'Unidad', icon: 'scale' as const }
+  { id: 'unidad', label: 'Unidad', icon: 'scale' as const },
+  { id: 'articulo', label: 'Artículo', icon: 'cube' as const }
 ];
 
 const CATEGORY_TITLES = {
@@ -51,10 +53,11 @@ const CATEGORY_TITLES = {
   tipodearticulo: 'Tipo de Artículo',
   tipodeimpuesto: 'Tipo de Impuesto',
   seccion: 'Sección',
-  unidad: 'Unidad'
+  unidad: 'Unidad',
+  articulo: 'Artículo'
 };
 
-type CategoryId = keyof typeof CATEGORY_TITLES;
+type CategoryId = keyof typeof CATEGORY_TITLES | 'articulo';
 
 const EntInventario: React.FC = () => {
   const navigation = useNavigation();
@@ -159,6 +162,23 @@ const EntInventario: React.FC = () => {
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
   const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
   const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(currentPage, PAGE_SIZE);
+  // Articulo hooks
+  const { 
+    useGetArticuloList, 
+    useCreateArticulo, 
+    useUpdateArticulo, 
+    useDeleteArticulo 
+  } = useArticulo();
+  const createArticuloMutation = useCreateArticulo();
+  const updateArticuloMutation = useUpdateArticulo();
+  const deleteArticuloMutation = useDeleteArticulo();
+  const { data: articuloData, isLoading: isLoadingArticulo } = useGetArticuloList(currentPage, PAGE_SIZE);
+  // Listas para selects de articulo
+  const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
+  const { data: coloresDataArticulo } = useGetColorList(1, 1000);
+  const { data: tallasDataArticulo } = useGetTallaList(1, 1000);
+  const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
+  const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -205,7 +225,6 @@ const EntInventario: React.FC = () => {
 
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS_INVENTORY[selectedCategory];
-    
     if (selectedCategory === 'grupo' && categoriasData?.data) {
       return fields.map(field => {
         if (field.name === 'codigoCategoria') {
@@ -217,7 +236,6 @@ const EntInventario: React.FC = () => {
         return field;
       });
     }
-
     if (selectedCategory === 'seccion' && gruposData?.data) {
       return fields.map(field => {
         if (field.name === 'codigoGrupo') {
@@ -229,9 +247,28 @@ const EntInventario: React.FC = () => {
         return field;
       });
     }
-    
+    if (selectedCategory === 'articulo') {
+      return fields.map(field => {
+        if (field.name === 'codigoGrupo' && gruposDataArticulo?.data) {
+          return { ...field, options: gruposDataArticulo.data };
+        }
+        if (field.name === 'codigoColor' && coloresDataArticulo?.data) {
+          return { ...field, options: coloresDataArticulo.data };
+        }
+        if (field.name === 'codigoTalla' && tallasDataArticulo?.data) {
+          return { ...field, options: tallasDataArticulo.data };
+        }
+        if (field.name === 'codigoTipoArticulo' && tiposArticuloDataArticulo?.data) {
+          return { ...field, options: tiposArticuloDataArticulo.data };
+        }
+        if (field.name === 'codigoImpuesto' && impuestosDataArticulo?.data) {
+          return { ...field, options: impuestosDataArticulo.data };
+        }
+        return field;
+      });
+    }
     return fields;
-  }, [selectedCategory, categoriasData, gruposData]);
+  }, [selectedCategory, categoriasData, gruposData, gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -502,6 +539,20 @@ const EntInventario: React.FC = () => {
           showError("Error", error.response?.data.mensaje);
         }
       });
+    } else if (selectedCategory === 'articulo') {
+      createArticuloMutation.mutate(formData, {
+        onSuccess: (createdItem) => {
+          setAccumulatedItems(prev => [createdItem, ...prev]);
+          setCurrentPage(1);
+          setHasMore(true);
+          showCreateSuccess('el artículo');
+        },
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
+          setCurrentPage(1);
+          showError("Error", error.response?.data.mensaje);
+        }
+      });
     }
     setFormModalVisible(false);
   };
@@ -642,6 +693,20 @@ const EntInventario: React.FC = () => {
             prev.map(item => item.id === currentItem.id ? updatedItem : item)
           );
           showUpdateSuccess('el origen');
+        },
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
+          setCurrentPage(1);
+          showError("Error", error.response?.data.mensaje);
+        }
+      });
+    } else if (selectedCategory === 'articulo') {
+      updateArticuloMutation.mutate({ id: currentItem.id, formData }, {
+        onSuccess: (updatedItem) => {
+          setAccumulatedItems(prev => 
+            prev.map(item => item.id === currentItem.id ? updatedItem : item)
+          );
+          showUpdateSuccess('el artículo');
         },
         onError: (error:any) => {
           console.log(error.response?.data.mensaje);
@@ -796,6 +861,20 @@ const EntInventario: React.FC = () => {
           showError("Error", error.response?.data.mensaje);
         }
       });
+    } else if (selectedCategory === 'articulo') {
+      deleteArticuloMutation.mutate(id, {
+        onSuccess: () => {
+          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+          setCurrentPage(1);
+          setHasMore(true);
+          showDeleteSuccess('el artículo');
+        },
+        onError: (error:any) => {
+          console.log(error.response?.data.mensaje);
+          setCurrentPage(1);
+          showError("Error", error.response?.data.mensaje);
+        }
+      });
     }
     setDetailModalVisible(false);
   };
@@ -812,6 +891,7 @@ const EntInventario: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
+    // Renderizado por defecto para otras entidades
     return (
       <ItemArticle
         dataCategory={categoriasData?.data || []}
