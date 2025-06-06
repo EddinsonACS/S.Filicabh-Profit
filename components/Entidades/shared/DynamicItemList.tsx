@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   ListRenderItem,
+  RefreshControl,
   View
 } from 'react-native';
 
@@ -12,6 +13,8 @@ interface DynamicItemListProps<T> {
   showItemDetails: (item: T) => void;
   openEditModal: (item: T) => void;
   onLoadMore: () => void;
+  onRefresh?: () => Promise<void> | void;
+  refreshing?: boolean;
   hasMore: boolean;
   selectedCategory: string;
   renderItem: ListRenderItem<T>;
@@ -23,6 +26,8 @@ const DynamicItemList = <T,>({
   items,
   showItemDetails,
   onLoadMore,
+  onRefresh,
+  refreshing = false,
   hasMore,
   selectedCategory,
   renderItem,
@@ -49,6 +54,16 @@ const DynamicItemList = <T,>({
       onEndReachedThreshold={0.5}
       ListFooterComponent={renderFooter}
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#581c87']}
+            tintColor="#581c87"
+          />
+        ) : undefined
+      }
     />
   );
 };

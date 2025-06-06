@@ -863,6 +863,7 @@ const EntVentas: React.FC = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<ItemUnion[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   // React Query hooks basados en categoría seleccionada
   const { data: acuerdoDePagoData, isLoading: isLoadingAcuerdoDePago } = useGetAcuerdoDePagoList(currentPage, PAGE_SIZE);
@@ -1050,7 +1051,25 @@ const EntVentas: React.FC = () => {
     if (hasMore && !isLoading) {
       setCurrentPage(prev => prev + 1);
     }
-  }, [hasMore, isLoading]);
+  }, [hasMore, isLoading, currentPage]);
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      setCurrentPage(1);
+      setHasMore(true);
+      
+      // Invalidate the query to force a refetch
+      await queryClient.invalidateQueries({
+        queryKey: [selectedCategory]
+      });
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      showError('Error', 'No se pudo actualizar los datos');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [queryClient, selectedCategory]);
 
   // Preparar los campos del formulario según la categoría seleccionada
   const getFormFields = useCallback(() => {
@@ -1552,6 +1571,8 @@ const handleDelete = (id: number) => {
             showItemDetails={showItemDetails}
             openEditModal={openEditModal}
             onLoadMore={handleLoadMore}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
             selectedCategory={selectedCategory}
             hasMore={hasMore}
             renderItem={renderItem}

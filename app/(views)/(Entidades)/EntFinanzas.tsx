@@ -86,6 +86,7 @@ const EntFinanzas: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   // React Query hooks
   const { data: bancoData, isLoading: isLoadingBanco, error: bancoError } = useGetBancoList(currentPage, PAGE_SIZE);
@@ -273,6 +274,24 @@ const EntFinanzas: React.FC = () => {
       setCurrentPage(prev => prev + 1);
     }
   }, [hasMore, isLoading]);
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      setCurrentPage(1);
+      setHasMore(true);
+      
+      // Invalidate the query to force a refetch
+      await queryClient.invalidateQueries({
+        queryKey: [selectedCategory]
+      });
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      showError('Error', 'No se pudo actualizar los datos');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [queryClient, selectedCategory, showError]);
 
   const handleCreate = async (formData: any): Promise<boolean> => {
     setBackendFormError(null);
@@ -489,6 +508,8 @@ const EntFinanzas: React.FC = () => {
               showItemDetails={showItemDetails}
               openEditModal={openEditModal}
               onLoadMore={handleLoadMore}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
               selectedCategory={selectedCategory}
               hasMore={hasMore}
               renderItem={renderItem}
