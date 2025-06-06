@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { BackHandler, View } from 'react-native';
+import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 
 const PAGE_SIZE = 10;
 
@@ -478,24 +479,30 @@ const EntFinanzas: React.FC = () => {
         buttonTextColor={themes.finanzas.buttonTextColor}
       />
 
-      <DynamicItemList
-        items={filteredItems}
-        showItemDetails={showItemDetails}
-        openEditModal={openEditModal}
-        handleDelete={handleDelete}
-        onLoadMore={handleLoadMore}
-        hasMore={hasMore}
-        selectedCategory={selectedCategory}
-        renderItem={renderItem}
-        emptyStateComponent={
-          <DynamicEmptyState
-            icon="document-text-outline"
-            title="No hay elementos en la lista"
-            subtitle="Agrega un nuevo elemento para comenzar"
-          />
-        }
-        keyExtractor={(item) => item.id.toString()}
-      />
+      <View className="flex-1">
+          {isLoading && currentPage === 1 ? (
+            <DynamicLoadingState color={themes.inventory.buttonColor} />
+          ) : (
+            <DynamicItemList
+              items={filteredItems}
+              handleDelete={handleDelete}
+              showItemDetails={showItemDetails}
+              openEditModal={openEditModal}
+              onLoadMore={handleLoadMore}
+              selectedCategory={selectedCategory}
+              hasMore={hasMore}
+              renderItem={renderItem}
+              emptyStateComponent={
+                <DynamicEmptyState
+                  icon="document-text-outline"
+                  title={`No hay ${CATEGORY_TITLES[selectedCategory].toLowerCase()}s en la lista`}
+                  subtitle="Agrega un nuevo elemento para comenzar"
+                />
+              }
+              keyExtractor={(item) => item.id.toString()}
+            />
+          )}
+        </View>
 
       <DynamicFormModal
         visible={formModalVisible}

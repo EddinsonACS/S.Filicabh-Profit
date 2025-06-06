@@ -43,7 +43,6 @@ const DynamicItemList = <T,>({
   return (
     <FlatList
       data={items}
-      ListEmptyComponent={emptyStateComponent}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       onEndReached={onLoadMore}
