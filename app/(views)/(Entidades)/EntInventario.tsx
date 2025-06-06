@@ -528,7 +528,7 @@ const handleCreate = async (formData: any): Promise<boolean> => {
         resolve(false);
       };
 
-      const mutationData = { id: currentItem.id, ...formData };
+      const mutationData = { id: currentItem.id, formData };
 
       if (selectedCategory === 'almacen') {
         updateAlmacenMutation.mutate(mutationData, {

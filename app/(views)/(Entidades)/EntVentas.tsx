@@ -1267,8 +1267,6 @@ const handleUpdate = async (formData: any): Promise<boolean> => {
       resolve(false);
     };
 
-    console.log('Updating with data:', formData); // Debug log
-    console.log('Current item:', currentItem); // Debug log
 
     switch (selectedCategory) {
       case 'acuerdodepago':
