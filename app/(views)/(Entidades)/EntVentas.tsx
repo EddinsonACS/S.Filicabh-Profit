@@ -451,7 +451,7 @@ const FORM_FIELDS = {
     { name: 'personaContacto', label: 'Persona Contacto', type: 'text' as const, placeholder: 'Nombre del contacto principal', description: 'Persona a contactar en la empresa.', required: true },
     { name: 'telefono', label: 'Teléfono', type: 'number' as const, placeholder: 'Ej: 0412-1234567', description: 'Número de teléfono principal.', required: true },
     { name: 'email', label: 'Email Principal', type: 'text' as const, placeholder: 'correo@ejemplo.com', description: 'Dirección de correo electrónico principal.', required: true },
-    { name: 'emailAlterno', label: 'Email Alterno', type: 'text' as const, placeholder: 'correo.alterno@ejemplo.com', description: 'Dirección de correo electrónico alternativa.', required: false },
+    { name: 'emailAlterno', label: 'Email Alterno', type: 'text' as const, placeholder: 'correo.alterno@ejemplo.com', description: 'Dirección de correo electrónico alternativa.', required: true },
     { name: 'descripcionFiguraComercial', label: 'Descripción', type: 'text' as const, placeholder: 'Descripción adicional', description: 'Notas o descripción relevante sobre la figura comercial.', required: false },
     { name: 'codigoPais', label: 'País', type: 'select' as const, required: true, placeholder: 'Seleccione un país', description: 'País de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
     { name: 'codigoCiudad', label: 'Ciudad', type: 'select' as const, required: true, placeholder: 'Seleccione una ciudad', description: 'Ciudad de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
@@ -512,10 +512,7 @@ const DEFAULT_VALUES = {
     suspendido: false
   },
   vendedor: {
-    nombre: '',
-    direccion: '',
     telefono: 0,
-    email: '',
     esVendedor: false,
     esCobrador: false,
     codigoRegion: 0,
@@ -524,8 +521,6 @@ const DEFAULT_VALUES = {
     suspendido: false
   },
   moneda: {
-    codigo: '',
-    nombre: '',
     esDividir: false,
     suspendido: false
   },
@@ -536,27 +531,18 @@ const DEFAULT_VALUES = {
     tasaCompra: 0
   },
   listadeprecio: {
-    nombre: '',
     suspendido: false
   },
   sector: {
-    nombre: '',
     suspendido: false
   },
   rubro: {
-    nombre: '',
     codigoListaPrecio: 0,
     suspendido: false
   },
   figuracomercial: {
-    nombre: '',
-    rif: '',
-    nit: '',
-    personaContacto: '',
-    telefono: 0,
     email: '',
     emailAlterno: '',
-    descripcionFiguraComercial: '',
     codigoPais: 0,
     codigoCiudad: 0,
     codigoRubro: 0,
@@ -567,14 +553,6 @@ const DEFAULT_VALUES = {
     activoVentas: true,
     activoCompras: true,
     esCasaMatriz: false,
-    codigoFiguraComercialCasaMatriz: 0,
-    direccionComercial: '',
-    direccionEntrega: '',
-    codigoMonedaLimiteCreditoVentas: '',
-    montolimiteCreditoVentas: 0,
-    codigoMonedaLimiteCreditoCompras: '',
-    montolimiteCreditoCompras: 0,
-    porceRetencionIva: 0,
     aplicaRetVentasAuto: false,
     aplicaRetComprasAuto: false,
     suspendido: false
@@ -584,72 +562,72 @@ const DEFAULT_VALUES = {
 // Schemas de validación por entidad
 const SCHEMAS = {
   acuerdodepago: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
-    dias: z.number().min(0, 'Los días deben ser mayor o igual a 0'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
+    dias: z.number({required_error: 'Los días son requeridos'}).min(0, 'Los días deben ser mayor o igual a 0'),
     suspendido: z.boolean()
   }),
   ciudad: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
-    codigoRegion: z.number().min(1, 'La región es requerida'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
+    codigoRegion: z.number({required_error: 'La región es requerida'}).min(1, 'La región es requerida'),
     suspendido: z.boolean()
   }),
   region: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   pais: z.object({
-    codigo: z.string().min(1, 'El código es requerido'),
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    codigo: z.string({required_error: 'El código es requerido'}),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   formadeentrega: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     aplicaDespachoTransporte: z.boolean(),
     suspendido: z.boolean()
   }),
   tipopersona: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   tipovendedor: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   vendedor: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
-    direccion: z.string().optional(),
-    telefono: z.string().optional(),
-    email: z.string().email('Email inválido').optional().or(z.literal('')),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
+    direccion: z.string({required_error: 'La dirección es requerida'}).optional(),
+    telefono: z.string({required_error: 'El teléfono es requerido'}).optional(),
+    email: z.string({required_error: 'El email es requerido'}).email('Email inválido'),
     esVendedor: z.boolean(),
     esCobrador: z.boolean(),
-    codigoRegion: z.number().optional(),
-    codigoTipoVendedor: z.number().optional(),
-    codigoListaPrecio: z.number().optional(),
+    codigoRegion: z.number({required_error: 'La región es requerida'}),
+    codigoTipoVendedor: z.number({required_error: 'El tipo de vendedor es requerido'}),
+    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}),
     suspendido: z.boolean()
   }),
   moneda: z.object({
-    codigo: z.string().min(1, 'El código es requerido'),
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    codigo: z.string({required_error: 'El código es requerido'}),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     esDividir: z.boolean(),
     suspendido: z.boolean()
   }),
   tasadecambio: z.object({
-    codigoMoneda: z.number().min(1, 'La moneda es requerida'),
-    fecha: z.string().min(1, 'La fecha es requerida'),
-    tasaVenta: z.number().min(0, 'La tasa de venta debe ser mayor o igual a 0'),
-    tasaCompra: z.number().min(0, 'La tasa de compra debe ser mayor o igual a 0')
+    codigoMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
+    fecha: z.string({required_error: 'La fecha es requerida'}).min(1, 'La fecha es requerida'),
+    tasaVenta: z.number({required_error: 'La tasa de venta es requerida'}).min(0, 'La tasa de venta debe ser mayor o igual a 0'),
+    tasaCompra: z.number({required_error: 'La tasa de compra es requerida'}).min(0, 'La tasa de compra debe ser mayor o igual a 0')
   }),
   listadeprecio: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   sector: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
     suspendido: z.boolean()
   }),
   rubro: z.object({
-    nombre: z.string().min(1, 'El nombre es requerido'),
-    codigoListaPrecio: z.number().min(1, 'La lista de precio es requerida'),
+    nombre: z.string({required_error: 'El nombre es requerido'}),
+    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}).min(1, 'La lista de precio es requerida'),
     suspendido: z.boolean()
   }),
   figuracomercial: z.object({
@@ -657,7 +635,7 @@ const SCHEMAS = {
     rif: z.string({required_error: 'El RIF es requerido'}),
     nit: z.string({required_error: 'El NIT es requerido'}),
     personaContacto: z.string({required_error: 'La persona de contacto es requerida'}),
-    telefono: z.string({required_error: 'El teléfono es requerido'}),
+    telefono: z.number({required_error: 'El teléfono es requerido'}),
     email: z.string({required_error: 'El email es requerido'}).email('Email inválido'), 
     emailAlterno: z.string({required_error: 'El email alterno es requerido'}).email('Email inválido'), 
     descripcionFiguraComercial: z.string({required_error: 'La descripción es requerida'}),

@@ -66,7 +66,7 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
           </View>
           
           {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between mb-2">
+          <View className="flex-row justify-between mb-2 items-baseline">
 
             {(selectedCategory == 'acuerdodepago' || selectedCategory == 'tasadecambio' || selectedCategory == 'vendedor' || selectedCategory == 'pais' || selectedCategory == 'moneda' || selectedCategory == 'figuracomercial') && (
               <View className="flex mr-2">
