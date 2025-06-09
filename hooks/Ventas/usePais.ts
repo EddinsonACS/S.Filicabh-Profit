@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiPais = createApiService<Pais>();
 
@@ -18,10 +17,6 @@ export const usePais = () => {
             queryFn: () => apiPais.getList(endpoints.sales.pais.list, page, size),
             onSettled: (_: ListDataResponse<Pais> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de países. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching pais list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const usePais = () => {
             enabled: !!id,
             onSettled: (_: Pais | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el país. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching pais item:', error);
                 }
             }
@@ -70,10 +61,8 @@ export const usePais = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['pais', 'list'] });
-                Alert.alert('Éxito', 'País creado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear el país. Por favor, intente nuevamente.');
                 console.error('Error creating pais:', error);
             }
         });
@@ -104,10 +93,8 @@ export const usePais = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['pais', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['pais', 'item', variables.id] });
-                Alert.alert('Éxito', 'País actualizado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar el país. Por favor, intente nuevamente.');
                 console.error('Error updating pais:', error);
             }
         });
@@ -118,10 +105,8 @@ export const usePais = () => {
             mutationFn: (id: number) => apiPais.delete(endpoints.sales.pais.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['pais', 'list'] });
-                Alert.alert('Éxito', 'País eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el país. Por favor, intente nuevamente.');
                 console.error('Error deleting pais:', error);
             }
         });

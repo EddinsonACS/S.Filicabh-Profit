@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTasaDeCambio = createApiService<TasaDeCambio>();
 
@@ -18,10 +17,6 @@ export const useTasaDeCambio = () => {
             queryFn: () => apiTasaDeCambio.getList(endpoints.sales.tasadecambio.list, page, size),
             onSettled: (_: ListDataResponse<TasaDeCambio> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de tasas de cambio. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tasa de cambio list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useTasaDeCambio = () => {
             enabled: !!id,
             onSettled: (_: TasaDeCambio | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la tasa de cambio. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tasa de cambio item:', error);
                 }
             }
@@ -71,10 +62,8 @@ export const useTasaDeCambio = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tasadecambio', 'list'] });
-                Alert.alert('Éxito', 'Tasa de cambio creada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear la tasa de cambio. Por favor, intente nuevamente.');
                 console.error('Error creating tasa de cambio:', error);
             }
         });
@@ -105,10 +94,8 @@ export const useTasaDeCambio = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['tasadecambio', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['tasadecambio', 'item', variables.id] });
-                Alert.alert('Éxito', 'Tasa de cambio actualizada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar la tasa de cambio. Por favor, intente nuevamente.');
                 console.error('Error updating tasa de cambio:', error);
             }
         });
@@ -119,10 +106,8 @@ export const useTasaDeCambio = () => {
             mutationFn: (id: number) => apiTasaDeCambio.delete(endpoints.sales.tasadecambio.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tasadecambio', 'list'] });
-                Alert.alert('Éxito', 'Tasa de cambio eliminada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar la tasa de cambio. Por favor, intente nuevamente.');
                 console.error('Error deleting tasa de cambio:', error);
             }
         });

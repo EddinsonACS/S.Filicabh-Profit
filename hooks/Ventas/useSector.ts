@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiSector = createApiService<Sector>();
 
@@ -18,10 +17,6 @@ export const useSector = () => {
             queryFn: () => apiSector.getList(endpoints.sales.sector.list, page, size),
             onSettled: (_: ListDataResponse<Sector> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de sectores. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching sector list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useSector = () => {
             enabled: !!id,
             onSettled: (_: Sector | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el sector. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching sector item:', error);
                 }
             }
@@ -69,10 +60,8 @@ export const useSector = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['sector', 'list'] });
-                Alert.alert('Éxito', 'Sector creado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear el sector. Por favor, intente nuevamente.');
                 console.error('Error creating sector:', error);
             }
         });
@@ -103,10 +92,8 @@ export const useSector = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['sector', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['sector', 'item', variables.id] });
-                Alert.alert('Éxito', 'Sector actualizado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar el sector. Por favor, intente nuevamente.');
                 console.error('Error updating sector:', error);
             }
         });
@@ -117,10 +104,8 @@ export const useSector = () => {
             mutationFn: (id: number) => apiSector.delete(endpoints.sales.sector.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['sector', 'list'] });
-                Alert.alert('Éxito', 'Sector eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el sector. Por favor, intente nuevamente.');
                 console.error('Error deleting sector:', error);
             }
         });

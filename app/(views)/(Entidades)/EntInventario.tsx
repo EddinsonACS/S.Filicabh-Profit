@@ -535,7 +535,6 @@ const EntInventario: React.FC = () => {
     return new Promise((resolve) => {
       const commonOnSuccess = (updatedItem: any, entityName: string) => {
         queryClient.invalidateQueries({ queryKey: [selectedCategory, currentItem.id] });
-        // queryClient.invalidateQueries({ queryKey: [selectedCategory] }); // Add queryClient for this
         setAccumulatedItems(prev =>
           prev.map(item => (item.id === currentItem.id ? updatedItem : item))
         );

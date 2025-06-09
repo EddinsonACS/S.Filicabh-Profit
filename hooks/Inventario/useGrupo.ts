@@ -5,7 +5,6 @@ import ListDataResponse from '@/core/response/ListDataResponse';
 import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
-import { Alert } from 'react-native';
 
 const apiGrupo = createApiService<Grupo>();
 
@@ -17,10 +16,6 @@ export const useGrupo = () => {
       queryFn: () => apiGrupo.getList(endpoints.inventory.grupo.list, page, size),
       onSettled: (_: ListDataResponse<Grupo> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching grupo list:', error);
         }
       }
@@ -34,10 +29,6 @@ export const useGrupo = () => {
       enabled: !!id,
       onSettled: (_: Grupo | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el grupo. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching grupo item:', error);
         }
       }
@@ -68,16 +59,8 @@ export const useGrupo = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Grupo creado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error creating grupo:', error);
       }
     });
@@ -109,16 +92,8 @@ export const useGrupo = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['grupo', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Grupo actualizado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating grupo:', error);
       }
     });
@@ -129,16 +104,8 @@ export const useGrupo = () => {
       mutationFn: (id: number) => apiGrupo.delete(endpoints.inventory.grupo.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Grupo eliminado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting grupo:', error);
       }
     });

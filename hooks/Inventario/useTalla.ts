@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTalla = createApiService<Talla>();
 
@@ -16,10 +15,6 @@ export const useTalla   = () => {
       queryFn: () => apiTalla.getList(endpoints.inventory.talla.list, page, size),
       onSettled: (_: ListDataResponse<Talla> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching talla list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useTalla   = () => {
       enabled: !!id,
       onSettled: (_: Talla | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el grupo. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching talla item:', error);
         }
       }
@@ -66,16 +57,8 @@ export const useTalla   = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Talla creada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear la talla. Por favor, intente nuevamente.'
-        );
         console.error('Error creating talla:', error);
       }
     });
@@ -106,16 +89,8 @@ export const useTalla   = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['talla', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Talla actualizada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating talla:', error);
       }
     });
@@ -126,16 +101,8 @@ export const useTalla   = () => {
       mutationFn: (id: number) => apiTalla.delete(endpoints.inventory.talla.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['talla', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Talla eliminada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting talla:', error);
       }
     });

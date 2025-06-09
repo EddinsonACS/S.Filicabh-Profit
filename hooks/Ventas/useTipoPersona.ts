@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTipoPersona = createApiService<TipoPersona>();
 
@@ -18,10 +17,6 @@ export const useTipoPersona = () => {
             queryFn: () => apiTipoPersona.getList(endpoints.sales.tipopersona.list, page, size),
             onSettled: (_: ListDataResponse<TipoPersona> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de tipos de persona. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tipo persona list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useTipoPersona = () => {
             enabled: !!id,
             onSettled: (_: TipoPersona | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el tipo de persona. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tipo persona item:', error);
                 }
             }
@@ -69,10 +60,8 @@ export const useTipoPersona = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tipopersona', 'list'] });
-                Alert.alert('Éxito', 'Tipo de persona creado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear el tipo de persona. Por favor, intente nuevamente.');
                 console.error('Error creating tipo persona:', error);
             }
         });
@@ -103,10 +92,8 @@ export const useTipoPersona = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['tipopersona', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['tipopersona', 'item', variables.id] });
-                Alert.alert('Éxito', 'Tipo de persona actualizado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar el tipo de persona. Por favor, intente nuevamente.');
                 console.error('Error updating tipo persona:', error);
             }
         });
@@ -117,10 +104,8 @@ export const useTipoPersona = () => {
             mutationFn: (id: number) => apiTipoPersona.delete(endpoints.sales.tipopersona.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tipopersona', 'list'] });
-                Alert.alert('Éxito', 'Tipo de persona eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el tipo de persona. Por favor, intente nuevamente.');
                 console.error('Error deleting tipo persona:', error);
             }
         });

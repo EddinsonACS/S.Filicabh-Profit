@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiSeccion = createApiService<Seccion>();
 
@@ -16,10 +15,6 @@ export const useSeccion = () => {
       queryFn: () => apiSeccion.getList(endpoints.inventory.seccion.list, page, size),
       onSettled: (_: ListDataResponse<Seccion> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching seccion list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useSeccion = () => {
       enabled: !!id,
       onSettled: (_: Seccion | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el grupo. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching seccion item:', error);
         }
       }
@@ -67,16 +58,8 @@ export const useSeccion = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Sección creada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear la sección. Por favor, intente nuevamente.'
-        );
         console.error('Error creating seccion:', error);
       }
     });
@@ -107,16 +90,8 @@ export const useSeccion = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['seccion', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Sección actualizada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating seccion:', error);
       }
     });
@@ -127,16 +102,8 @@ export const useSeccion = () => {
       mutationFn: (id: number) => apiSeccion.delete(endpoints.inventory.seccion.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Sección eliminada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting seccion:', error);
       }
     });

@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiListaDePrecio = createApiService<ListaDePrecio>();
 
@@ -18,10 +17,6 @@ export const useListaDePrecio = () => {
             queryFn: () => apiListaDePrecio.getList(endpoints.sales.listadeprecio.list, page, size),
             onSettled: (_: ListDataResponse<ListaDePrecio> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de precios. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching lista de precio list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useListaDePrecio = () => {
             enabled: !!id,
             onSettled: (_: ListaDePrecio | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de precio. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching lista de precio item:', error);
                 }
             }
@@ -69,10 +60,8 @@ export const useListaDePrecio = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['listadeprecio', 'list'] });
-                Alert.alert('Éxito', 'Lista de precio creada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear la lista de precio. Por favor, intente nuevamente.');
                 console.error('Error creating lista de precio:', error);
             }
         });
@@ -103,10 +92,8 @@ export const useListaDePrecio = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['listadeprecio', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['listadeprecio', 'item', variables.id] });
-                Alert.alert('Éxito', 'Lista de precio actualizada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar la lista de precio. Por favor, intente nuevamente.');
                 console.error('Error updating lista de precio:', error);
             }
         });
@@ -117,10 +104,8 @@ export const useListaDePrecio = () => {
             mutationFn: (id: number) => apiListaDePrecio.delete(endpoints.sales.listadeprecio.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['listadeprecio', 'list'] });
-                Alert.alert('Éxito', 'Lista de precio eliminada correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar la lista de precio. Por favor, intente nuevamente.');
                 console.error('Error deleting lista de precio:', error);
             }
         });

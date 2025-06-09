@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTipoDeArticulo = createApiService<TipoDeArticulo>();
 
@@ -16,10 +15,6 @@ export const useTipoDeArticulo   = () => {
       queryFn: () => apiTipoDeArticulo.getList(endpoints.inventory.tipoDeArticulo.list, page, size),
       onSettled: (_: ListDataResponse<TipoDeArticulo> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de tipos de articulo. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching tipo de articulo list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useTipoDeArticulo   = () => {
       enabled: !!id,
       onSettled: (_: TipoDeArticulo | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el tipo de articulo. Por favor, intente nuevamente.'
-          );
         console.error('Error fetching tipo de articulo item:', error);
         }
       }
@@ -67,16 +58,8 @@ export const useTipoDeArticulo   = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeArticulo', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de articulo creado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el tipo de articulo. Por favor, intente nuevamente.'
-        );
         console.error('Error creating tipo de articulo:', error);
       }
     });
@@ -108,16 +91,8 @@ export const useTipoDeArticulo   = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeArticulo', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['tipoDeArticulo', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de articulo actualizado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el tipo de articulo. Por favor, intente nuevamente.'
-        );
         console.error('Error updating tipo de articulo:', error);
       }
     });
@@ -128,16 +103,8 @@ export const useTipoDeArticulo   = () => {
       mutationFn: (id: number) => apiTipoDeArticulo.delete(endpoints.inventory.tipoDeArticulo.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeArticulo', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de articulo eliminado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el tipo de articulo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting tipo de articulo:', error);
       }
     });

@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiRubro = createApiService<Rubro>();
 
@@ -18,10 +17,6 @@ export const useRubro = () => {
             queryFn: () => apiRubro.getList(endpoints.sales.rubro.list, page, size),
             onSettled: (_: ListDataResponse<Rubro> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de rubros. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching rubro list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useRubro = () => {
             enabled: !!id,
             onSettled: (_: Rubro | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el rubro. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching rubro item:', error);
                 }
             }
@@ -70,10 +61,8 @@ export const useRubro = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['rubro', 'list'] });
-                Alert.alert('Éxito', 'Rubro creado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear el rubro. Por favor, intente nuevamente.');
                 console.error('Error creating rubro:', error);
             }
         });
@@ -104,10 +93,8 @@ export const useRubro = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['rubro', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['rubro', 'item', variables.id] });
-                Alert.alert('Éxito', 'Rubro actualizado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar el rubro. Por favor, intente nuevamente.');
                 console.error('Error updating rubro:', error);
             }
         });
@@ -118,10 +105,8 @@ export const useRubro = () => {
             mutationFn: (id: number) => apiRubro.delete(endpoints.sales.rubro.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['rubro', 'list'] });
-                Alert.alert('Éxito', 'Rubro eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el rubro. Por favor, intente nuevamente.');
                 console.error('Error deleting rubro:', error);
             }
         });

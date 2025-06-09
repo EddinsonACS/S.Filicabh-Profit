@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTipoVendedor = createApiService<TipoVendedor>();
 
@@ -18,10 +17,6 @@ export const useTipoVendedor = () => {
             queryFn: () => apiTipoVendedor.getList(endpoints.sales.tipovendedor.list, page, size),
             onSettled: (_: ListDataResponse<TipoVendedor> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de tipos de vendedor. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tipo vendedor list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useTipoVendedor = () => {
             enabled: !!id,
             onSettled: (_: TipoVendedor | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el tipo de vendedor. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching tipo vendedor item:', error);
                 }
             }
@@ -69,10 +60,8 @@ export const useTipoVendedor = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tipovendedor', 'list'] });
-                Alert.alert('Éxito', 'Tipo de vendedor creado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo crear el tipo de vendedor. Por favor, intente nuevamente.');
                 console.error('Error creating tipo vendedor:', error);
             }
         });
@@ -103,10 +92,8 @@ export const useTipoVendedor = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['tipovendedor', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['tipovendedor', 'item', variables.id] });
-                Alert.alert('Éxito', 'Tipo de vendedor actualizado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo actualizar el tipo de vendedor. Por favor, intente nuevamente.');
                 console.error('Error updating tipo vendedor:', error);
             }
         });
@@ -117,10 +104,8 @@ export const useTipoVendedor = () => {
             mutationFn: (id: number) => apiTipoVendedor.delete(endpoints.sales.tipovendedor.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['tipovendedor', 'list'] });
-                Alert.alert('Éxito', 'Tipo de vendedor eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el tipo de vendedor. Por favor, intente nuevamente.');
                 console.error('Error deleting tipo vendedor:', error);
             }
         });

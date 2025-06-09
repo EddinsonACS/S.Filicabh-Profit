@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const origenApiGeneric = createApiService<Origen>();
 
@@ -16,10 +15,6 @@ export const useOrigen   = () => {
       queryFn: () => origenApiGeneric.getList(endpoints.inventory.origen.list, page, size),
       onSettled: (_: ListDataResponse<Origen> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
         console.error('Error fetching origen list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useOrigen   = () => {
       enabled: !!id,
       onSettled: (_: Origen | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el color. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching origen item:', error);
         }
       }
@@ -66,16 +57,8 @@ export const useOrigen   = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['origen', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Origen creada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el origen. Por favor, intente nuevamente.'
-        );
         console.error('Error creating origen:', error);
       }
     });
@@ -106,16 +89,8 @@ export const useOrigen   = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['origen', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['origen', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Origen actualizada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar el color. Por favor, intente nuevamente.'
-        );
         console.error('Error updating origen:', error);
       }
     });
@@ -126,16 +101,8 @@ export const useOrigen   = () => {
       mutationFn: (id: number) => origenApiGeneric.delete(endpoints.inventory.origen.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['origen', 'list'] });
-        Alert.alert(
-          'Éxito',
-        'Origen eliminada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el color. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting origen:', error);
       }
     });

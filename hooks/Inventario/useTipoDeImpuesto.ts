@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiTipoDeImpuesto = createApiService<TipoDeImpuesto>();
 
@@ -16,10 +15,6 @@ export const useTipoDeImpuesto   = () => {
       queryFn: () => apiTipoDeImpuesto.getList(endpoints.inventory.tipoDeImpuesto.list, page, size),
       onSettled: (_: ListDataResponse<TipoDeImpuesto> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching tipo de impuesto list:', error);
         }
       }
@@ -33,10 +28,6 @@ export const useTipoDeImpuesto   = () => {
       enabled: !!id,
       onSettled: (_: TipoDeImpuesto | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el grupo. Por favor, intente nuevamente.'
-          );
         console.error('Error fetching tipo de impuesto item:', error);
         }
       }
@@ -66,16 +57,8 @@ export const useTipoDeImpuesto   = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeImpuesto', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de impuesto creado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear el tipo de impuesto. Por favor, intente nuevamente.'
-        );
         console.error('Error creating tipo de impuesto:', error);
       }
     });
@@ -106,16 +89,8 @@ export const useTipoDeImpuesto   = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeImpuesto', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['tipoDeImpuesto', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de impuesto actualizado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating tipo de impuesto:', error);
       }
     });
@@ -126,16 +101,8 @@ export const useTipoDeImpuesto   = () => {
       mutationFn: (id: number) => apiTipoDeImpuesto.delete(endpoints.inventory.tipoDeImpuesto.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['tipoDeImpuesto', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Tipo de impuesto eliminado correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting tipo de impuesto:', error);
       }
     });

@@ -5,7 +5,6 @@ import { authStorage } from '@/data/global/authStorage';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiVendedor = createApiService<Vendedor>();
 
@@ -18,10 +17,6 @@ export const useVendedor = () => {
             queryFn: () => apiVendedor.getList(endpoints.sales.vendedor.list, page, size),
             onSettled: (_: ListDataResponse<Vendedor> | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar la lista de vendedores. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching vendedor list:', error);
                 }
             }
@@ -35,10 +30,6 @@ export const useVendedor = () => {
             enabled: !!id,
             onSettled: (_: Vendedor | undefined, error: Error | null) => {
                 if (error) {
-                    Alert.alert(
-                        'Error',
-                        'No se pudo cargar el vendedor. Por favor, intente nuevamente.'
-                    );
                     console.error('Error fetching vendedor item:', error);
                 }
             }
@@ -100,14 +91,12 @@ export const useVendedor = () => {
             },
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['vendedor', 'list'] });
-                Alert.alert('Éxito', 'Vendedor creado correctamente.');
             },
-            onError: (error) => {
+            onError: (error: any) => {
                 console.error('Error completo del vendedor:', error);
                 if (error?.response?.data) {
                     console.error('Respuesta del servidor:', error.response.data);
                 }
-                Alert.alert('Error', 'No se pudo crear el vendedor. Por favor, intente nuevamente.');
             }
         });
     };
@@ -164,14 +153,12 @@ export const useVendedor = () => {
             onSuccess: (_, variables) => {
                 queryClient.invalidateQueries({ queryKey: ['vendedor', 'list'] });
                 queryClient.invalidateQueries({ queryKey: ['vendedor', 'item', variables.id] });
-                Alert.alert('Éxito', 'Vendedor actualizado correctamente.');
             },
-            onError: (error) => {
+            onError: (error: any) => {
                 console.error('Error actualizando vendedor:', error);
                 if (error?.response?.data) {
                     console.error('Respuesta del servidor en update:', error.response.data);
                 }
-                Alert.alert('Error', 'No se pudo actualizar el vendedor. Por favor, intente nuevamente.');
             }
         });
     };
@@ -181,10 +168,8 @@ export const useVendedor = () => {
             mutationFn: (id: number) => apiVendedor.delete(endpoints.sales.vendedor.delete(id)),
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['vendedor', 'list'] });
-                Alert.alert('Éxito', 'Vendedor eliminado correctamente.');
             },
             onError: (error) => {
-                Alert.alert('Error', 'No se pudo eliminar el vendedor. Por favor, intente nuevamente.');
                 console.error('Error deleting vendedor:', error);
             }
         });

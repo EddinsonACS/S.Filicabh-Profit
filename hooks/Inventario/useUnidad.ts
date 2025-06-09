@@ -5,7 +5,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiUnidad = createApiService<Unidad>();
 
@@ -17,10 +16,6 @@ export const useUnidad   = () => {
       queryFn: () => apiUnidad.getList(endpoints.inventory.unidad.list, page, size),
       onSettled: (_: ListDataResponse<Unidad> | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar la lista de categorías. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching unidad list:', error);
         }
       }
@@ -34,10 +29,6 @@ export const useUnidad   = () => {
       enabled: !!id,
       onSettled: (_: Unidad | undefined, error: Error | null) => {
         if (error) {
-          Alert.alert(
-            'Error',
-            'No se pudo cargar el grupo. Por favor, intente nuevamente.'
-          );
           console.error('Error fetching unidad item:', error);
         }
       }
@@ -67,16 +58,8 @@ export const useUnidad   = () => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Unidad creada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo crear la sección. Por favor, intente nuevamente.'
-        );
         console.error('Error creating unidad:', error);
       }
     });
@@ -107,16 +90,8 @@ export const useUnidad   = () => {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['unidad', 'item', variables.id] });
-        Alert.alert(
-          'Éxito',
-          'Unidad actualizada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo actualizar la categoría. Por favor, intente nuevamente.'
-        );
         console.error('Error updating unidad:', error);
       }
     });
@@ -127,16 +102,8 @@ export const useUnidad   = () => {
       mutationFn: (id: number) => apiUnidad.delete(endpoints.inventory.unidad.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['unidad', 'list'] });
-        Alert.alert(
-          'Éxito',
-          'Unidad eliminada correctamente.'
-        );
       },
       onError: (error) => {
-        Alert.alert(
-          'Error',
-          'No se pudo eliminar el grupo. Por favor, intente nuevamente.'
-        );
         console.error('Error deleting unidad:', error);
       }
     });
