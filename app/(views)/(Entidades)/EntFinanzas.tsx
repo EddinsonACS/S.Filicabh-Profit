@@ -4,7 +4,8 @@ import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
@@ -16,11 +17,10 @@ import { DEFAULT_VALUES_FINANZAS } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_FINANZAS } from '@/utils/const/formFields';
 import { finanzasSchema } from '@/utils/schemas/finanzasSchema';
 import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 
 const PAGE_SIZE = 10;
 
@@ -87,6 +87,7 @@ const EntFinanzas: React.FC = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const itemModalRef = useRef<DynamicItemModalRef>(null);
 
   // React Query hooks
   const { data: bancoData, isLoading: isLoadingBanco, error: bancoError } = useGetBancoList(currentPage, PAGE_SIZE);
@@ -409,9 +410,7 @@ const EntFinanzas: React.FC = () => {
 
     const commonOnError = (error: any, entityTypeString: string) => {
       const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityTypeString.toLowerCase()}`;
-      showError("Error", errorMessage);
-      // Consider if modal should always close on delete error, currently it does.
-      setDetailModalVisible(false);
+      itemModalRef.current?.showDeleteError(entityTypeString.toLowerCase(), errorMessage);
     };
 
     if (selectedCategory === 'banco') {
@@ -431,8 +430,7 @@ const EntFinanzas: React.FC = () => {
       });
     } else {
       console.warn('Unhandled category for delete:', selectedCategory);
-      showError("Error", `Categoría no manejada para la eliminación: ${selectedCategory}`);
-      setDetailModalVisible(false);
+      itemModalRef.current?.showDeleteError('elemento', `Categoría no manejada para la eliminación: ${selectedCategory}`);
     }
   };
 
@@ -471,6 +469,7 @@ const EntFinanzas: React.FC = () => {
         viewType={viewType}
         setViewType={setViewType}
         navigateToModules={navigateToModules}
+        categoryTitle={CATEGORY_TITLES[selectedCategory]}
       />
 
       <DynamicCategorySelector<CategoryId>
@@ -550,6 +549,7 @@ const EntFinanzas: React.FC = () => {
       />
 
       <DynamicItemModal
+        ref={itemModalRef}
         visible={detailModalVisible}
         onClose={() => setDetailModalVisible(false)}
         currentItem={currentItem}

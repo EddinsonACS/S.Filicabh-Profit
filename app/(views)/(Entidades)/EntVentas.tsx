@@ -1,5 +1,6 @@
 import { useAcuerdoDePago } from '@/hooks/Ventas/useAcuerdoDePago';
 import { useCiudad } from '@/hooks/Ventas/useCiudad';
+import { useFiguraComercial } from '@/hooks/Ventas/useFiguraComercial';
 import { useFormaDeEntrega } from '@/hooks/Ventas/useFormaDeEntrega';
 import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
 import { useMoneda } from '@/hooks/Ventas/useMoneda';
@@ -11,10 +12,10 @@ import { useTasaDeCambio } from '@/hooks/Ventas/useTasaDeCambio';
 import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
 import { useTipoVendedor } from '@/hooks/Ventas/useTipoVendedor';
 import { useVendedor } from '@/hooks/Ventas/useVendedor';
-import { useFiguraComercial } from '@/hooks/Ventas/useFiguraComercial';
 
 import { AcuerdoDePago } from '@/core/models/Ventas/AcuerdoDePago';
 import { Ciudad } from '@/core/models/Ventas/Ciudad';
+import { FiguraComercial } from '@/core/models/Ventas/FiguraComercial';
 import { FormaDeEntrega } from '@/core/models/Ventas/FormaDeEntrega';
 import { ListaDePrecio } from '@/core/models/Ventas/ListaDePrecio';
 import { Moneda } from '@/core/models/Ventas/Moneda';
@@ -26,13 +27,11 @@ import { TasaDeCambio } from '@/core/models/Ventas/TasaDeCambio';
 import { TipoPersona } from '@/core/models/Ventas/TipoPersona';
 import { TipoVendedor } from '@/core/models/Ventas/TipoVendedor';
 import { Vendedor } from '@/core/models/Ventas/Vendedor';
-import { FiguraComercial } from '@/core/models/Ventas/FiguraComercial';
 
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import { z } from 'zod';
 
 // Import dynamic components
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
@@ -41,12 +40,13 @@ import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { themes } from '@/components/Entidades/shared/theme';
 import ItemArticle from '@/components/Entidades/Ventas/ItemArticle';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { ventasSchema } from '@/utils/schemas/ventasSchema';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Interfaces auxiliares
@@ -560,108 +560,7 @@ const DEFAULT_VALUES = {
 };
 
 // Schemas de validación por entidad
-const SCHEMAS = {
-  acuerdodepago: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    dias: z.number({required_error: 'Los días son requeridos'}).min(0, 'Los días deben ser mayor o igual a 0'),
-    suspendido: z.boolean()
-  }),
-  ciudad: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    codigoRegion: z.number({required_error: 'La región es requerida'}).min(1, 'La región es requerida'),
-    suspendido: z.boolean()
-  }),
-  region: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  pais: z.object({
-    codigo: z.string({required_error: 'El código es requerido'}),
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  formadeentrega: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    aplicaDespachoTransporte: z.boolean(),
-    suspendido: z.boolean()
-  }),
-  tipopersona: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  tipovendedor: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  vendedor: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    direccion: z.string({required_error: 'La dirección es requerida'}).optional(),
-    telefono: z.string({required_error: 'El teléfono es requerido'}).optional(),
-    email: z.string({required_error: 'El email es requerido'}).email('Email inválido'),
-    esVendedor: z.boolean(),
-    esCobrador: z.boolean(),
-    codigoRegion: z.number({required_error: 'La región es requerida'}),
-    codigoTipoVendedor: z.number({required_error: 'El tipo de vendedor es requerido'}),
-    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}),
-    suspendido: z.boolean()
-  }),
-  moneda: z.object({
-    codigo: z.string({required_error: 'El código es requerido'}),
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    esDividir: z.boolean(),
-    suspendido: z.boolean()
-  }),
-  tasadecambio: z.object({
-    codigoMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
-    fecha: z.string({required_error: 'La fecha es requerida'}).min(1, 'La fecha es requerida'),
-    tasaVenta: z.number({required_error: 'La tasa de venta es requerida'}).min(0, 'La tasa de venta debe ser mayor o igual a 0'),
-    tasaCompra: z.number({required_error: 'La tasa de compra es requerida'}).min(0, 'La tasa de compra debe ser mayor o igual a 0')
-  }),
-  listadeprecio: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  sector: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    suspendido: z.boolean()
-  }),
-  rubro: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}).min(1, 'La lista de precio es requerida'),
-    suspendido: z.boolean()
-  }),
-  figuracomercial: z.object({
-    nombre: z.string({required_error: 'El nombre es requerido'}),
-    rif: z.string({required_error: 'El RIF es requerido'}),
-    nit: z.string({required_error: 'El NIT es requerido'}),
-    personaContacto: z.string({required_error: 'La persona de contacto es requerida'}),
-    telefono: z.string({required_error: 'El teléfono es requerido'}),
-    email: z.string({required_error: 'El email es requerido'}).email('Email inválido'), 
-    emailAlterno: z.string({required_error: 'El email alterno es requerido'}).email('Email inválido'), 
-    descripcionFiguraComercial: z.string({required_error: 'La descripción es requerida'}),
-    codigoPais: z.number({required_error: 'El país es requerido'}).min(1, 'El país es requerido'),
-    codigoCiudad: z.number({required_error: 'La ciudad es requerida'}).min(1, 'La ciudad es requerida'),
-    codigoRubro: z.number({required_error: 'El rubro es requerido'}).min(1, 'El rubro es requerido'),
-    codigoSector: z.number({required_error: 'El sector es requerido'}).min(1, 'El sector es requerido'),
-    codigoVendedor: z.number({required_error: 'El vendedor es requerido'}).min(1, 'El vendedor es requerido'),
-    codigoAcuerdoDePago: z.number({required_error: 'El acuerdo de pago es requerido'}).min(1, 'El acuerdo de pago es requerido'),
-    codigoTipoPersona: z.number({required_error: 'El tipo de persona es requerido'}).min(1, 'El tipo de persona es requerido'),
-    activoVentas: z.boolean(),
-    activoCompras: z.boolean(),
-    esCasaMatriz: z.boolean(),
-    codigoFiguraComercialCasaMatriz: z.number({required_error: 'La casa matriz es requerida'}),
-    direccionComercial: z.string({required_error: 'La dirección comercial es requerida'}),
-    direccionEntrega: z.string({required_error: 'La dirección de entrega es requerida'}),
-    codigoMonedaLimiteCreditoVentas: z.string({required_error: 'Moneda límite crédito ventas es requerida'}).min(1, 'Moneda límite crédito ventas es requerida'),
-    montolimiteCreditoVentas: z.number({required_error: 'Monto límite crédito ventas es requerido'}),
-    codigoMonedaLimiteCreditoCompras: z.string({required_error: 'Moneda límite crédito compras es requerida'}).min(1, 'Moneda límite crédito compras es requerida'),
-    montolimiteCreditoCompras: z.number({required_error: 'Monto límite crédito compras es requerido'}),
-    porceRetencionIva: z.number({required_error: 'Porcentaje retención IVA es requerido'}).min(0, 'Porcentaje retención IVA debe ser >= 0').max(100, 'Porcentaje retención IVA debe ser <= 100'),
-    aplicaRetVentasAuto: z.boolean(),
-    aplicaRetComprasAuto: z.boolean(),
-    suspendido: z.boolean()
-  })
-};
+const SCHEMAS = ventasSchema;
 
 type CategoryId = keyof typeof CATEGORY_TITLES;
 type ItemUnion = AcuerdoDePago | Ciudad | Region | Pais | FormaDeEntrega | TipoPersona | TipoVendedor | Vendedor | Moneda | TasaDeCambio | ListaDePrecio | Sector | Rubro | FiguraComercial;
@@ -842,6 +741,7 @@ const EntVentas: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const itemModalRef = useRef<DynamicItemModalRef>(null);
 
   // React Query hooks basados en categoría seleccionada
   const { data: acuerdoDePagoData, isLoading: isLoadingAcuerdoDePago } = useGetAcuerdoDePagoList(currentPage, PAGE_SIZE);
@@ -1366,13 +1266,14 @@ const handleDelete = (id: number) => {
     setCurrentPage(1);
     setHasMore(true);
     showSuccess('¡Eliminado!', `${entityType} eliminado correctamente.`);
+    // Cerrar el modal después de la eliminación exitosa
     setDetailModalVisible(false);
   };
 
   const commonOnError = (error: any, entityType: string) => {
     const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityType.toLowerCase()}`;
-    showError('Error', errorMessage);
-    setDetailModalVisible(false);
+    // Usar el método optimizado showDeleteError
+    itemModalRef.current?.showDeleteError(entityType.toLowerCase(), errorMessage);
   };
 
   switch (selectedCategory) {
@@ -1588,6 +1489,7 @@ const handleDelete = (id: number) => {
       />
 
       <DynamicItemModal
+        ref={itemModalRef}
         visible={detailModalVisible}
         onClose={() => setDetailModalVisible(false)}
         currentItem={currentItem}

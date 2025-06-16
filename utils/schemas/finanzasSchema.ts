@@ -1,20 +1,43 @@
 import { z } from 'zod';
 
+// Validaciones simples - solo verifican que el campo no esté vacío
+const nameSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido');
+
+const addressSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido');
+
+const accountNumberSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido');
+
+const phoneSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido');
+
+const emailSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido')
+  .email('Formato de email inválido');
+
+const sucursalSchema = z.string({required_error: 'Campo requerido'})
+  .min(1, 'Campo requerido');
+
 const baseSchema = {
-  nombre: z.string({required_error: 'El nombre es requerido'}).min(1, 'El nombre es requerido'),
+  nombre: nameSchema,
   suspendido: z.boolean()
 };
 
 const baseCuentaBancariaSchema = {
-    nroCuenta: z.string({required_error: 'El número de cuenta es requerido'}),
-    tipoDeCuenta: z.string({required_error: 'El tipo de cuenta es requerido'}),
-    codigoMoneda: z.number({required_error: 'El código de moneda es requerido'}),
-    codigoBanco: z.number({required_error: 'El código de banco es requerido'}),
-    sucursal: z.string({required_error: 'La sucursal es requerida'}),
-    direccion: z.string({required_error: 'La dirección es requerida'}),
-    nombreEjecutivo: z.string({required_error: 'El nombre del ejecutivo es requerido'}),
-    telefono: z.string({required_error: 'El teléfono es requerido'}),
-    email: z.string({required_error: 'El email es requerido'}).email('El email no es válido')
+    nroCuenta: accountNumberSchema,
+    tipoDeCuenta: z.string({required_error: 'Campo requerido'})
+      .min(1, 'Campo requerido'),
+    codigoMoneda: z.number({required_error: 'Campo requerido'})
+      .min(1, 'Campo requerido'),
+    codigoBanco: z.number({required_error: 'Campo requerido'})
+      .min(1, 'Campo requerido'),
+    sucursal: sucursalSchema,
+    direccion: addressSchema,
+    nombreEjecutivo: nameSchema,
+    telefono: phoneSchema,
+    email: emailSchema
 };
 
 export const finanzasSchema = {
@@ -23,7 +46,8 @@ export const finanzasSchema = {
   }),
   caja: z.object({
     ...baseSchema,
-    codigoMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
+    codigoMoneda: z.number({required_error: 'Campo requerido'})
+      .min(1, 'Campo requerido'),
   }),
   cuentaBancaria: z.object({
     ...baseCuentaBancariaSchema,

@@ -1,15 +1,15 @@
+import { authStorage } from '@/data/global/authStorage';
 import { loginSchema } from '@/utils/schemas/loginSchema';
 import { LoginFormData } from '@/utils/types/LoginFormData';
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { BounceIn, Easing, FadeIn, interpolateColor, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLoginUser } from '../../hooks/auth/useLoginUser';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authStorage } from '@/data/global/authStorage';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -193,7 +193,7 @@ export default function LoginForm() {
                         <Ionicons name="mail-outline" size={20} color="#4B5563" />
                       </Animated.View>
                       <TextInput
-                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
+                        className="w-full pl-4 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
                         placeholder="tu@email.com"
                         keyboardType="email-address"
                         autoCapitalize="none"
@@ -226,7 +226,7 @@ export default function LoginForm() {
                         <Ionicons name="lock-closed-outline" size={20} color="#4B5563" />
                       </Animated.View>
                       <TextInput
-                        className="w-full pl-12 pr-12 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
+                        className="w-full pl-4 pr-12 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
                         placeholder="••••••••"
                         secureTextEntry={!passwordVisible}
                         autoCapitalize="none"

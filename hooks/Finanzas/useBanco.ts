@@ -37,11 +37,13 @@ export const useBanco = () => {
   const useCreateBanco = () => {
     return useMutation({
       mutationFn: (formData: Partial<Banco>) => {
-        if (!formData.nombre) {
+        // Solo validar campos requeridos
+        if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
+
         const data: Omit<Banco, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
-          nombre: formData.nombre,
+          nombre: formData.nombre.trim(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: formData.otrosN1 || 0,
@@ -70,12 +72,14 @@ export const useBanco = () => {
   const useUpdateBanco = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<Banco> }) => {
-        if (!formData.nombre) {
+        // Solo validar campos requeridos
+        if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
+
         const data: Partial<Banco> = {
           id: id,
-          nombre: formData.nombre,
+          nombre: formData.nombre.trim(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: formData.otrosN1 || 0,

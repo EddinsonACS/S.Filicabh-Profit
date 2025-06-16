@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  ListRenderItem,
-  RefreshControl,
-  View
+    ActivityIndicator,
+    FlatList,
+    ListRenderItem,
+    RefreshControl,
+    View
 } from 'react-native';
 
 interface DynamicItemListProps<T> {
@@ -53,7 +53,12 @@ const DynamicItemList = <T,>({
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.5}
       ListFooterComponent={renderFooter}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+      ListEmptyComponent={emptyStateComponent}
+      contentContainerStyle={{ 
+        paddingHorizontal: 16, 
+        paddingBottom: 16,
+        flexGrow: items.length === 0 ? 1 : 0 // Para centrar el empty state
+      }}
       refreshControl={
         onRefresh ? (
           <RefreshControl

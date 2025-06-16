@@ -25,7 +25,7 @@ const DynamicSearchBar: React.FC<DynamicSearchBarProps> = ({
   return (
     <View className="px-4 mb-2">
       <View className="flex-row items-center">
-        <View className="flex-1 flex-row items-center bg-gray-100 rounded-lg px-3 py-1 mr-2">
+        <View className="flex-1 flex-row items-center bg-gray-100 rounded-lg px-3 mr-2">
           <Ionicons name="search" size={20} color="#6b7280" />
           <TextInput
             className="flex-1 ml-2 text-gray-800"

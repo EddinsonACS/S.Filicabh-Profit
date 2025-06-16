@@ -76,49 +76,54 @@ export const useNotifications = () => {
 
     // Métodos de conveniencia para diferentes tipos de notificaciones
     const showSuccess = useCallback((title: string, message: string, duration?: number) => {
-        addNotification('success', title, message, duration || 3000);
-    }, [addNotification]);
+        addNotification('success', title, message, duration || 3000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showError = useCallback((title: string, message: string, duration?: number) => {
-        addNotification('error', title, message, duration || 5000); // Errores duran más
+        // Los errores mantienen su color rojo, no usan color de sección
+        addNotification('error', title, message, duration || 5000);
     }, [addNotification]);
 
     const showWarning = useCallback((title: string, message: string, duration?: number) => {
-        addNotification('warning', title, message, duration || 4000);
-    }, [addNotification]);
+        addNotification('warning', title, message, duration || 4000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showInfo = useCallback((title: string, message: string, duration?: number) => {
-        addNotification('info', title, message, duration || 4000);
-    }, [addNotification]);
+        addNotification('info', title, message, duration || 4000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     // Métodos específicos para operaciones CRUD comunes con mejor UX
     const showCreateSuccess = useCallback((entityName: string) => {
-        showSuccess('¡Creado!', `${entityName} se ha creado correctamente.`, 3000);
-    }, [showSuccess]);
+        addNotification('success', '¡Creado!', `${entityName} se ha creado correctamente.`, 3000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showUpdateSuccess = useCallback((entityName: string) => {
-        showSuccess('¡Actualizado!', `${entityName} se ha actualizado correctamente.`, 3000);
-    }, [showSuccess]);
+        addNotification('success', '¡Actualizado!', `${entityName} se ha actualizado correctamente.`, 3000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showDeleteSuccess = useCallback((entityName: string) => {
-        showSuccess('¡Eliminado!', `${entityName} se ha eliminado correctamente.`, 3000);
-    }, [showSuccess]);
+        addNotification('success', '¡Eliminado!', `${entityName} se ha eliminado correctamente.`, 3000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showCreateError = useCallback((entityName: string) => {
-        showError('Error al crear', `No se pudo crear ${entityName}. Por favor, intente nuevamente.`);
-    }, [showError]);
+        // Los errores mantienen su color rojo
+        addNotification('error', 'Error al crear', `No se pudo crear ${entityName}. Por favor, intente nuevamente.`, 5000);
+    }, [addNotification]);
 
     const showUpdateError = useCallback((entityName: string) => {
-        showError('Error al actualizar', `No se pudo actualizar ${entityName}. Por favor, intente nuevamente.`);
-    }, [showError]);
+        // Los errores mantienen su color rojo
+        addNotification('error', 'Error al actualizar', `No se pudo actualizar ${entityName}. Por favor, intente nuevamente.`, 5000);
+    }, [addNotification]);
 
     const showDeleteError = useCallback((entityName: string) => {
-        showError('Error al eliminar', `No se pudo eliminar ${entityName}. Por favor, intente nuevamente.`);
-    }, [showError]);
+        // Los errores mantienen su color rojo
+        addNotification('error', 'Error al eliminar', `No se pudo eliminar ${entityName}. Por favor, intente nuevamente.`, 5000);
+    }, [addNotification]);
 
     const showLoadError = useCallback((entityName: string) => {
-        showError('Error al cargar', `No se pudo cargar ${entityName}. Por favor, intente nuevamente.`);
-    }, [showError]);
+        // Los errores mantienen su color rojo
+        addNotification('error', 'Error al cargar', `No se pudo cargar ${entityName}. Por favor, intente nuevamente.`, 5000);
+    }, [addNotification]);
 
     // Método para mostrar confirmación personalizada usando el color de sección
     const showConfirmation = useCallback((

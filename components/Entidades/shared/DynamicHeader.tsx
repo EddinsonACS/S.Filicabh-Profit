@@ -36,10 +36,10 @@ const DynamicHeader: React.FC<DynamicHeaderProps> = ({
 }) => {
   return (
     <View style={{ backgroundColor }} className="px-4 py-4">
-      <View className="flex-row justify-between items-start">
-        <View className="flex-row items-start flex-1 mr-2">
+      <View className="flex-row justify-between items-center">
+        <View className="flex-row items-center flex-1 mr-2">
           <TouchableOpacity
-            className="mr-3 p-1 mt-1"
+            className="mr-3 p-1"
             onPress={navigateToModules}
           >
             <Ionicons
@@ -50,26 +50,27 @@ const DynamicHeader: React.FC<DynamicHeaderProps> = ({
           </TouchableOpacity>
           <View className="flex-1">
             <Text style={{ color: textColor }} className="text-xl font-bold mb-1">{title}</Text>
-            <Text 
-              style={{ color: lightTextColor }} 
-              className="text-sm"
-              numberOfLines={2}
-            >
-              {categoryTitle ? `${description} - ${categoryTitle}` : description}
-            </Text>
+            {categoryTitle && (
+              <Text 
+                style={{ color: lightTextColor }} 
+                className="text-sm font-semibold underline"
+                numberOfLines={1}
+              >
+                {categoryTitle}
+              </Text>
+            )}
           </View>
         </View>
         <TouchableOpacity
-          style={{ backgroundColor: buttonColor }}
-          className="rounded-full p-2 flex-row items-center mt-1"
+          className="bg-white rounded-2xl p-2 flex-row items-center"
           onPress={() => setViewType(viewType === 'chips' ? 'dropdown' : 'chips')}
         >
           <Ionicons
             name={viewType === 'chips' ? 'list-outline' : 'grid-outline'}
             size={18}
-            color={lightTextColor}
+            color={backgroundColor}
           />
-          <Text style={{ color: lightTextColor }} className="ml-1 text-xs">
+          <Text style={{ color: backgroundColor }} className="ml-1 text-xs">
             {viewType === 'chips' ? 'Ver lista' : 'Ver chips'}
           </Text>
         </TouchableOpacity>

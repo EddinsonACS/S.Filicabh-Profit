@@ -4,11 +4,13 @@ import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
-import DynamicItemModal from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
+import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
+import { useArticulo } from '@/hooks/Inventario/useArticulo';
 import { useCategoria } from '@/hooks/Inventario/useCategoria';
 import { useColor } from '@/hooks/Inventario/useColor';
 import { useGrupo } from '@/hooks/Inventario/useGrupo';
@@ -18,17 +20,14 @@ import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
 import { useUnidad } from '@/hooks/Inventario/useUnidad';
-import { useArticulo } from '@/hooks/Inventario/useArticulo';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
-import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 
 const PAGE_SIZE = 10;
 
@@ -155,6 +154,7 @@ const EntInventario: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const itemModalRef = useRef<DynamicItemModalRef>(null);
 
   useEffect(() => {
     const backAction = () => {
@@ -614,162 +614,85 @@ const EntInventario: React.FC = () => {
   };
 
   const handleDelete = (id: number) => {
+    const commonOnSuccess = (entityName: string) => {
+      queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+      setAccumulatedItems(prev => prev.filter(item => item.id !== id));
+      setCurrentPage(1);
+      setHasMore(true);
+      showDeleteSuccess(entityName);
+      // Cerrar el modal después de la eliminación exitosa
+      setDetailModalVisible(false);
+    };
+
+    const commonOnError = (error: any) => {
+      console.log(error.response?.data.mensaje);
+      setCurrentPage(1);
+      const errorMessage = error.response?.data?.mensaje || error.message || 'Error al eliminar el elemento';
+      // Usar el método optimizado showDeleteError
+      itemModalRef.current?.showDeleteError('elemento', errorMessage);
+      // En caso de error, mantener el modal abierto para que el usuario pueda ver el error
+    };
+
     if (selectedCategory === 'almacen') {
       deleteAlmacenMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el almacén');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el almacén'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'categoria') {
       deleteCategoriaMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la categoría');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la categoría'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'grupo') {
       deleteGrupoMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el grupo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el grupo'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'seccion') {
       deleteSeccionMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la sección');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la sección'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'unidad') {
       deleteUnidadMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la unidad');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la unidad'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'talla') {
       deleteTallaMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('la talla');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('la talla'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'color') {
       deleteColorMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el color');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el color'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'tipodeimpuesto') {
       deleteTipoDeImpuestoMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el tipo de impuesto');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el tipo de impuesto'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'tipodearticulo') {
       deleteTipoDeArticuloMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el tipo de artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el tipo de artículo'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'origen') {
       deleteOrigenMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el origen');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el origen'),
+        onError: commonOnError
       });
     } else if (selectedCategory === 'articulo') {
       deleteArticuloMutation.mutate(id, {
-        onSuccess: () => {
-          setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-          setCurrentPage(1);
-          setHasMore(true);
-          showDeleteSuccess('el artículo');
-        },
-        onError: (error:any) => {
-          console.log(error.response?.data.mensaje);
-          setCurrentPage(1);
-          showError("Error", error.response?.data.mensaje);
-        }
+        onSuccess: () => commonOnSuccess('el artículo'),
+        onError: commonOnError
       });
+    } else {
+      console.warn('Unhandled category for delete:', selectedCategory);
+      showError('Error', `Categoría no manejada para la eliminación: ${selectedCategory}`);
+      setDetailModalVisible(false);
     }
-    setDetailModalVisible(false);
   };
 
   const showItemDetails = (item: any) => {
@@ -812,6 +735,7 @@ const EntInventario: React.FC = () => {
         viewType={viewType}
         setViewType={setViewType}
         navigateToModules={navigateToModules}
+        categoryTitle={CATEGORY_TITLES[selectedCategory]}
       />
 
       <DynamicCategorySelector
@@ -888,6 +812,7 @@ const EntInventario: React.FC = () => {
       />
 
       <DynamicItemModal
+        ref={itemModalRef}
         visible={detailModalVisible}
         onClose={() => setDetailModalVisible(false)}
         currentItem={currentItem}

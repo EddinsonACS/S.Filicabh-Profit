@@ -1,6 +1,9 @@
-import { useNotificationContext } from '@/contexts/NotificationContext';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
+import ErrorModal from '@/components/common/ErrorModal';
+import { useConfirmationModal } from '@/hooks/common/useConfirmationModal';
+import { useErrorModal } from '@/hooks/common/useErrorModal';
 import { Ionicons } from '@expo/vector-icons';
-import React, { memo, useEffect, useRef } from 'react';
+import React, { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
 import {
   Animated,
   Dimensions,
@@ -14,6 +17,15 @@ import {
 } from 'react-native';
 
 const { height } = Dimensions.get('window');
+
+export interface DynamicItemModalRef {
+  showError: (title: string, message: string) => void;
+  showWarning: (title: string, message: string) => void;
+  showInfo: (title: string, message: string) => void;
+  showDeleteError: (entityName: string, errorMessage?: string) => void;
+  showCreateError: (entityName: string, errorMessage?: string) => void;
+  showUpdateError: (entityName: string, errorMessage?: string) => void;
+}
 
 export interface DynamicItemModalProps {
   visible: boolean;
@@ -50,7 +62,7 @@ export interface DynamicItemModalProps {
   deleteButtonBorderColor: string;
 }
 
-const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
+const DynamicItemModal = forwardRef<DynamicItemModalRef, DynamicItemModalProps>(({
   visible,
   onClose,
   currentItem,
@@ -68,10 +80,34 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
   deleteButtonColor,
   deleteButtonTextColor,
   deleteButtonBorderColor
-}) => {
+}, ref) => {
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
+  const confirmationModal = useConfirmationModal();
+  const errorModal = useErrorModal();
+
+  // Exponer funciones a través del ref
+  useImperativeHandle(ref, () => ({
+    showError: (title: string, message: string) => {
+      errorModal.showError(title, message, 'Entendido', headerColor);
+    },
+    showWarning: (title: string, message: string) => {
+      errorModal.showWarning(title, message, 'Entendido', headerColor);
+    },
+    showInfo: (title: string, message: string) => {
+      errorModal.showInfo(title, message, 'Entendido', headerColor);
+    },
+    showDeleteError: (entityName: string, errorMessage?: string) => {
+      errorModal.showDeleteError(entityName, errorMessage, headerColor);
+    },
+    showCreateError: (entityName: string, errorMessage?: string) => {
+      errorModal.showCreateError(entityName, errorMessage, headerColor);
+    },
+    showUpdateError: (entityName: string, errorMessage?: string) => {
+      errorModal.showUpdateError(entityName, errorMessage, headerColor);
+    }
+  }), [errorModal, headerColor]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -128,14 +164,18 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
 
   if (!currentItem) return null;
 
-  const { showDeleteConfirmation } = useNotificationContext();
-
   const confirmDelete = () => {
-    onClose();
-    showDeleteConfirmation(
+    confirmationModal.showDeleteConfirmation(
       'elemento',
       mainTitleField.value,
-      () => handleDelete(currentItem.id)
+      () => {
+        // No cerrar el modal aquí, se cerrará después de que la eliminación sea exitosa
+        handleDelete(currentItem.id);
+      },
+      () => {
+        // Si cancela, no hacer nada - mantener el modal abierto
+      },
+      headerColor
     );
   };
 
@@ -145,11 +185,12 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
       transparent={true}
       animationType="none"
       onRequestClose={onClose}
+      style={{ zIndex: 1000 }}
     >
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: 'rgba(0,0,0,0.5)', opacity }
+          { backgroundColor: 'rgba(0,0,0,0.5)', opacity, zIndex: 1000 }
         ]}
       >
         <TouchableOpacity
@@ -168,39 +209,21 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             overflow: 'hidden',
-            height: '80%'
+            height: '80%',
+            zIndex: 1000
           }}
         >
           {/* Header */}
           <View
             style={{ backgroundColor: headerColor }}
-            className="rounded-xl mb-4 p-6"
+            className="rounded-xl mb-4 p-4"
             {...panResponder.panHandlers}
           >
             <View className="absolute top-3 left-0 right-0 flex items-center z-10">
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
-            <View>
-              <Text style={{ color: headerTextColor }} className="text-2xl font-bold" numberOfLines={1}>{mainTitleField.value}</Text>
-            </View>
-            <View className="flex-row justify-between items-center mt-2">
-              <View className="flex-row space-x-2">
-                {badges.map((badge, idx) => (
-                  <View key={idx} style={{ backgroundColor: badgeColor }} className="p-2 rounded-full flex-row items-center">
-                    <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
-                      {badge.value ? (
-                        <>
-                          <Ionicons name={badge.activeIcon as any} size={14} color={badge.color} />
-                          <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
-                        </>
-                      ) : (
-                        <Ionicons name={badge.inactiveIcon as any} size={14} color="#7C7D7DFF" />
-                      )}
-                    </View>
-                    <Text style={{ color: headerTextColor }} className="text-xs ml-1">{badge.label}</Text>
-                  </View>
-                ))}
-              </View>
+            <View className="items-center mt-4">
+              <Text style={{ color: headerTextColor }} className="text-2xl font-bold text-center" numberOfLines={2}>{mainTitleField.value}</Text>
             </View>
           </View>
 
@@ -236,7 +259,7 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
 
           {/* Action buttons */}
           <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
-            <View className="flex-row space-x-4 mt-1">
+            <View className="flex-row space-x-4 pb-4">
               <TouchableOpacity
                 style={{ 
                   backgroundColor: deleteButtonColor,
@@ -264,8 +287,30 @@ const DynamicItemModal: React.FC<DynamicItemModalProps> = ({
           </View>
         </Animated.View>
       </Animated.View>
+      
+      <ConfirmationModal
+        visible={confirmationModal.isVisible}
+        type={confirmationModal.config?.type || 'warning'}
+        title={confirmationModal.config?.title || ''}
+        message={confirmationModal.config?.message || ''}
+        onConfirm={confirmationModal.handleConfirm}
+        onCancel={confirmationModal.handleCancel}
+        confirmText={confirmationModal.config?.confirmText}
+        cancelText={confirmationModal.config?.cancelText}
+        sectionColor={confirmationModal.config?.sectionColor}
+      />
+      
+      <ErrorModal
+        visible={errorModal.isVisible}
+        type={errorModal.config?.type || 'error'}
+        title={errorModal.config?.title || ''}
+        message={errorModal.config?.message || ''}
+        onClose={errorModal.hideError}
+        buttonText={errorModal.config?.buttonText}
+        sectionColor={errorModal.config?.sectionColor || headerColor}
+      />
     </Modal>
   );
-};
+});
 
 export default memo(DynamicItemModal); 

@@ -36,14 +36,16 @@ export const useCaja = () => {
   const useCreateCaja = () => {
     return useMutation({
       mutationFn: (formData: Partial<Caja>) => {
-        if (!formData.nombre) {
+        // Solo validar campos requeridos
+        if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
-        if (!formData.codigoMoneda) {
+        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
+
         const data: Omit<Caja, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
-          nombre: formData.nombre,
+          nombre: formData.nombre.trim(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,
@@ -72,12 +74,17 @@ export const useCaja = () => {
   const useUpdateCaja = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<Caja> }) => {
-        if (!formData.nombre) {
+        // Solo validar campos requeridos
+        if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
+        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+          throw new Error('La moneda es requerida');
+        }
+
         const data: Partial<Caja> = {
           id: id,
-          nombre: formData.nombre,
+          nombre: formData.nombre.trim(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,
@@ -88,7 +95,7 @@ export const useCaja = () => {
           otrosC4: null,
           otrosT1: null,
           equipo: "equipo",
-          codigoMoneda: formData.codigoMoneda || 0
+          codigoMoneda: Number(formData.codigoMoneda)
         };
         return apiCaja.update(endpoints.finanzas.caja.update(id), data);
       },

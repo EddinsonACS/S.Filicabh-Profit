@@ -36,28 +36,45 @@ export const useCuentaBancaria = () => {
   const useCreateCuentaBancaria = () => {
     return useMutation({
       mutationFn: (formData: Partial<CuentaBancaria>) => {
-        if (!formData.nroCuenta) {
+        // Solo validar campos requeridos
+        if (!formData.nroCuenta || formData.nroCuenta.trim().length === 0) {
           throw new Error('El número de cuenta es requerido');
         }
-        if (!formData.tipoDeCuenta) {
+        if (!formData.tipoDeCuenta || formData.tipoDeCuenta.trim().length === 0) {
           throw new Error('El tipo de cuenta es requerido');
         }
-        if (!formData.codigoMoneda) {
+        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
-        if (!formData.codigoBanco) {
+        if (!formData.codigoBanco || formData.codigoBanco === 0) {
           throw new Error('El banco es requerido');
         }
+        if (!formData.sucursal || formData.sucursal.trim().length === 0) {
+          throw new Error('La sucursal es requerida');
+        }
+        if (!formData.direccion || formData.direccion.trim().length === 0) {
+          throw new Error('La dirección es requerida');
+        }
+        if (!formData.nombreEjecutivo || formData.nombreEjecutivo.trim().length === 0) {
+          throw new Error('El nombre del ejecutivo es requerido');
+        }
+        if (!formData.telefono || formData.telefono.trim().length === 0) {
+          throw new Error('El teléfono es requerido');
+        }
+        if (!formData.email || formData.email.trim().length === 0) {
+          throw new Error('El email es requerido');
+        }
+
         const data: Omit<CuentaBancaria, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
-          nroCuenta: formData.nroCuenta,
-          tipoDeCuenta: formData.tipoDeCuenta,
+          nroCuenta: formData.nroCuenta.trim(),
+          tipoDeCuenta: formData.tipoDeCuenta.trim(),
           codigoMoneda: Number(formData.codigoMoneda),
           codigoBanco: Number(formData.codigoBanco),
-          sucursal: formData.sucursal || '',
-          direccion: formData.direccion || '',
-          nombreEjecutivo: formData.nombreEjecutivo || '',
-          telefono: formData.telefono || '',
-          email: formData.email || '',
+          sucursal: formData.sucursal.trim(),
+          direccion: formData.direccion.trim(),
+          nombreEjecutivo: formData.nombreEjecutivo.trim(),
+          telefono: formData.telefono.trim(),
+          email: formData.email.trim().toLowerCase(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,
@@ -86,20 +103,46 @@ export const useCuentaBancaria = () => {
   const useUpdateCuentaBancaria = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<CuentaBancaria> }) => {
-        if (!formData.nroCuenta) {
+        // Solo validar campos requeridos
+        if (!formData.nroCuenta || formData.nroCuenta.trim().length === 0) {
           throw new Error('El número de cuenta es requerido');
         }
+        if (!formData.tipoDeCuenta || formData.tipoDeCuenta.trim().length === 0) {
+          throw new Error('El tipo de cuenta es requerido');
+        }
+        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+          throw new Error('La moneda es requerida');
+        }
+        if (!formData.codigoBanco || formData.codigoBanco === 0) {
+          throw new Error('El banco es requerido');
+        }
+        if (!formData.sucursal || formData.sucursal.trim().length === 0) {
+          throw new Error('La sucursal es requerida');
+        }
+        if (!formData.direccion || formData.direccion.trim().length === 0) {
+          throw new Error('La dirección es requerida');
+        }
+        if (!formData.nombreEjecutivo || formData.nombreEjecutivo.trim().length === 0) {
+          throw new Error('El nombre del ejecutivo es requerido');
+        }
+        if (!formData.telefono || formData.telefono.trim().length === 0) {
+          throw new Error('El teléfono es requerido');
+        }
+        if (!formData.email || formData.email.trim().length === 0) {
+          throw new Error('El email es requerido');
+        }
+
         const data: Partial<CuentaBancaria> = {
           id: id,
-          nroCuenta: formData.nroCuenta?.toString() || '',
-          tipoDeCuenta: formData.tipoDeCuenta,
-          codigoMoneda: formData.codigoMoneda,
-          codigoBanco: formData.codigoBanco,
-          sucursal: formData.sucursal,
-          direccion: formData.direccion,
-          nombreEjecutivo: formData.nombreEjecutivo,
-          telefono: formData.telefono?.toString() || '',
-          email: formData.email,
+          nroCuenta: formData.nroCuenta.trim(),
+          tipoDeCuenta: formData.tipoDeCuenta.trim(),
+          codigoMoneda: Number(formData.codigoMoneda),
+          codigoBanco: Number(formData.codigoBanco),
+          sucursal: formData.sucursal.trim(),
+          direccion: formData.direccion.trim(),
+          nombreEjecutivo: formData.nombreEjecutivo.trim(),
+          telefono: formData.telefono.trim(),
+          email: formData.email.trim().toLowerCase(),
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,

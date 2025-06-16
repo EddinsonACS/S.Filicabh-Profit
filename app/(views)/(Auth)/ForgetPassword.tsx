@@ -212,7 +212,7 @@ export default function ForgetPassword() {
                         <Ionicons name="mail-outline" size={20} color="#4B5563" />
                       </Animated.View>
                       <TextInput
-                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
+                        className="w-full pl-4 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
                         placeholder="tu@email.com"
                         keyboardType="email-address"
                         autoCapitalize="none"

@@ -49,8 +49,46 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
     return false; // TasaDeCambio no tiene suspendido, se considera siempre activa
   };
 
+  // Función auxiliar para obtener información adicional del item
+  const getAdditionalInfo = (item: ItemUnion, category: CategoryId): string[] => {
+    const info: string[] = [];
+    
+    switch (category) {
+      case 'acuerdodepago':
+        info.push(`Días: ${(item as AcuerdoDePago).dias}`);
+        break;
+      case 'tasadecambio':
+        const tasa = item as TasaDeCambio;
+        info.push(`Venta: ${tasa.tasaVenta} | Compra: ${tasa.tasaCompra}`);
+        break;
+      case 'vendedor':
+        info.push((item as Vendedor).email);
+        break;
+      case 'pais':
+        info.push(`Código: ${(item as Pais).codigo}`);
+        break;
+      case 'moneda':
+        info.push(`Código: ${(item as Moneda).codigo}`);
+        break;
+      case 'figuracomercial':
+        const figura = item as FiguraComercial;
+        info.push(`RIF: ${figura.rif}`);
+        info.push(`NIT: ${figura.nit}`);
+        info.push(`Contacto: ${figura.personaContacto}`);
+        info.push(`Tel: ${figura.telefono}`);
+        info.push(`Email: ${figura.email}`);
+        if (figura.emailAlterno) {
+          info.push(`Email Alt: ${figura.emailAlterno}`);
+        }
+        break;
+    }
+    
+    return info;
+  };
+
   const entityName = getEntityName(item);
   const isSuspended = getEntitySuspended(item);
+  const additionalInfo = getAdditionalInfo(item, selectedCategory);
 
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
@@ -68,38 +106,13 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
           {/* Fila final - Información adicional y Estado en la misma fila */}
           <View className="flex-row justify-between mb-2 items-baseline">
 
-            {(selectedCategory == 'acuerdodepago' || selectedCategory == 'tasadecambio' || selectedCategory == 'vendedor' || selectedCategory == 'pais' || selectedCategory == 'moneda' || selectedCategory == 'figuracomercial') && (
+            {additionalInfo.length > 0 && (
               <View className="flex mr-2">
-              {selectedCategory === 'acuerdodepago' && (
-                <Text className="text-sm text-gray-600">Días: {(item as AcuerdoDePago).dias}</Text>
-              )}
-              {selectedCategory === 'tasadecambio' && (
-                <Text className="text-sm text-gray-600">
-                  Venta: {(item as TasaDeCambio).tasaVenta} | Compra: {(item as TasaDeCambio).tasaCompra}
-                </Text>
-              )}
-              {selectedCategory === 'vendedor' && (
-                <Text className="text-sm text-gray-600">{(item as Vendedor).email}</Text>
-              )}
-              {selectedCategory === 'pais' && (
-                <Text className="text-sm text-gray-600">Código: {(item as Pais).codigo}</Text>
-              )}
-              {selectedCategory === 'moneda' && (
-                <Text className="text-sm text-gray-600">Código: {(item as Moneda).codigo}</Text>
-              )}
-              {selectedCategory === 'figuracomercial' && (
-                <View className="flex">
-                  <Text className="text-sm text-gray-600">Rif: {(item as FiguraComercial).rif}</Text>
-                  <Text className="text-sm text-gray-600">Nit: {(item as FiguraComercial).nit}</Text>
-                  <Text className="text-sm text-gray-600">Persona Contacto: {(item as FiguraComercial).personaContacto}</Text>
-                  <Text className="text-sm text-gray-600">Telefono: {(item as FiguraComercial).telefono}</Text>
-                  <Text className="text-sm text-gray-600">Email: {(item as FiguraComercial).email}</Text>
-                  <Text className="text-sm text-gray-600">Email Alterno: {(item as FiguraComercial).emailAlterno}</Text>
-
-                </View>
-              )}
-            </View>
-          )}
+                {additionalInfo.map((info, index) => (
+                  <Text key={index} className="text-sm text-gray-600">{info}</Text>
+                ))}
+              </View>
+            )}
             {selectedCategory !== 'tasadecambio'  ? (
               <View className={`px-2 py-1 rounded-full ${isSuspended
                 ? 'bg-red-100 border border-red-600'

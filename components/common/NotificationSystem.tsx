@@ -88,13 +88,12 @@ const Notification: React.FC<NotificationProps> = ({
                     iconBg: lightenColor(errorColor, 0.2)
                 };
             case 'warning':
-                const warningColor = '#f59e0b';
                 return {
                     icon: 'warning' as const,
-                    bgColor: warningColor,
-                    lightBg: lightenColor(warningColor, 0.1),
-                    borderColor: darkenColor(warningColor, 10),
-                    iconBg: lightenColor(warningColor, 0.2)
+                    bgColor: sectionColor,
+                    lightBg: lightenColor(sectionColor, 0.1),
+                    borderColor: darkenColor(sectionColor, 10),
+                    iconBg: lightenColor(sectionColor, 0.2)
                 };
             case 'info':
                 return {

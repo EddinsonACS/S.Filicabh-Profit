@@ -1,9 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, PanResponder, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView, Switch, Dimensions, Animated } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
-import { Ionicons } from '@expo/vector-icons';
 
 interface FormField {
   name: string;
@@ -39,6 +39,167 @@ interface DynamicFormModalProps {
 }
 
 const { height } = Dimensions.get('window');
+
+// Funciones de formateo automático
+const formatName = (text: string): string => {
+  return text
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+const formatAccountNumber = (text: string): string => {
+  return text.replace(/\D/g, ''); // Solo números
+};
+
+const formatPhone = (text: string): string => {
+  return text.replace(/\D/g, ''); // Solo números
+};
+
+const formatEmail = (text: string): string => {
+  return text.toLowerCase();
+};
+
+const formatCode = (text: string): string => {
+  return text.toUpperCase();
+};
+
+const formatRIF = (text: string): string => {
+  // Formato RIF: J-12345678-9
+  let cleaned = text.replace(/[^A-Za-z0-9]/g, '');
+  if (cleaned.length > 0) {
+    let formatted = cleaned.charAt(0).toUpperCase();
+    if (cleaned.length > 1) {
+      formatted += '-' + cleaned.slice(1, 9);
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 10);
+      }
+    }
+    return formatted;
+  }
+  return text;
+};
+
+const formatNIT = (text: string): string => {
+  return text.replace(/\D/g, ''); // Solo números
+};
+
+const formatDecimalNumber = (text: string): string => {
+  // Permite números decimales con coma o punto como separador
+  let cleaned = text.replace(/[^0-9,.-]/g, '');
+  
+  // Si hay coma, la convertimos a punto para el valor interno
+  if (cleaned.includes(',')) {
+    cleaned = cleaned.replace(',', '.');
+  }
+  
+  // Asegurar que solo hay un punto decimal
+  const parts = cleaned.split('.');
+  if (parts.length > 2) {
+    cleaned = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  return cleaned;
+};
+
+const formatInteger = (text: string): string => {
+  return text.replace(/\D/g, ''); // Solo números enteros
+};
+
+const formatPercentage = (text: string): string => {
+  // Para porcentajes, permitir decimales pero limitar a 100
+  let cleaned = text.replace(/[^0-9,.-]/g, '');
+  
+  // Si termina en punto o coma, permitir continuar escribiendo
+  if (cleaned.endsWith('.') || cleaned.endsWith(',')) {
+    return cleaned;
+  }
+  
+  // Convertir coma a punto para validación
+  let valueForValidation = cleaned;
+  if (valueForValidation.includes(',')) {
+    valueForValidation = valueForValidation.replace(',', '.');
+  }
+  
+  // Asegurar que solo hay un punto decimal
+  const parts = valueForValidation.split('.');
+  if (parts.length > 2) {
+    valueForValidation = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  const numValue = parseFloat(valueForValidation);
+  if (!isNaN(numValue) && numValue > 100) {
+    return '100';
+  }
+  
+  // Devolver el valor original con coma si la tenía
+  if (cleaned.includes(',')) {
+    return cleaned.replace(',', '.');
+  }
+  
+  return valueForValidation;
+};
+
+const getFormattedValue = (fieldName: string, text: string): string => {
+  // Campos que deben formatear nombres (cada palabra con mayúscula)
+  if (['nombre', 'nombreEjecutivo', 'sucursal', 'personaContacto'].includes(fieldName)) {
+    return formatName(text);
+  }
+  
+  // Campos que deben ser solo números enteros
+  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
+    return formatInteger(text);
+  }
+  
+  // Campos de email
+  if (['email', 'emailAlterno'].includes(fieldName)) {
+    return formatEmail(text);
+  }
+  
+  // Campos de dirección (primera letra de cada palabra en mayúscula)
+  if (['direccion', 'direccionComercial', 'direccionEntrega', 'descripcionFiguraComercial'].includes(fieldName)) {
+    return formatName(text);
+  }
+  
+  // Campos de código (mayúsculas)
+  if (['codigo'].includes(fieldName)) {
+    return formatCode(text);
+  }
+  
+  // Campo RIF (formato especial)
+  if (fieldName === 'rif') {
+    return formatRIF(text);
+  }
+  
+  // Campo de porcentaje (0-100)
+  if (fieldName === 'porceRetencionIva') {
+    return formatPercentage(text);
+  }
+  
+  // Campos de números decimales (tasas, montos)
+  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras'].includes(fieldName)) {
+    return formatDecimalNumber(text);
+  }
+  
+  return text;
+};
+
+const getKeyboardType = (fieldName: string, fieldType: string) => {
+  if (fieldType === 'number') return 'numeric';
+  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) return 'numeric';
+  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva'].includes(fieldName)) return 'decimal-pad';
+  if (['email', 'emailAlterno'].includes(fieldName)) return 'email-address';
+  return 'default';
+};
+
+const convertValueForSubmission = (fieldName: string, value: string | number): string | number => {
+  // Convertir valores con punto decimal para envío al backend
+  if (typeof value === 'string' && ['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva'].includes(fieldName)) {
+    const numericValue = parseFloat(value);
+    return isNaN(numericValue) ? 0 : numericValue;
+  }
+  return value;
+};
 
 const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   visible,
@@ -187,7 +348,8 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             overflow: 'hidden',
-            height: '80%'
+            height: '85%',
+            maxHeight: height - 30
           }}
         >
           <View
@@ -198,27 +360,28 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
             <View className="absolute top-3 left-0 right-0 flex items-center">
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
-            <Text style={{ color: headerTextColor }} className="text-xl text-center font-bold mt-1">
+            <Text style={{ color: headerTextColor }} className="text-xl text-center font-bold mt-4">
               {isEditing ? 'Editar' : 'Nuevo'} {categoryTitles[selectedCategory]}
             </Text>
           </View>
 
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            className="flex-1"
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 10}
           >
             <ScrollView
               ref={scrollViewRef}
               className="flex-1 px-4 pt-4"
-              contentContainerStyle={{ paddingBottom: 100 }}
+              contentContainerStyle={{ 
+                paddingBottom: 250,
+                flexGrow: 1
+              }}
               keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={true}
-              overScrollMode="always"
+              showsVerticalScrollIndicator={false}
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              scrollToOverflowEnabled={true}
               bounces={true}
-              alwaysBounceVertical={true}
-              scrollEventThrottle={16}
-              nestedScrollEnabled={true}
             >
               {/* Campos de texto y número */}
               {textFields.map((field) => (
@@ -238,10 +401,22 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                         placeholder={field.placeholder}
                         value={String(value || '')}
                         onChangeText={(text) => {
-                          const newValue = field.type === 'number' ? parseFloat(text) || 0 : text;
-                          onChange(newValue);
+                          const formattedText = getFormattedValue(field.name, text);
+                          // Para campos numéricos, convertir el valor apropiadamente
+                          if (field.type === 'number') {
+                            const convertedValue = convertValueForSubmission(field.name, formattedText);
+                            onChange(convertedValue);
+                          } else {
+                            onChange(formattedText);
+                          }
                         }}
-                        keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                        keyboardType={getKeyboardType(field.name, field.type)}
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                        selectTextOnFocus={false}
+                        clearButtonMode="while-editing"
                       />
                     )}
                   />
@@ -367,29 +542,30 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                   ))}
                 </View>
               )}
-            </ScrollView>
 
-            <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-6 px-8">
-              <View className="flex-row mt-1">
-                <TouchableOpacity
-                  className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
-                  onPress={onClose}
-                >
-                  <Ionicons name="close-outline" size={18} color="#4b5563" />
-                  <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ backgroundColor: buttonColor }}
-                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
-                  onPress={handleSubmit(onSubmit)}
-                >
-                  <Ionicons name="save-outline" size={18} color={buttonTextColor} />
-                  <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
-                    {isEditing ? 'Actualizar' : 'Guardar'}
-                  </Text>
-                </TouchableOpacity>
+              {/* Botones dentro del ScrollView */}
+              <View className="bg-white border-t border-gray-100 pt-6 pb-6 px-0 mt-4">
+                <View className="flex-row">
+                  <TouchableOpacity
+                    className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
+                    onPress={onClose}
+                  >
+                    <Ionicons name="close-outline" size={18} color="#4b5563" />
+                    <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ backgroundColor: buttonColor }}
+                    className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
+                    onPress={handleSubmit(onSubmit)}
+                  >
+                    <Ionicons name="save-outline" size={18} color={buttonTextColor} />
+                    <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
+                      {isEditing ? 'Actualizar' : 'Guardar'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </Animated.View>
       </Animated.View>
