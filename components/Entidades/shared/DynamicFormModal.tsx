@@ -44,15 +44,10 @@ const { height } = Dimensions.get('window');
 const formatName = (text: string): string => {
   return text
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
 
 const formatAccountNumber = (text: string): string => {
-  return text.replace(/\D/g, ''); // Solo números
-};
-
-const formatPhone = (text: string): string => {
   return text.replace(/\D/g, ''); // Solo números
 };
 
@@ -412,7 +407,6 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                         }}
                         keyboardType={getKeyboardType(field.name, field.type)}
                         returnKeyType="next"
-                        blurOnSubmit={false}
                         autoCorrect={false}
                         autoCapitalize="none"
                         selectTextOnFocus={false}
