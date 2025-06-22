@@ -434,6 +434,25 @@ const EntFinanzas: React.FC = () => {
     }
   };
 
+  const getSystemFieldsForCategory = (category: string, item: any) => {
+    if (!item) return []
+
+    const baseFields = [
+      { label: 'ID', value: String(item.id) },
+      { label: 'Fecha de Registro', value: item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : '' },
+      { label:'Fecha de Modificación',value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A'},
+    ];
+
+    const additionalFields = Object.entries(item)
+      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
+      .map(([key, value]) => ({
+        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+        value: value === null || value === undefined ? 'N/A' : String(value)
+      }));
+        
+        return [...baseFields,...additionalFields];
+  };
+
   const showItemDetails = (item: any) => {
     setCurrentItem(item);
     setDetailModalVisible(true);
@@ -573,12 +592,7 @@ const EntFinanzas: React.FC = () => {
           activeText: 'Activo',
           inactiveText: 'Inactivo'
         }}
-        systemFields={currentItem ? [
-          { label: 'ID', value: String(currentItem.id) },
-          { label: 'Fecha de Registro', value: currentItem.fechaRegistro ? new Date(currentItem.fechaRegistro).toLocaleDateString() : '' },
-          { label: 'Usuario Registro', value: currentItem.usuarioRegistroNombre || '' },
-          ...(currentItem.fechaModificacion ? [{ label: 'Última Modificación', value: new Date(currentItem.fechaModificacion).toLocaleDateString() }] : [])
-        ] : []}
+        systemFields={currentItem ? getSystemFieldsForCategory(selectedCategory, currentItem) : []}
         headerColor={themes.finanzas.itemHeaderColor}
         headerTextColor={themes.finanzas.itemHeaderTextColor}
         badgeColor={themes.finanzas.badgeColor}
