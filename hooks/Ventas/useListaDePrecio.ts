@@ -54,7 +54,7 @@ export const useListaDePrecio = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiListaDePrecio.create(endpoints.sales.listadeprecio.create, data);
             },
@@ -85,7 +85,7 @@ export const useListaDePrecio = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiListaDePrecio.update(endpoints.sales.listadeprecio.update(id), data);
             },

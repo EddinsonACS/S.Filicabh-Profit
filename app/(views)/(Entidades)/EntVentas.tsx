@@ -43,7 +43,9 @@ import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
+import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import { themes } from '@/components/Entidades/shared/theme';
+import { applyFilters } from '@/utils/helpers/filterUtils';
 import ItemArticle from '@/components/Entidades/Ventas/ItemArticle';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { ventasSchema } from '@/utils/schemas/ventasSchema';
@@ -259,60 +261,93 @@ const FORM_FIELDS = {
     }
   ],
   vendedor: [
-  {
-    name: 'nombre',
-    label: 'Nombre',
-    type: 'text' as const,
-    required: true,
-    placeholder: 'Nombre del vendedor',
-    description: 'Ingrese el nombre del vendedor.'
-  },
-  {
-    name: 'direccion',
-    label: 'Dirección',
-    type: 'text' as const,
-    required: false,
-    placeholder: 'Dirección del vendedor',
-    description: 'Ingrese la dirección del vendedor.'
-  },
-  {
-    name: 'telefono',
-    label: 'Teléfono',
-    type: 'text' as const,
-    required: true,
-    placeholder: 'Teléfono del vendedor',
-    description: 'Ingrese el teléfono del vendedor.'
-  },
-  {
-    name: 'email',
-    label: 'Email',
-    type: 'text' as const,
-    required: true,
-    placeholder: 'Email del vendedor',
-    description: 'Ingrese el email del vendedor.'
-  },
-  {
-    name: 'esVendedor',
-    label: 'Es Vendedor',
-    type: 'switch' as const,
-    required: false,
-    description: 'Indica si es vendedor.'
-  },
-  {
-    name: 'esCobrador',
-    label: 'Es Cobrador',
-    type: 'switch' as const,
-    required: false,
-    description: 'Indica si es cobrador.'
-  },
-  {
-    name: 'suspendido',
-    label: 'Suspendido',
-    type: 'switch' as const,
-    required: false,
-    description: 'Indica si el vendedor está suspendido.'
-  }
-],
+    {
+      name: 'nombre',
+      label: 'Nombre',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Nombre del vendedor',
+      description: 'Ingrese el nombre del vendedor.'
+    },
+    {
+      name: 'direccion',
+      label: 'Dirección',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Dirección del vendedor',
+      description: 'Ingrese la dirección del vendedor.'
+    },
+    {
+      name: 'telefono',
+      label: 'Teléfono',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Teléfono del vendedor',
+      description: 'Ingrese el teléfono del vendedor.'
+    },
+    {
+      name: 'email',
+      label: 'Email',
+      type: 'text' as const,
+      required: true,
+      placeholder: 'Email del vendedor',
+      description: 'Ingrese el email del vendedor.'
+    },
+    {
+      name: 'codigoTipoVendedor',
+      label: 'Tipo de Vendedor',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione un tipo de vendedor',
+      description: 'Seleccione el tipo de vendedor.',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoRegion',
+      label: 'Región',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione una región',
+      description: 'Seleccione la región del vendedor.',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'codigoListaPrecio',
+      label: 'Lista de Precio',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione una lista de precio',
+      description: 'Seleccione la lista de precio del vendedor.',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
+    },
+    {
+      name: 'esVendedor',
+      label: 'Es Vendedor',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si es vendedor.'
+    },
+    {
+      name: 'esCobrador',
+      label: 'Es Cobrador',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si es cobrador.'
+    },
+    {
+      name: 'suspendido',
+      label: 'Suspendido',
+      type: 'switch' as const,
+      required: false,
+      description: 'Indica si el vendedor está suspendido.'
+    }
+  ],
   moneda: [
     {
       name: 'codigo',
@@ -347,23 +382,12 @@ const FORM_FIELDS = {
   ],
   tasadecambio: [
     {
-      name: 'codigoMoneda',
-      label: 'Moneda',
-      type: 'select' as const,
-      required: true,
-      placeholder: 'Seleccione una moneda',
-      description: 'Seleccione la moneda para la tasa de cambio.',
-      options: [],
-      optionLabel: 'nombre',
-      optionValue: 'id'
-    },
-    {
       name: 'fecha',
       label: 'Fecha',
-      type: 'text' as const,
+      type: 'date' as const,
       required: true,
-      placeholder: 'Fecha de la tasa',
-      description: 'Ingrese la fecha de la tasa de cambio.'
+      placeholder: 'Seleccione la fecha',
+      description: 'Seleccione la fecha para la tasa de cambio.'
     },
     {
       name: 'tasaVenta',
@@ -380,6 +404,17 @@ const FORM_FIELDS = {
       required: true,
       placeholder: 'Tasa de compra',
       description: 'Ingrese la tasa de compra.'
+    },
+    {
+      name: 'codigoMoneda',
+      label: 'Moneda',
+      type: 'select' as const,
+      required: true,
+      placeholder: 'Seleccione una moneda',
+      description: 'Seleccione la moneda para la tasa de cambio.',
+      options: [],
+      optionLabel: 'nombre',
+      optionValue: 'id'
     }
   ],
   listadeprecio: [
@@ -742,13 +777,30 @@ const EntVentas: React.FC = () => {
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
+  
+  // Filter state
+  const [filterState, setFilterState] = useState<FilterState>({
+    sortBy: 'fechaRegistro',
+    sortOrder: 'desc',
+    status: 'all',
+    dateFilter: 'all'
+  });
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filterState.sortBy !== 'fechaRegistro' || filterState.sortOrder !== 'desc') count++;
+    if (filterState.status !== 'all') count++;
+    if (filterState.dateFilter !== 'all') count++;
+    return count;
+  };
 
   // React Query hooks basados en categoría seleccionada
   const { data: acuerdoDePagoData, isLoading: isLoadingAcuerdoDePago } = useGetAcuerdoDePagoList(currentPage, PAGE_SIZE);
   const { data: ciudadData, isLoading: isLoadingCiudad } = useGetCiudadList(currentPage, PAGE_SIZE);
   const { data: regionData, isLoading: isLoadingRegion } = useGetRegionList(currentPage, PAGE_SIZE);
   const { data: paisData, isLoading: isLoadingPais } = useGetPaisList(currentPage, PAGE_SIZE);
- const { data: formaDeEntregaData, isLoading: isLoadingFormaDeEntrega } = useGetFormaDeEntregaList(currentPage, PAGE_SIZE);
+  const { data: formaDeEntregaData, isLoading: isLoadingFormaDeEntrega } = useGetFormaDeEntregaList(currentPage, PAGE_SIZE);
   const { data: tipoPersonaData, isLoading: isLoadingTipoPersona } = useGetTipoPersonaList(currentPage, PAGE_SIZE);
   const { data: tipoVendedorData, isLoading: isLoadingTipoVendedor } = useGetTipoVendedorList(currentPage, PAGE_SIZE);
   const { data: vendedorData, isLoading: isLoadingVendedor } = useGetVendedorList(currentPage, PAGE_SIZE);
@@ -763,6 +815,7 @@ const EntVentas: React.FC = () => {
   const { data: regionesData } = useGetRegionList(1, 1000);
   const { data: monedasData } = useGetMonedaList(1, 1000);
   const { data: listasDePrecioData } = useGetListaDePrecioList(1, 1000);
+  const { data: tiposVendedorData } = useGetTipoVendedorList(1, 1000);
   const { data: paisesOptionsData } = useGetPaisList(1, 1000);
   const { data: ciudadesOptionsData } = useGetCiudadList(1, 1000);
   const { data: rubrosOptionsData } = useGetRubroList(1, 1000);
@@ -782,7 +835,7 @@ const EntVentas: React.FC = () => {
   // Update hasMore and accumulate items when new data arrives
   useEffect(() => {
     let currentData = null;
-    
+
     switch (selectedCategory) {
       case 'acuerdodepago':
         currentData = acuerdoDePagoData;
@@ -831,7 +884,7 @@ const EntVentas: React.FC = () => {
     if (currentData) {
       const totalPages = Math.ceil(currentData.totalRegistros / PAGE_SIZE);
       setHasMore(currentPage < totalPages);
-      
+
       if (currentPage === 1) {
         setAccumulatedItems(currentData.data);
       } else {
@@ -919,11 +972,8 @@ const EntVentas: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      const name = getEntityName(item);
-      return name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-  }, [items, searchQuery, selectedCategory]);
+    return applyFilters(items as any[], filterState, searchQuery);
+  }, [items, filterState, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoading) {
@@ -936,7 +986,7 @@ const EntVentas: React.FC = () => {
       setRefreshing(true);
       setCurrentPage(1);
       setHasMore(true);
-      
+
       // Invalidate the query to force a refetch
       await queryClient.invalidateQueries({
         queryKey: [selectedCategory]
@@ -952,7 +1002,7 @@ const EntVentas: React.FC = () => {
   // Preparar los campos del formulario según la categoría seleccionada
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS[selectedCategory];
-    
+
     if (selectedCategory === 'ciudad' && regionesData?.data) {
       return fields.map(field => {
         if (field.name === 'codigoRegion') {
@@ -984,6 +1034,21 @@ const EntVentas: React.FC = () => {
             ...field,
             options: listasDePrecioData.data
           };
+        }
+        return field;
+      });
+    }
+
+    if (selectedCategory === 'vendedor') {
+      return fields.map(field => {
+        if (field.name === 'codigoTipoVendedor' && tipoVendedorData?.data) {
+          return { ...field, options: tipoVendedorData.data };
+        }
+        if (field.name === 'codigoRegion' && regionesData?.data) {
+          return { ...field, options: regionesData.data };
+        }
+        if (field.name === 'codigoListaPrecio' && listasDePrecioData?.data) {
+          return { ...field, options: listasDePrecioData.data };
         }
         return field;
       });
@@ -1025,349 +1090,349 @@ const EntVentas: React.FC = () => {
         return field;
       });
     }
-    
+
     return fields;
-  }, [selectedCategory, regionesData, monedasData, listasDePrecioData, paisesOptionsData, ciudadesOptionsData, rubrosOptionsData, sectoresOptionsData, vendedoresOptionsData, acuerdosDePagoOptionsData, tiposPersonaOptionsData, figurasComercialesOptionsData, currentItem]);
+  }, [selectedCategory, regionesData, monedasData, listasDePrecioData, tiposVendedorData, paisesOptionsData, ciudadesOptionsData, rubrosOptionsData, sectoresOptionsData, vendedoresOptionsData, acuerdosDePagoOptionsData, tiposPersonaOptionsData, figurasComercialesOptionsData, currentItem]);
 
   const handleCreate = async (formData: any): Promise<boolean> => {
-  setBackendFormError(null);
-  return new Promise((resolve) => {
-    const commonOnSuccess = (createdItem: any, entityType: string) => {
+    setBackendFormError(null);
+    return new Promise((resolve) => {
+      const commonOnSuccess = (createdItem: any, entityType: string) => {
+        queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+        setAccumulatedItems(prev => [createdItem, ...prev]);
+        setCurrentPage(1);
+        setHasMore(true);
+        showSuccess('¡Éxito!', `${entityType} creado correctamente.`);
+        resolve(true);
+      };
+      const commonOnError = (error: any, entityType: string) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || `Error al crear ${entityType.toLowerCase()}`;
+        setBackendFormError(errorMessage);
+        resolve(false);
+      };
+      console.log('Creating with data:', formData); // Debug log
+      console.log('Selected category:', selectedCategory); // Debug log
+
+      switch (selectedCategory) {
+        case 'acuerdodepago':
+          createAcuerdoDePagoMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Acuerdo de pago'),
+            onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
+          });
+          break;
+        case 'ciudad':
+          createCiudadMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Ciudad'),
+            onError: (error: any) => commonOnError(error, 'Ciudad')
+          });
+          break;
+        case 'region':
+          createRegionMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Región'),
+            onError: (error: any) => commonOnError(error, 'Región')
+          });
+          break;
+        case 'pais':
+          createPaisMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'País'),
+            onError: (error: any) => commonOnError(error, 'País')
+          });
+          break;
+        case 'formadeentrega':
+          createFormaDeEntregaMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Forma de entrega'),
+            onError: (error: any) => commonOnError(error, 'Forma de entrega')
+          });
+          break;
+        case 'tipopersona':
+          createTipoPersonaMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de persona'),
+            onError: (error: any) => commonOnError(error, 'Tipo de persona')
+          });
+          break;
+        case 'tipovendedor':
+          createTipoVendedorMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de vendedor'),
+            onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
+          });
+          break;
+        case 'vendedor':
+          createVendedorMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Vendedor'),
+            onError: (error: any) => commonOnError(error, 'Vendedor')
+          });
+          break;
+        case 'moneda':
+          createMonedaMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Moneda'),
+            onError: (error: any) => commonOnError(error, 'Moneda')
+          });
+          break;
+        case 'tasadecambio':
+          createTasaDeCambioMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tasa de cambio'),
+            onError: (error: any) => commonOnError(error, 'Tasa de cambio')
+          });
+          break;
+        case 'listadeprecio':
+          createListaDePrecioMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Lista de precio'),
+            onError: (error: any) => commonOnError(error, 'Lista de precio')
+          });
+          break;
+        case 'sector':
+          createSectorMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Sector'),
+            onError: (error: any) => commonOnError(error, 'Sector')
+          });
+          break;
+        case 'rubro':
+          createRubroMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Rubro'),
+            onError: (error: any) => commonOnError(error, 'Rubro')
+          });
+          break;
+        case 'figuracomercial':
+          createFiguraComercialMutation.mutate(formData, {
+            onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Figura Comercial'),
+            onError: (error: any) => commonOnError(error, 'Figura Comercial')
+          });
+          break;
+        default:
+          console.warn('Unhandled category for create:', selectedCategory);
+          setBackendFormError(`Categoría no manejada para la creación: ${selectedCategory}`);
+          resolve(false);
+          break;
+      }
+    });
+  };
+
+  const handleUpdate = async (formData: any): Promise<boolean> => {
+    setBackendFormError(null);
+    return new Promise((resolve) => {
+      if (!currentItem) {
+        resolve(false);
+        return;
+      }
+
+      const commonOnSuccess = (updatedItem: any, entityType: string) => {
+        queryClient.invalidateQueries({ queryKey: [selectedCategory] });
+        setAccumulatedItems(prev =>
+          prev.map(item => item.id === currentItem.id ? updatedItem : item)
+        );
+        showSuccess('¡Actualizado!', `${entityType} actualizado correctamente.`);
+        resolve(true);
+      };
+      const commonOnError = (error: any, entityType: string) => {
+        const errorMessage = error.response?.data?.mensaje || error.message || `Error al actualizar ${entityType.toLowerCase()}`;
+        setBackendFormError(errorMessage);
+        resolve(false);
+      };
+
+
+      switch (selectedCategory) {
+        case 'acuerdodepago':
+          updateAcuerdoDePagoMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Acuerdo de pago'),
+            onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
+          });
+          break;
+        case 'ciudad':
+          updateCiudadMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Ciudad'),
+            onError: (error: any) => commonOnError(error, 'Ciudad')
+          });
+          break;
+        case 'region':
+          updateRegionMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Región'),
+            onError: (error: any) => commonOnError(error, 'Región')
+          });
+          break;
+        case 'pais':
+          updatePaisMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'País'),
+            onError: (error: any) => commonOnError(error, 'País')
+          });
+          break;
+        case 'formadeentrega':
+          updateFormaDeEntregaMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Forma de entrega'),
+            onError: (error: any) => commonOnError(error, 'Forma de entrega')
+          });
+          break;
+        case 'tipopersona':
+          updateTipoPersonaMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de persona'),
+            onError: (error: any) => commonOnError(error, 'Tipo de persona')
+          });
+          break;
+        case 'tipovendedor':
+          updateTipoVendedorMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de vendedor'),
+            onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
+          });
+          break;
+        case 'vendedor':
+          updateVendedorMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Vendedor'),
+            onError: (error: any) => commonOnError(error, 'Vendedor')
+          });
+          break;
+        case 'moneda':
+          updateMonedaMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Moneda'),
+            onError: (error: any) => commonOnError(error, 'Moneda')
+          });
+          break;
+        case 'tasadecambio':
+          updateTasaDeCambioMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tasa de cambio'),
+            onError: (error: any) => commonOnError(error, 'Tasa de cambio')
+          });
+          break;
+        case 'listadeprecio':
+          updateListaDePrecioMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Lista de precio'),
+            onError: (error: any) => commonOnError(error, 'Lista de precio')
+          });
+          break;
+        case 'sector':
+          updateSectorMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Sector'),
+            onError: (error: any) => commonOnError(error, 'Sector')
+          });
+          break;
+        case 'rubro':
+          updateRubroMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Rubro'),
+            onError: (error: any) => commonOnError(error, 'Rubro')
+          });
+          break;
+        case 'figuracomercial':
+          updateFiguraComercialMutation.mutate({ id: currentItem.id, formData }, {
+            onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Figura Comercial'),
+            onError: (error: any) => commonOnError(error, 'Figura Comercial')
+          });
+          break;
+        default:
+          console.warn('Unhandled category for update:', selectedCategory);
+          setBackendFormError(`Categoría no manejada para la actualización: ${selectedCategory}`);
+          resolve(false);
+          break;
+      } // End of handleUpdate's switch
+    }); // End of new Promise in handleUpdate
+  }; // End of handleUpdate function
+
+  const handleDelete = (id: number) => {
+    const commonOnSuccess = (entityType: string) => {
       queryClient.invalidateQueries({ queryKey: [selectedCategory] });
-      setAccumulatedItems(prev => [createdItem, ...prev]);
+      setAccumulatedItems(prev => prev.filter(item => item.id !== id));
       setCurrentPage(1);
       setHasMore(true);
-      showSuccess('¡Éxito!', `${entityType} creado correctamente.`);
-      resolve(true);
-    };
-    const commonOnError = (error: any, entityType: string) => {
-      const errorMessage = error.response?.data?.mensaje || error.message || `Error al crear ${entityType.toLowerCase()}`;
-      setBackendFormError(errorMessage);
-      resolve(false);
-    };
-    console.log('Creating with data:', formData); // Debug log
-    console.log('Selected category:', selectedCategory); // Debug log
-
-    switch (selectedCategory) {
-      case 'acuerdodepago':
-        createAcuerdoDePagoMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Acuerdo de pago'),
-          onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
-        });
-        break;
-      case 'ciudad':
-        createCiudadMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Ciudad'),
-          onError: (error: any) => commonOnError(error, 'Ciudad')
-        });
-        break;
-      case 'region':
-        createRegionMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Región'),
-          onError: (error: any) => commonOnError(error, 'Región')
-        });
-        break;
-      case 'pais':
-        createPaisMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'País'),
-          onError: (error: any) => commonOnError(error, 'País')
-        });
-        break;
-      case 'formadeentrega':
-        createFormaDeEntregaMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Forma de entrega'),
-          onError: (error: any) => commonOnError(error, 'Forma de entrega')
-        });
-        break;
-      case 'tipopersona':
-        createTipoPersonaMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de persona'),
-          onError: (error: any) => commonOnError(error, 'Tipo de persona')
-        });
-        break;
-      case 'tipovendedor':
-        createTipoVendedorMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tipo de vendedor'),
-          onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
-        });
-        break;
-      case 'vendedor':
-        createVendedorMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Vendedor'),
-          onError: (error: any) => commonOnError(error, 'Vendedor')
-        });
-        break;
-      case 'moneda':
-        createMonedaMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Moneda'),
-          onError: (error: any) => commonOnError(error, 'Moneda')
-        });
-        break;
-      case 'tasadecambio':
-        createTasaDeCambioMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Tasa de cambio'),
-          onError: (error: any) => commonOnError(error, 'Tasa de cambio')
-        });
-        break;
-      case 'listadeprecio':
-        createListaDePrecioMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Lista de precio'),
-          onError: (error: any) => commonOnError(error, 'Lista de precio')
-        });
-        break;
-      case 'sector':
-        createSectorMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Sector'),
-          onError: (error: any) => commonOnError(error, 'Sector')
-        });
-        break;
-      case 'rubro':
-        createRubroMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Rubro'),
-          onError: (error: any) => commonOnError(error, 'Rubro')
-        });
-        break;
-      case 'figuracomercial':
-        createFiguraComercialMutation.mutate(formData, {
-          onSuccess: (createdItem) => commonOnSuccess(createdItem, 'Figura Comercial'),
-          onError: (error: any) => commonOnError(error, 'Figura Comercial')
-        });
-        break;
-      default:
-        console.warn('Unhandled category for create:', selectedCategory);
-        setBackendFormError(`Categoría no manejada para la creación: ${selectedCategory}`);
-        resolve(false);
-        break;
-    }
-  });
-};
-
-const handleUpdate = async (formData: any): Promise<boolean> => {
-  setBackendFormError(null);
-  return new Promise((resolve) => {
-    if (!currentItem) {
-      resolve(false);
-      return;
-    }
-
-    const commonOnSuccess = (updatedItem: any, entityType: string) => {
-      queryClient.invalidateQueries({ queryKey: [selectedCategory] });
-      setAccumulatedItems(prev => 
-        prev.map(item => item.id === currentItem.id ? updatedItem : item)
-      );
-      showSuccess('¡Actualizado!', `${entityType} actualizado correctamente.`);
-      resolve(true);
-    };
-    const commonOnError = (error: any, entityType: string) => {
-      const errorMessage = error.response?.data?.mensaje || error.message || `Error al actualizar ${entityType.toLowerCase()}`;
-      setBackendFormError(errorMessage);
-      resolve(false);
-    };
-
-
-    switch (selectedCategory) {
-      case 'acuerdodepago':
-        updateAcuerdoDePagoMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Acuerdo de pago'),
-          onError: (error: any) => commonOnError(error, 'Acuerdo de pago')
-        });
-        break;
-      case 'ciudad':
-        updateCiudadMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Ciudad'),
-          onError: (error: any) => commonOnError(error, 'Ciudad')
-        });
-        break;
-      case 'region':
-        updateRegionMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Región'),
-          onError: (error: any) => commonOnError(error, 'Región')
-        });
-        break;
-      case 'pais':
-        updatePaisMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'País'),
-          onError: (error: any) => commonOnError(error, 'País')
-        });
-        break;
-      case 'formadeentrega':
-        updateFormaDeEntregaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Forma de entrega'),
-          onError: (error: any) => commonOnError(error, 'Forma de entrega')
-        });
-        break;
-      case 'tipopersona':
-        updateTipoPersonaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de persona'),
-          onError: (error: any) => commonOnError(error, 'Tipo de persona')
-        });
-        break;
-      case 'tipovendedor':
-        updateTipoVendedorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tipo de vendedor'),
-          onError: (error: any) => commonOnError(error, 'Tipo de vendedor')
-        });
-        break;
-      case 'vendedor':
-        updateVendedorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Vendedor'),
-          onError: (error: any) => commonOnError(error, 'Vendedor')
-        });
-        break;
-      case 'moneda':
-        updateMonedaMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Moneda'),
-          onError: (error: any) => commonOnError(error, 'Moneda')
-        });
-        break;
-      case 'tasadecambio':
-        updateTasaDeCambioMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Tasa de cambio'),
-          onError: (error: any) => commonOnError(error, 'Tasa de cambio')
-        });
-        break;
-      case 'listadeprecio':
-        updateListaDePrecioMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Lista de precio'),
-          onError: (error: any) => commonOnError(error, 'Lista de precio')
-        });
-        break;
-      case 'sector':
-        updateSectorMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Sector'),
-          onError: (error: any) => commonOnError(error, 'Sector')
-        });
-        break;
-      case 'rubro':
-        updateRubroMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Rubro'),
-          onError: (error: any) => commonOnError(error, 'Rubro')
-        });
-        break;
-      case 'figuracomercial':
-        updateFiguraComercialMutation.mutate({ id: currentItem.id, formData }, {
-          onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'Figura Comercial'),
-          onError: (error: any) => commonOnError(error, 'Figura Comercial')
-        });
-        break;
-      default:
-        console.warn('Unhandled category for update:', selectedCategory);
-        setBackendFormError(`Categoría no manejada para la actualización: ${selectedCategory}`);
-        resolve(false);
-        break;
-    } // End of handleUpdate's switch
-  }); // End of new Promise in handleUpdate
-}; // End of handleUpdate function
-
-const handleDelete = (id: number) => {
-  const commonOnSuccess = (entityType: string) => {
-    queryClient.invalidateQueries({ queryKey: [selectedCategory] });
-    setAccumulatedItems(prev => prev.filter(item => item.id !== id));
-    setCurrentPage(1);
-    setHasMore(true);
-    showSuccess('¡Eliminado!', `${entityType} eliminado correctamente.`);
-    // Cerrar el modal después de la eliminación exitosa
-    setDetailModalVisible(false);
-  };
-
-  const commonOnError = (error: any, entityType: string) => {
-    const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityType.toLowerCase()}`;
-    // Usar el método optimizado showDeleteError
-    itemModalRef.current?.showDeleteError(entityType.toLowerCase(), errorMessage);
-  };
-
-  switch (selectedCategory) {
-    case 'acuerdodepago':
-      deleteAcuerdoDePagoMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Acuerdo de pago'),
-        onError: (err: any) => commonOnError(err, 'Acuerdo de pago'),
-      });
-      break;
-    case 'ciudad':
-      deleteCiudadMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Ciudad'),
-        onError: (err: any) => commonOnError(err, 'Ciudad'),
-      });
-      break;
-    case 'region':
-      deleteRegionMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Región'),
-        onError: (err: any) => commonOnError(err, 'Región'),
-      });
-      break;
-    case 'pais':
-      deletePaisMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('País'),
-        onError: (err: any) => commonOnError(err, 'País'),
-      });
-      break;
-    case 'formadeentrega':
-      deleteFormaDeEntregaMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Forma de entrega'),
-        onError: (err: any) => commonOnError(err, 'Forma de entrega'),
-      });
-      break;
-    case 'tipopersona':
-      deleteTipoPersonaMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Tipo de persona'),
-        onError: (err: any) => commonOnError(err, 'Tipo de persona'),
-      });
-      break;
-    case 'tipovendedor':
-      deleteTipoVendedorMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Tipo de vendedor'),
-        onError: (err: any) => commonOnError(err, 'Tipo de vendedor'),
-      });
-      break;
-    case 'vendedor':
-      deleteVendedorMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Vendedor'),
-        onError: (err: any) => commonOnError(err, 'Vendedor'),
-      });
-      break;
-    case 'moneda':
-      deleteMonedaMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Moneda'),
-        onError: (err: any) => commonOnError(err, 'Moneda'),
-      });
-      break;
-    case 'tasadecambio':
-      deleteTasaDeCambioMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Tasa de cambio'),
-        onError: (err: any) => commonOnError(err, 'Tasa de cambio'),
-      });
-      break;
-    case 'listadeprecio':
-      deleteListaDePrecioMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Lista de precio'),
-        onError: (err: any) => commonOnError(err, 'Lista de precio'),
-      });
-      break;
-    case 'sector':
-      deleteSectorMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Sector'),
-        onError: (err: any) => commonOnError(err, 'Sector'),
-      });
-      break;
-    case 'rubro':
-      deleteRubroMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Rubro'),
-        onError: (err: any) => commonOnError(err, 'Rubro'),
-      });
-      break;
-    case 'figuracomercial':
-      deleteFiguraComercialMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('Figura Comercial'),
-        onError: (err: any) => commonOnError(err, 'Figura Comercial'),
-      });
-      break;
-    default:
-      console.warn('Unhandled category for delete:', selectedCategory);
-      showError('Error', `Categoría no manejada para la eliminación: ${selectedCategory}`);
+      showSuccess('¡Eliminado!', `${entityType} eliminado correctamente.`);
+      // Cerrar el modal después de la eliminación exitosa
       setDetailModalVisible(false);
-      break;
-  }
-};
+    };
+
+    const commonOnError = (error: any, entityType: string) => {
+      const errorMessage = error.response?.data?.mensaje || error.message || `Error al eliminar ${entityType.toLowerCase()}`;
+      // Usar el método optimizado showDeleteError
+      itemModalRef.current?.showDeleteError(entityType.toLowerCase(), errorMessage);
+    };
+
+    switch (selectedCategory) {
+      case 'acuerdodepago':
+        deleteAcuerdoDePagoMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Acuerdo de pago'),
+          onError: (err: any) => commonOnError(err, 'Acuerdo de pago'),
+        });
+        break;
+      case 'ciudad':
+        deleteCiudadMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Ciudad'),
+          onError: (err: any) => commonOnError(err, 'Ciudad'),
+        });
+        break;
+      case 'region':
+        deleteRegionMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Región'),
+          onError: (err: any) => commonOnError(err, 'Región'),
+        });
+        break;
+      case 'pais':
+        deletePaisMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('País'),
+          onError: (err: any) => commonOnError(err, 'País'),
+        });
+        break;
+      case 'formadeentrega':
+        deleteFormaDeEntregaMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Forma de entrega'),
+          onError: (err: any) => commonOnError(err, 'Forma de entrega'),
+        });
+        break;
+      case 'tipopersona':
+        deleteTipoPersonaMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Tipo de persona'),
+          onError: (err: any) => commonOnError(err, 'Tipo de persona'),
+        });
+        break;
+      case 'tipovendedor':
+        deleteTipoVendedorMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Tipo de vendedor'),
+          onError: (err: any) => commonOnError(err, 'Tipo de vendedor'),
+        });
+        break;
+      case 'vendedor':
+        deleteVendedorMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Vendedor'),
+          onError: (err: any) => commonOnError(err, 'Vendedor'),
+        });
+        break;
+      case 'moneda':
+        deleteMonedaMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Moneda'),
+          onError: (err: any) => commonOnError(err, 'Moneda'),
+        });
+        break;
+      case 'tasadecambio':
+        deleteTasaDeCambioMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Tasa de cambio'),
+          onError: (err: any) => commonOnError(err, 'Tasa de cambio'),
+        });
+        break;
+      case 'listadeprecio':
+        deleteListaDePrecioMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Lista de precio'),
+          onError: (err: any) => commonOnError(err, 'Lista de precio'),
+        });
+        break;
+      case 'sector':
+        deleteSectorMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Sector'),
+          onError: (err: any) => commonOnError(err, 'Sector'),
+        });
+        break;
+      case 'rubro':
+        deleteRubroMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Rubro'),
+          onError: (err: any) => commonOnError(err, 'Rubro'),
+        });
+        break;
+      case 'figuracomercial':
+        deleteFiguraComercialMutation.mutate(id, {
+          onSuccess: () => commonOnSuccess('Figura Comercial'),
+          onError: (err: any) => commonOnError(err, 'Figura Comercial'),
+        });
+        break;
+      default:
+        console.warn('Unhandled category for delete:', selectedCategory);
+        showError('Error', `Categoría no manejada para la eliminación: ${selectedCategory}`);
+        setDetailModalVisible(false);
+        break;
+    }
+  };
 
   const getSystemFieldsForCategory = (category: string, item: any) => {
     if (!item) return []
@@ -1375,17 +1440,17 @@ const handleDelete = (id: number) => {
     const baseFields = [
       { label: 'ID', value: String(item.id) },
       { label: 'Fecha de Registro', value: item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : '' },
-      { label:'Fecha de Modificación',value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A'},
+      { label: 'Fecha de Modificación', value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A' },
     ];
 
     const additionalFields = Object.entries(item)
-      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
+      .filter(([key]) => !['id', 'fechaRegistro', 'fechaModificacion', 'otrosF1', 'otrosN1', 'otrosN2', 'otrosC1', 'otrosC2', 'otrosC3', 'otrosC4', 'otrosT1'].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
         value: value === null || value === undefined ? 'N/A' : String(value)
       }));
-        
-        return [...baseFields,...additionalFields];
+
+    return [...baseFields, ...additionalFields];
   };
 
   const showItemDetails = (item: ItemUnion) => {
@@ -1443,10 +1508,12 @@ const handleDelete = (id: number) => {
           setIsEditing(false);
           setFormModalVisible(true);
         }}
+        onFilterPress={() => setFilterModalVisible(true)}
         placeholder={`Buscar ${CATEGORY_TITLES[selectedCategory].toLowerCase()}...`}
         addButtonText={`Agregar ${CATEGORY_TITLES[selectedCategory]}`}
         buttonColor={themes.sales.buttonColor}
         buttonTextColor={themes.sales.buttonTextColor}
+        activeFiltersCount={getActiveFiltersCount()}
       />
 
       <View className="flex-1">
@@ -1487,14 +1554,20 @@ const handleDelete = (id: number) => {
       </View>
 
       <DynamicFormModal
+        key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
         visible={formModalVisible}
-        onClose={() => { setFormModalVisible(false); setBackendFormError(null); }}
+        onClose={() => { 
+          setFormModalVisible(false); 
+          setBackendFormError(null); 
+          setCurrentItem(null); 
+          setIsEditing(false); 
+        }}
         isEditing={isEditing}
         currentItem={currentItem}
         handleCreate={handleCreate}
         handleUpdate={handleUpdate}
         selectedCategory={selectedCategory}
-       schema={SCHEMAS[selectedCategory]}
+        schema={SCHEMAS[selectedCategory]}
         defaultValues={DEFAULT_VALUES[selectedCategory]}
         categoryTitles={CATEGORY_TITLES}
         formFields={getFormFields()}
@@ -1514,8 +1587,8 @@ const handleDelete = (id: number) => {
         currentItem={currentItem}
         openEditModal={openEditModal}
         handleDelete={handleDelete}
-        mainTitleField={{ 
-          label: 'Nombre', 
+        mainTitleField={{
+          label: 'Nombre',
           value: currentItem ? getEntityName(currentItem) : ''
         }}
         badges={[]}
@@ -1533,6 +1606,23 @@ const handleDelete = (id: number) => {
         deleteButtonColor={themes.sales.deleteButtonColor}
         deleteButtonTextColor={themes.sales.deleteButtonTextColor}
         deleteButtonBorderColor={themes.sales.deleteButtonBorderColor}
+      />
+
+      <DynamicFilterBar
+        filterState={filterState}
+        onFilterChange={setFilterState}
+        isVisible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        buttonColor={themes.sales.buttonColor}
+        buttonTextColor={themes.sales.buttonTextColor}
+        sortOptions={[
+          { id: 'nombre', label: 'Nombre', icon: 'text' },
+          { id: 'codigo', label: 'Código', icon: 'barcode' },
+          { id: 'fechaRegistro', label: 'Fecha de registro', icon: 'calendar' },
+          { id: 'fechaModificacion', label: 'Fecha de modificación', icon: 'time' }
+        ]}
+        enableStatusFilter={selectedCategory !== 'tasadecambio'}
+        enableDateFilter={true}
       />
     </View>
   );

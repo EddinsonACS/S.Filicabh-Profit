@@ -56,7 +56,7 @@ export const useTasaDeCambio = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTasaDeCambio.create(endpoints.sales.tasadecambio.create, data);
             },
@@ -87,7 +87,7 @@ export const useTasaDeCambio = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTasaDeCambio.update(endpoints.sales.tasadecambio.update(id), data);
             },

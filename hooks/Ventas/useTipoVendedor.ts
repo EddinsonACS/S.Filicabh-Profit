@@ -54,7 +54,7 @@ export const useTipoVendedor = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTipoVendedor.create(endpoints.sales.tipovendedor.create, data);
             },
@@ -85,7 +85,7 @@ export const useTipoVendedor = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTipoVendedor.update(endpoints.sales.tipovendedor.update(id), data);
             },

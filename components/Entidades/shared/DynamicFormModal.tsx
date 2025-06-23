@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -8,7 +9,7 @@ import { z } from 'zod';
 interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'switch' | 'select';
+  type: 'text' | 'number' | 'switch' | 'select' | 'date';
   placeholder?: string;
   required?: boolean;
   description?: string;
@@ -83,15 +84,27 @@ const formatDecimalNumber = (text: string): string => {
   // Permite números decimales con coma o punto como separador
   let cleaned = text.replace(/[^0-9,.-]/g, '');
   
-  // Si hay coma, la convertimos a punto para el valor interno
-  if (cleaned.includes(',')) {
-    cleaned = cleaned.replace(',', '.');
+  // Permitir coma o punto al final para continuar escribiendo decimales
+  if (cleaned.endsWith('.') || cleaned.endsWith(',')) {
+    return cleaned;
   }
   
-  // Asegurar que solo hay un punto decimal
-  const parts = cleaned.split('.');
-  if (parts.length > 2) {
-    cleaned = parts[0] + '.' + parts.slice(1).join('');
+  // Si hay coma, verificar que solo hay una
+  if (cleaned.includes(',')) {
+    const parts = cleaned.split(',');
+    if (parts.length > 2) {
+      cleaned = parts[0] + ',' + parts.slice(1).join('');
+    }
+    return cleaned;
+  }
+  
+  // Si hay punto, verificar que solo hay uno
+  if (cleaned.includes('.')) {
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    return cleaned;
   }
   
   return cleaned;
@@ -135,6 +148,26 @@ const formatPercentage = (text: string): string => {
   return valueForValidation;
 };
 
+const formatDate = (text: string): string => {
+  // Permitir solo números y guiones para formato YYYY-MM-DD
+  let cleaned = text.replace(/[^0-9-]/g, '');
+  
+  // Agregar guiones automáticamente
+  if (cleaned.length >= 4 && cleaned.indexOf('-') === -1) {
+    cleaned = cleaned.substring(0, 4) + '-' + cleaned.substring(4);
+  }
+  if (cleaned.length >= 7 && cleaned.lastIndexOf('-') === 4) {
+    cleaned = cleaned.substring(0, 7) + '-' + cleaned.substring(7);
+  }
+  
+  // Limitar a 10 caracteres (YYYY-MM-DD)
+  if (cleaned.length > 10) {
+    cleaned = cleaned.substring(0, 10);
+  }
+  
+  return cleaned;
+};
+
 const getFormattedValue = (fieldName: string, text: string): string => {
   // Campos que deben formatear nombres (cada palabra con mayúscula)
   if (['nombre', 'nombreEjecutivo', 'sucursal', 'personaContacto'].includes(fieldName)) {
@@ -142,7 +175,7 @@ const getFormattedValue = (fieldName: string, text: string): string => {
   }
   
   // Campos que deben ser solo números enteros
-  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
     return formatInteger(text);
   }
   
@@ -171,28 +204,74 @@ const getFormattedValue = (fieldName: string, text: string): string => {
     return formatPercentage(text);
   }
   
-  // Campos de números decimales (tasas, montos)
-  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras'].includes(fieldName)) {
+  // Campos de números decimales (tasas, montos, medidas)
+  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'peso', 'volumen', 'metroCubico', 'pie', 'precio', 'costo', 'margen'].includes(fieldName)) {
     return formatDecimalNumber(text);
   }
   
   return text;
 };
 
+const getFormattedValueByType = (fieldName: string, fieldType: string, text: string): string => {
+  // Campo fecha específico - no formatear porque usa date picker
+  if (fieldType === 'date') {
+    return text;
+  }
+  
+  // Campo porcentaje específico (tiene límite de 100)
+  if (fieldName === 'porceRetencionIva') {
+    return formatPercentage(text);
+  }
+  
+  // Si es un campo de tipo número y no está en la lista de enteros, usar formateo decimal
+  if (fieldType === 'number' && !['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
+    return formatDecimalNumber(text);
+  }
+  
+  // Para campos enteros específicos
+  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
+    return formatInteger(text);
+  }
+  
+  // Usar formateo específico por nombre de campo para otros casos
+  return getFormattedValue(fieldName, text);
+};
+
 const getKeyboardType = (fieldName: string, fieldType: string) => {
-  if (fieldType === 'number') return 'numeric';
-  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) return 'numeric';
-  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva'].includes(fieldName)) return 'decimal-pad';
+  // Campo fecha usa teclado numérico
+  if (fieldName === 'fecha') return 'numeric';
+  // Campos que requieren teclado decimal
+  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva', 'peso', 'volumen', 'metroCubico', 'pie', 'precio', 'costo', 'margen'].includes(fieldName)) return 'decimal-pad';
+  // Campos que solo requieren números enteros
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) return 'numeric';
+  // Por defecto, campos numéricos utilizan teclado decimal
+  if (fieldType === 'number') return 'decimal-pad';
+  // Campos de email
   if (['email', 'emailAlterno'].includes(fieldName)) return 'email-address';
   return 'default';
 };
 
-const convertValueForSubmission = (fieldName: string, value: string | number): string | number => {
-  // Convertir valores con punto decimal para envío al backend
-  if (typeof value === 'string' && ['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva'].includes(fieldName)) {
-    const numericValue = parseFloat(value);
+const convertValueForSubmission = (fieldName: string, fieldType: string, value: string | number): string | number => {
+  // Si es undefined, null o string vacío, retornar 0 para campos numéricos
+  if (fieldType === 'number' && (value === undefined || value === null || value === '')) {
+    return 0;
+  }
+  
+  if (typeof value === 'string' && fieldType === 'number') {
+    // Limpiar el string: quitar espacios y reemplazar coma por punto
+    const cleanedValue = value.trim().replace(',', '.');
+    
+    // Campos que deben ser enteros
+    if (['dias', 'nroCuenta', 'telefono', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
+      const numericValue = parseInt(cleanedValue, 10);
+      return isNaN(numericValue) ? 0 : numericValue;
+    }
+    
+    // Todos los otros campos numéricos permiten decimales
+    const numericValue = parseFloat(cleanedValue);
     return isNaN(numericValue) ? 0 : numericValue;
   }
+  
   return value;
 };
 
@@ -220,23 +299,37 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm({
+  const { control, handleSubmit, reset, getValues, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: isEditing && currentItem ? currentItem : defaultValues
   });
 
   // Estado para controlar el selector abierto
   const [openSelect, setOpenSelect] = useState<string | null>(null);
+  
+  // Estado para controlar el date picker
+  const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
       if (isEditing && currentItem) {
-        reset(currentItem);
+        // Convertir campos numéricos que vienen como string del backend
+        const processedItem = { ...currentItem };
+        formFields.forEach(field => {
+          if (field.type === 'number' && processedItem[field.name] !== undefined) {
+            processedItem[field.name] = convertValueForSubmission(field.name, field.type, processedItem[field.name]);
+          }
+        });
+        console.log('🔍 Datos para edición antes de conversión:', currentItem);
+        console.log('🔍 Datos para edición después de conversión:', processedItem);
+        reset(processedItem);
       } else {
-        reset(defaultValues);
+        // Limpiar completamente y resetear con los valores por defecto
+        reset({});
+        setTimeout(() => reset(defaultValues), 10);
       }
     }
-  }, [visible, isEditing, currentItem, defaultValues, reset]);
+  }, [visible, isEditing, currentItem, defaultValues, selectedCategory, reset]);
 
   useEffect(() => {
     if (visible) {
@@ -292,11 +385,23 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   ).current;
 
   const onSubmit = async (data: any) => {
+    console.log('🔵 Datos enviados antes de conversión:', data);
+
+    // Aplicar conversión de tipos para todos los campos numéricos antes del envío
+    const convertedData = { ...data };
+    formFields.forEach(field => {
+      if (field.type === 'number' && convertedData[field.name] !== undefined) {
+        convertedData[field.name] = convertValueForSubmission(field.name, field.type, convertedData[field.name]);
+      }
+    });
+
+    console.log('🔵 Datos enviados después de conversión:', convertedData);
+
     let success = false;
     if (isEditing) {
-      success = await handleUpdate(data); 
+      success = await handleUpdate(convertedData); 
     } else {
-      success = await handleCreate(data);
+      success = await handleCreate(convertedData);
     }
 
     if (success) {
@@ -306,8 +411,9 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     // If not successful, the modal remains open, and the parent component is expected to pass the backendError prop.
   };
 
-  // Separar campos de texto/número, switches y selects
+  // Separar campos por tipo
   const textFields = formFields.filter(f => f.type === 'text' || f.type === 'number');
+  const dateFields = formFields.filter(f => f.type === 'date');
   const switchFields = formFields.filter(f => f.type === 'switch');
   const selectFields = formFields.filter(f => f.type === 'select');
 
@@ -396,13 +502,15 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                         placeholder={field.placeholder}
                         value={String(value || '')}
                         onChangeText={(text) => {
-                          const formattedText = getFormattedValue(field.name, text);
-                          // Para campos numéricos, convertir el valor apropiadamente
+                          const formattedText = getFormattedValueByType(field.name, field.type, text);
+                          onChange(formattedText);
+                        }}
+                        onBlur={() => {
+                          // Convertir a número cuando el usuario termine de escribir
                           if (field.type === 'number') {
-                            const convertedValue = convertValueForSubmission(field.name, formattedText);
+                            const currentValue = getValues(field.name);
+                            const convertedValue = convertValueForSubmission(field.name, field.type, currentValue);
                             onChange(convertedValue);
-                          } else {
-                            onChange(formattedText);
                           }
                         }}
                         keyboardType={getKeyboardType(field.name, field.type)}
@@ -412,6 +520,59 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                         selectTextOnFocus={false}
                         clearButtonMode="while-editing"
                       />
+                    )}
+                  />
+                  {field.description && (
+                    <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                  )}
+                  {errors[field.name] && (
+                    <Text className="text-red-500 text-sm mt-1">
+                      {errors[field.name]?.message as string}
+                    </Text>
+                  )}
+                </View>
+              ))}
+
+              {/* Campos de fecha */}
+              {dateFields.map((field) => (
+                <View key={field.name} className="mb-4">
+                  <View className="flex-row mb-1">
+                    <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
+                    {field.required && <Text className="text-red-600">*</Text>}
+                  </View>
+                  <Controller
+                    control={control}
+                    name={field.name}
+                    render={({ field: { onChange, value } }) => (
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => setShowDatePicker(field.name)}
+                          className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
+                            errors[field.name] ? 'border-red-500' : 'border-gray-200'
+                          }`}
+                        >
+                          <Text className="text-gray-700">
+                            {value ? new Date(value).toLocaleDateString('es-ES') : field.placeholder}
+                          </Text>
+                          <Ionicons name="calendar-outline" size={20} color="#6B7280" />
+                        </TouchableOpacity>
+                        
+                        {showDatePicker === field.name && (
+                          <DateTimePicker
+                            value={value ? new Date(value) : new Date()}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event: any, selectedDate: Date | undefined) => {
+                              setShowDatePicker(null);
+                              if (selectedDate) {
+                                // Formatear la fecha como YYYY-MM-DD
+                                const formattedDate = selectedDate.toISOString().split('T')[0];
+                                onChange(formattedDate);
+                              }
+                            }}
+                          />
+                        )}
+                      </View>
                     )}
                   />
                   {field.description && (

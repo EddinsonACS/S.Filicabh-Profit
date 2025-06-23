@@ -55,7 +55,7 @@ export const usePais = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiPais.create(endpoints.sales.pais.create, data);
             },
@@ -86,7 +86,7 @@ export const usePais = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiPais.update(endpoints.sales.pais.update(id), data);
             },

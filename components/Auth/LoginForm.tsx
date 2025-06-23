@@ -181,9 +181,9 @@ export default function LoginForm() {
             )}
 
             <View className="space-y-5">
-              {/* Email */}
+              {/* Usuario */}
               <Animated.View entering={SlideInRight.delay(200).duration(400)}>
-                <Text className="text-sm font-semibold text-gray-700 mb-2">Email</Text>
+                <Text className="text-sm font-semibold text-gray-700 mb-2">Usuario</Text>
                 <Controller
                   control={control}
                   name="username"
@@ -194,8 +194,8 @@ export default function LoginForm() {
                       </Animated.View>
                       <TextInput
                         className="w-full pl-4 pr-4 py-3.5 bg-gray-50 rounded-xl border border-gray-200 text-gray-800"
-                        placeholder="tu@email.com"
-                        keyboardType="email-address"
+                        placeholder="Ingresa tu Usuario"
+                        keyboardType="default"
                         autoCapitalize="none"
                         value={value}
                         onChangeText={onChange}

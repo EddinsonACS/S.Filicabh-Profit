@@ -49,7 +49,8 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "seccion":{
         nombre: '',
-        suspendido: false
+        suspendido: false,
+        codigoGrupo: undefined
     },
     "unidad":{
         nombre: '',

@@ -29,6 +29,25 @@ const descriptionSchema = z.string({required_error: 'Campo requerido'})
 const dateSchema = z.string({required_error: 'Campo requerido'})
   .min(1, 'Campo requerido');
 
+// Esquemas numéricos flexibles que aceptan string o number
+const flexibleNumberSchema = z.union([
+  z.number(),
+  z.string().transform((val) => {
+    if (val === '' || val === undefined || val === null) return 0;
+    const num = parseFloat(val.replace(',', '.'));
+    return isNaN(num) ? 0 : num;
+  })
+], {required_error: 'Campo requerido'});
+
+const flexibleIntegerSchema = z.union([
+  z.number(),
+  z.string().transform((val) => {
+    if (val === '' || val === undefined || val === null) return 0;
+    const num = parseInt(val.replace(/\D/g, ''), 10);
+    return isNaN(num) ? 0 : num;
+  })
+], {required_error: 'Campo requerido'});
+
 // Esquema base común
 const baseSchema = {
   nombre: nameSchema,
@@ -38,14 +57,14 @@ const baseSchema = {
 export const ventasSchema = {
   acuerdodepago: z.object({
     ...baseSchema,
-    dias: z.number({required_error: 'Campo requerido'})
-      .min(0, 'Los días deben ser mayor o igual a 0'),
+    dias: flexibleIntegerSchema
+      .refine((val) => val >= 0, 'Los días deben ser mayor o igual a 0'),
   }),
   
   ciudad: z.object({
     ...baseSchema,
-    codigoRegion: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
+    codigoRegion: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
   }),
   
   region: z.object({
@@ -78,9 +97,9 @@ export const ventasSchema = {
     email: emailSchema,
     esVendedor: z.boolean(),
     esCobrador: z.boolean(),
-    codigoRegion: z.number({required_error: 'Campo requerido'}),
-    codigoTipoVendedor: z.number({required_error: 'Campo requerido'}),
-    codigoListaPrecio: z.number({required_error: 'Campo requerido'}),
+    codigoRegion: flexibleIntegerSchema,
+    codigoTipoVendedor: flexibleIntegerSchema,
+    codigoListaPrecio: flexibleIntegerSchema,
     suspendido: z.boolean()
   }),
   
@@ -92,13 +111,13 @@ export const ventasSchema = {
   }),
   
   tasadecambio: z.object({
-    codigoMoneda: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
+    codigoMoneda: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
     fecha: dateSchema,
-    tasaVenta: z.number({required_error: 'Campo requerido'})
-      .min(0, 'La tasa debe ser mayor o igual a 0'),
-    tasaCompra: z.number({required_error: 'Campo requerido'})
-      .min(0, 'La tasa debe ser mayor o igual a 0')
+    tasaVenta: flexibleNumberSchema
+      .refine((val) => val >= 0, 'La tasa debe ser mayor o igual a 0'),
+    tasaCompra: flexibleNumberSchema
+      .refine((val) => val >= 0, 'La tasa debe ser mayor o igual a 0')
   }),
   
   listadeprecio: z.object({
@@ -111,8 +130,8 @@ export const ventasSchema = {
   
   rubro: z.object({
     ...baseSchema,
-    codigoListaPrecio: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
+    codigoListaPrecio: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
   }),
   
   figuracomercial: z.object({
@@ -124,35 +143,34 @@ export const ventasSchema = {
     email: emailSchema,
     emailAlterno: emailSchema,
     descripcionFiguraComercial: descriptionSchema,
-    codigoPais: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoCiudad: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoRubro: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoSector: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoVendedor: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoAcuerdoDePago: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
-    codigoTipoPersona: z.number({required_error: 'Campo requerido'})
-      .min(1, 'Campo requerido'),
+    codigoPais: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoCiudad: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoRubro: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoSector: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoVendedor: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoAcuerdoDePago: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
+    codigoTipoPersona: flexibleIntegerSchema
+      .refine((val) => val >= 1, 'Campo requerido'),
     activoVentas: z.boolean(),
     activoCompras: z.boolean(),
     esCasaMatriz: z.boolean(),
-    codigoFiguraComercialCasaMatriz: z.number({required_error: 'Campo requerido'}),
+    codigoFiguraComercialCasaMatriz: flexibleIntegerSchema,
     direccionComercial: addressSchema,
     direccionEntrega: addressSchema,
     codigoMonedaLimiteCreditoVentas: z.string({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
-    montolimiteCreditoVentas: z.number({required_error: 'Campo requerido'}),
+    montolimiteCreditoVentas: flexibleNumberSchema,
     codigoMonedaLimiteCreditoCompras: z.string({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
-    montolimiteCreditoCompras: z.number({required_error: 'Campo requerido'}),
-    porceRetencionIva: z.number({required_error: 'Campo requerido'})
-      .min(0, 'El porcentaje debe ser >= 0')
-      .max(100, 'El porcentaje debe ser <= 100'),
+    montolimiteCreditoCompras: flexibleNumberSchema,
+    porceRetencionIva: flexibleNumberSchema
+      .refine((val) => val >= 0 && val <= 100, 'El porcentaje debe estar entre 0 y 100'),
     aplicaRetVentasAuto: z.boolean(),
     aplicaRetComprasAuto: z.boolean(),
     suspendido: z.boolean()

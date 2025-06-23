@@ -83,7 +83,8 @@ export const useSeccion = () => {
           otrosC3: formData.otrosC3 || null,
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
-          equipo: 'equipo'
+          equipo: 'equipo',
+          codigoGrupo: formData.codigoGrupo || 0
         };
         return apiSeccion.update(endpoints.inventory.seccion.update(id), data);
       },

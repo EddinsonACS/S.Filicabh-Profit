@@ -54,7 +54,7 @@ export const useSector = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiSector.create(endpoints.sales.sector.create, data);
             },
@@ -85,7 +85,7 @@ export const useSector = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiSector.update(endpoints.sales.sector.update(id), data);
             },

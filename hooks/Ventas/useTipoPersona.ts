@@ -54,7 +54,7 @@ export const useTipoPersona = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTipoPersona.create(endpoints.sales.tipopersona.create, data);
             },
@@ -85,7 +85,7 @@ export const useTipoPersona = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiTipoPersona.update(endpoints.sales.tipopersona.update(id), data);
             },

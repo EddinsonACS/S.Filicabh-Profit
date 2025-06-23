@@ -7,7 +7,9 @@ import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
+import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import { themes } from '@/components/Entidades/shared/theme';
+import { applyFilters } from '@/utils/helpers/filterUtils';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useBanco } from '@/hooks/Finanzas/useBanco';
 import { useCaja } from '@/hooks/Finanzas/useCaja';
@@ -88,6 +90,23 @@ const EntFinanzas: React.FC = () => {
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
+  
+  // Filter state
+  const [filterState, setFilterState] = useState<FilterState>({
+    sortBy: 'fechaRegistro',
+    sortOrder: 'desc',
+    status: 'all',
+    dateFilter: 'all'
+  });
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filterState.sortBy !== 'fechaRegistro' || filterState.sortOrder !== 'desc') count++;
+    if (filterState.status !== 'all') count++;
+    if (filterState.dateFilter !== 'all') count++;
+    return count;
+  };
 
   // React Query hooks
   const { data: bancoData, isLoading: isLoadingBanco, error: bancoError } = useGetBancoList(currentPage, PAGE_SIZE);
@@ -264,11 +283,8 @@ const EntFinanzas: React.FC = () => {
   }, [accumulatedItems]);
 
   const filteredItems = useMemo(() => {
-    return items.filter(item =>
-      item.nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.nroCuenta?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [items, searchQuery]);
+    return applyFilters(items, filterState, searchQuery);
+  }, [items, filterState, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoading) {
@@ -510,10 +526,12 @@ const EntFinanzas: React.FC = () => {
           setIsEditing(false);
           setFormModalVisible(true);
         }}
+        onFilterPress={() => setFilterModalVisible(true)}
         placeholder="Buscar en finanzas..."
         addButtonText="Agregar Item"
         buttonColor={themes.finanzas.buttonColor}
         buttonTextColor={themes.finanzas.buttonTextColor}
+        activeFiltersCount={getActiveFiltersCount()}
       />
 
       <View className="flex-1">
@@ -601,6 +619,23 @@ const EntFinanzas: React.FC = () => {
         deleteButtonColor={themes.finanzas.deleteButtonColor}
         deleteButtonTextColor={themes.finanzas.deleteButtonTextColor}
         deleteButtonBorderColor={themes.finanzas.deleteButtonBorderColor}
+      />
+
+      <DynamicFilterBar
+        filterState={filterState}
+        onFilterChange={setFilterState}
+        isVisible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        buttonColor={themes.finanzas.buttonColor}
+        buttonTextColor={themes.finanzas.buttonTextColor}
+        sortOptions={[
+          { id: 'nombre', label: 'Nombre', icon: 'text' },
+          { id: 'nroCuenta', label: 'Número de cuenta', icon: 'card' },
+          { id: 'fechaRegistro', label: 'Fecha de registro', icon: 'calendar' },
+          { id: 'fechaModificacion', label: 'Fecha de modificación', icon: 'time' }
+        ]}
+        enableStatusFilter={true}
+        enableDateFilter={true}
       />
     </View>
   );

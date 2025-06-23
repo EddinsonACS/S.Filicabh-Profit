@@ -7,7 +7,9 @@ import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
+import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import { themes } from '@/components/Entidades/shared/theme';
+import { applyFilters } from '@/utils/helpers/filterUtils';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
@@ -155,6 +157,23 @@ const EntInventario: React.FC = () => {
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
+  
+  // Filter state
+  const [filterState, setFilterState] = useState<FilterState>({
+    sortBy: 'fechaRegistro',
+    sortOrder: 'desc',
+    status: 'all',
+    dateFilter: 'all'
+  });
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filterState.sortBy !== 'fechaRegistro' || filterState.sortOrder !== 'desc') count++;
+    if (filterState.status !== 'all') count++;
+    if (filterState.dateFilter !== 'all') count++;
+    return count;
+  };
 
   useEffect(() => {
     const backAction = () => {
@@ -415,10 +434,8 @@ const EntInventario: React.FC = () => {
   }, [accumulatedItems]);
 
   const filteredItems = useMemo(() => {
-    return items.filter(item =>
-      item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [items, searchQuery]);
+    return applyFilters(items, filterState, searchQuery);
+  }, [items, filterState, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoading) {
@@ -773,10 +790,12 @@ const EntInventario: React.FC = () => {
           setIsEditing(false);
           setFormModalVisible(true);
         }}
+        onFilterPress={() => setFilterModalVisible(true)}
         placeholder="Buscar en inventario..."
         addButtonText="Agregar Item"
         buttonColor={themes.inventory.buttonColor}
         buttonTextColor={themes.inventory.buttonTextColor}
+        activeFiltersCount={getActiveFiltersCount()}
       />
 
        <View className="flex-1">
@@ -807,10 +826,13 @@ const EntInventario: React.FC = () => {
         </View>
 
       <DynamicFormModal
+        key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
         visible={formModalVisible}
         onClose={() => {
           setFormModalVisible(false);
-          setBackendFormError(null); // Clear backend error when modal is closed
+          setBackendFormError(null);
+          setCurrentItem(null);
+          setIsEditing(false);
         }}
         backendError={backendFormError}
         isEditing={isEditing}
@@ -861,6 +883,22 @@ const EntInventario: React.FC = () => {
         deleteButtonColor={themes.inventory.deleteButtonColor}
         deleteButtonTextColor={themes.inventory.deleteButtonTextColor}
         deleteButtonBorderColor={themes.inventory.deleteButtonBorderColor}
+      />
+
+      <DynamicFilterBar
+        filterState={filterState}
+        onFilterChange={setFilterState}
+        isVisible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        buttonColor={themes.inventory.buttonColor}
+        buttonTextColor={themes.inventory.buttonTextColor}
+        sortOptions={[
+          { id: 'nombre', label: 'Nombre', icon: 'text' },
+          { id: 'fechaRegistro', label: 'Fecha de registro', icon: 'calendar' },
+          { id: 'fechaModificacion', label: 'Fecha de modificación', icon: 'time' }
+        ]}
+        enableStatusFilter={true}
+        enableDateFilter={true}
       />
     </View>
   );

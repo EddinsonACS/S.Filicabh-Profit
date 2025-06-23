@@ -55,7 +55,7 @@ export const useRubro = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiRubro.create(endpoints.sales.rubro.create, data);
             },
@@ -86,7 +86,7 @@ export const useRubro = () => {
                     otrosC4: "",
                     otrosT1: "",
                     equipo: "equipo",
-                    usuario: username ? parseInt(username) : 0
+                    usuario: username ? (parseInt(username) || 1) : 1
                 };
                 return apiRubro.update(endpoints.sales.rubro.update(id), data);
             },
