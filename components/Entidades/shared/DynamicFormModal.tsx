@@ -416,7 +416,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   const dateFields = formFields.filter(f => f.type === 'date');
   const switchFields = formFields.filter(f => f.type === 'switch');
   const selectFields = formFields.filter(f => f.type === 'select');
-
+  console.log(errors)
   return (
     <Modal
       visible={visible}

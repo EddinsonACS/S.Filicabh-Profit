@@ -81,6 +81,34 @@ export const endpoints = {
       "getOne": (id: number) => `/api/articulo/${id}`,
       "update": (id: number) => `/api/articulo/${id}`,
       "delete": (id: number) => `/api/articulo/${id}`
+    },
+    "articulopresentaciones": {
+      "list": "/api/articulopresentaciones",
+      "create": "/api/articulopresentaciones",
+      "getOne": (id: number) => `/api/articulopresentaciones/${id}`,
+      "update": (id: number) => `/api/articulopresentaciones/${id}`,
+      "delete": (id: number) => `/api/articulopresentaciones/${id}`
+    },
+    "articulofoto": {
+      "list": "/api/articulofoto",
+      "create": "/api/articulofoto",
+      "getOne": (id: number) => `/api/articulofoto/${id}`,
+      "update": (id: number) => `/api/articulofoto/${id}`,
+      "delete": (id: number) => `/api/articulofoto/${id}`
+    },
+    "articulolistadeprecio": {
+      "list": "/api/articulolistadeprecio",
+      "create": "/api/articulolistadeprecio",
+      "getOne": (id: number) => `/api/articulolistadeprecio/${id}`,
+      "update": (id: number) => `/api/articulolistadeprecio/${id}`,
+      "delete": (id: number) => `/api/articulolistadeprecio/${id}`
+    },
+    "articuloubicacion": {
+      "list": "/api/articuloubicacion",
+      "create": "/api/articuloubicacion",
+      "getOne": (id: number) => `/api/articuloubicacion/${id}`,
+      "update": (id: number) => `/api/articuloubicacion/${id}`,
+      "delete": (id: number) => `/api/articuloubicacion/${id}`
     }
   },
   "sales": {
