@@ -474,10 +474,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
             <ScrollView
               ref={scrollViewRef}
               className="flex-1 px-4 pt-4"
-              contentContainerStyle={{ 
-                paddingBottom: 250,
-                flexGrow: 1
-              }}
+              nestedScrollEnabled={true}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
@@ -621,7 +618,9 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
 
                           {openSelect === field.name && (
                             <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                              <ScrollView className="max-h-48">
+                              <ScrollView
+                              nestedScrollEnabled={true}
+                              className="max-h-48">
                                 {field.options?.map((option) => (
                                   <TouchableOpacity
                                     key={option[field.optionValue || 'id']}
