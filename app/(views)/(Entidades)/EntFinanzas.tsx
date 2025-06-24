@@ -23,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
+import { boolean } from 'zod';
 
 const PAGE_SIZE = 10;
 
@@ -463,10 +464,10 @@ const EntFinanzas: React.FC = () => {
       .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-        value: value === null || value === undefined ? 'N/A' : String(value)
+        value: value === null || value === undefined ? 'N/A' : typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value)
       }));
         
-        return [...baseFields,...additionalFields];
+      return [...baseFields,...additionalFields];
   };
 
   const showItemDetails = (item: any) => {

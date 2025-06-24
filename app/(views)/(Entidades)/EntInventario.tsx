@@ -465,7 +465,6 @@ const EntInventario: React.FC = () => {
     setBackendFormError(null);
     return new Promise((resolve) => {
       const commonOnSuccess = (createdItem: any, entityName: string) => {
-        // queryClient.invalidateQueries({ queryKey: [selectedCategory] }); // Add queryClient for this
         setAccumulatedItems(prev => [createdItem, ...prev]);
         setCurrentPage(1);
         setHasMore(true);
@@ -637,7 +636,6 @@ const EntInventario: React.FC = () => {
       setCurrentPage(1);
       setHasMore(true);
       showDeleteSuccess(entityName);
-      // Cerrar el modal después de la eliminación exitosa
       setDetailModalVisible(false);
     };
 
@@ -645,9 +643,7 @@ const EntInventario: React.FC = () => {
       console.log(error.response?.data.mensaje);
       setCurrentPage(1);
       const errorMessage = error.response?.data?.mensaje || error.message || 'Error al eliminar el elemento';
-      // Usar el método optimizado showDeleteError
       itemModalRef.current?.showDeleteError('elemento', errorMessage);
-      // En caso de error, mantener el modal abierto para que el usuario pueda ver el error
     };
 
     if (selectedCategory === 'almacen') {
@@ -725,7 +721,7 @@ const EntInventario: React.FC = () => {
       .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-        value: value === null || value === undefined ? 'N/A' : String(value)
+        value: value === null || value === undefined ? 'N/A' : typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value)
       }));
         
         return [...baseFields,...additionalFields];
