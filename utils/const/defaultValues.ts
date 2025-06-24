@@ -15,6 +15,7 @@ export const DEFAULT_VALUES_INVENTORY = {
         manejaSerial: false,
         poseeGarantia: false,
         manejaPuntoMinimo: false,
+        presentaciones: undefined,
         manejaPuntoMaximo: false,
         suspendido: false,
     },

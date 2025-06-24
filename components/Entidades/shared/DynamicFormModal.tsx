@@ -385,6 +385,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   ).current;
 
   const onSubmit = async (data: any) => {
+    
     console.log('🔵 Datos enviados antes de conversión:', data);
 
     // Aplicar conversión de tipos para todos los campos numéricos antes del envío

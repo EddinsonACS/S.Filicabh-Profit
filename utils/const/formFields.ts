@@ -220,6 +220,17 @@ export const FORM_FIELDS_INVENTORY = {
       type: 'switch' as const,
       required: false,
       description: 'El artículo está inactivo'
+    },
+    {
+      name: 'presentaciones',
+      label: 'Presentaciones',
+      type: 'select' as const,
+      required: false,
+      placeholder: 'Seleccione una presentación',
+      description: 'Seleccione la presentación del artículo',
+      options: [],
+      optionLabel: 'codigoPresentacion',
+      optionValue: 'codigoPresentacion'
     }
   ],
   "categoria": [

@@ -33,7 +33,7 @@ export interface Articulo {
   manejaPuntoMaximo: boolean,
   puntoMaximo: number,
   suspendido: boolean,
-  presentaciones: number[]
+  presentaciones: number[] | number,
   fechaRegistro: string;
   usuarioRegistroNombre: string;
   fechaModificacion: string;

@@ -82,12 +82,12 @@ export const endpoints = {
       "update": (id: number) => `/api/articulo/${id}`,
       "delete": (id: number) => `/api/articulo/${id}`
     },
-    "articulopresentaciones": {
-      "list": "/api/articulopresentaciones",
-      "create": "/api/articulopresentaciones",
-      "getOne": (id: number) => `/api/articulopresentaciones/${id}`,
-      "update": (id: number) => `/api/articulopresentaciones/${id}`,
-      "delete": (id: number) => `/api/articulopresentaciones/${id}`
+    "articulopresentacion": {
+      "list": "/api/articulopresentacion",
+      "create": "/api/articulopresentacion",
+      "getOne": (id: number) => `/api/articulopresentacion/${id}`,
+      "update": (id: number) => `/api/articulopresentacion/${id}`,
+      "delete": (id: number) => `/api/articulopresentacion/${id}`
     },
     "articulofoto": {
       "list": "/api/articulofoto",

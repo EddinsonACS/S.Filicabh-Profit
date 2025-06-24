@@ -38,6 +38,7 @@ export const inventorySchema = {
     codigoTalla: z.number({required_error: 'Debe seleccionar una talla'}),
     codigoTipoArticulo: z.number({required_error: 'Debe seleccionar un tipo de artículo'}),
     codigoImpuesto: z.number({required_error: 'Debe seleccionar un impuesto'}),
+    presentaciones: z.number({required_error: 'Debe seleccionar una presentación'}),
     peso: z.number({required_error: 'El peso es requerido'}),
     volumen: z.number({required_error: 'El volumen es requerido'}),
     metroCubico: z.number({required_error: 'El metro cúbico es requerido'}),

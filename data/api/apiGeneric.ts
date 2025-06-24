@@ -3,9 +3,9 @@ import { api } from '@/utils/libs/api';
 
 interface ApiServiceConfig<T, U = Partial<T>> {
   getList: (url: string, page: number, pageSize: number) => Promise<ListDataResponse<T>>;
-  create: (url: string, data: U) => Promise<T>;
+  create: (url: string, data: U, isFile?: boolean) => Promise<T>;
   getOne: (url: string) => Promise<T>;
-  update: (url: string, data: U) => Promise<T>;
+  update: (url: string, data: U, isFile?: boolean) => Promise<T>;
   delete: (url: string) => Promise<void>;
 }
 
@@ -16,8 +16,12 @@ export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
       return response.data;
     },
 
-    create: async (url: string, data: U): Promise<T> => {
-      const response = await api.post(url, data);
+    create: async (url: string, data: U, isFile: boolean = false): Promise<T> => {
+      const response = await api.post(url, data, {
+        headers: {
+          'Content-Type': isFile ? 'multipart/form-data' : 'application/json'
+        }
+      });
       return response.data;
     },
 
@@ -26,9 +30,13 @@ export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
       return response.data;
     },
 
-    update: async (url: string, data: U): Promise<T> => {
+    update: async (url: string, data: U, isFile: boolean = false): Promise<T> => {
       console.log(data)
-      const response = await api.put(url, data);
+      const response = await api.put(url, data, {
+        headers: {
+          'Content-Type': isFile ? 'multipart/form-data' : 'application/json'
+        }
+      });
       return response.data;
     },
 

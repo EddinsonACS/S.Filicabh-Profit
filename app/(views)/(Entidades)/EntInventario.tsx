@@ -22,6 +22,7 @@ import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
 import { useUnidad } from '@/hooks/Inventario/useUnidad';
+import { useArticuloPresentaciones } from '@/hooks/Inventario/useArticuloPresentaciones';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
@@ -144,6 +145,10 @@ const EntInventario: React.FC = () => {
     useDeleteOrigen
   } = useOrigen();
 
+  const {
+    useGetArticuloPresentacionesList,
+  } = useArticuloPresentaciones();
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewType, setViewType] = useState<'chips' | 'dropdown'>('chips');
@@ -221,6 +226,7 @@ const EntInventario: React.FC = () => {
   const { data: tallasDataArticulo } = useGetTallaList(1, 1000);
   const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
   const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
+  const { data: articuloPresentacionesDataArticulo } = useGetArticuloPresentacionesList(1, 1000);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -306,11 +312,14 @@ const EntInventario: React.FC = () => {
         if (field.name === 'codigoImpuesto' && impuestosDataArticulo?.data) {
           return { ...field, options: impuestosDataArticulo.data };
         }
+        if (field.name === 'presentaciones' && articuloPresentacionesDataArticulo?.data) {
+          return { ...field, options: articuloPresentacionesDataArticulo.data };
+        }
         return field;
       });
     }
     return fields;
-  }, [selectedCategory, categoriasData, gruposData, gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo]);
+  }, [selectedCategory, categoriasData, gruposData, gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo, articuloPresentacionesDataArticulo]);
 
   useEffect(() => {
     setCurrentPage(1);
