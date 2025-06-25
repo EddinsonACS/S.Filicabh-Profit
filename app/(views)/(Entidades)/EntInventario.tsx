@@ -2,6 +2,7 @@ import { ItemArticle } from '@/components/Entidades/Inventario/ItemArticle';
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
+import FormCompleteProcess from '@/components/Entidades/shared/FormCompleteProcess';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
@@ -830,32 +831,61 @@ const EntInventario: React.FC = () => {
           )}
         </View>
 
-      <DynamicFormModal
-        key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
-        visible={formModalVisible}
-        onClose={() => {
-          setFormModalVisible(false);
-          setBackendFormError(null);
-          setCurrentItem(null);
-          setIsEditing(false);
-        }}
-        backendError={backendFormError}
-        isEditing={isEditing}
-        currentItem={currentItem}
-        handleCreate={handleCreate}
-        handleUpdate={handleUpdate}
-        selectedCategory={selectedCategory}
-        schema={inventorySchema[selectedCategory]}
-        defaultValues={DEFAULT_VALUES_INVENTORY[selectedCategory]}
-        categoryTitles={CATEGORY_TITLES}
-        formFields={getFormFields()}
-        headerColor={themes.inventory.formHeaderColor}
-        headerTextColor={themes.inventory.formHeaderTextColor}
-        buttonColor={themes.inventory.formButtonColor}
-        buttonTextColor={themes.inventory.formButtonTextColor}
-        switchActiveColor={themes.inventory.switchActiveColor}
-        switchInactiveColor={themes.inventory.switchInactiveColor}
-      />
+      {selectedCategory === 'articulo' ? (
+        <FormCompleteProcess
+          key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
+          visible={formModalVisible}
+          onClose={() => {
+            setFormModalVisible(false);
+            setBackendFormError(null);
+            setCurrentItem(null);
+            setIsEditing(false);
+          }}
+          backendError={backendFormError}
+          isEditing={isEditing}
+          currentItem={currentItem}
+          handleCreate={handleCreate}
+          handleUpdate={handleUpdate}
+          selectedCategory={selectedCategory}
+          schema={inventorySchema[selectedCategory]}
+          defaultValues={DEFAULT_VALUES_INVENTORY[selectedCategory]}
+          categoryTitles={CATEGORY_TITLES}
+          formFields={getFormFields()}
+          headerColor={themes.inventory.formHeaderColor}
+          headerTextColor={themes.inventory.formHeaderTextColor}
+          buttonColor={themes.inventory.formButtonColor}
+          buttonTextColor={themes.inventory.formButtonTextColor}
+          switchActiveColor={themes.inventory.switchActiveColor}
+          switchInactiveColor={themes.inventory.switchInactiveColor}
+        />
+      ) : (
+        <DynamicFormModal
+          key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
+          visible={formModalVisible}
+          onClose={() => {
+            setFormModalVisible(false);
+            setBackendFormError(null);
+            setCurrentItem(null);
+            setIsEditing(false);
+          }}
+          backendError={backendFormError}
+          isEditing={isEditing}
+          currentItem={currentItem}
+          handleCreate={handleCreate}
+          handleUpdate={handleUpdate}
+          selectedCategory={selectedCategory}
+          schema={inventorySchema[selectedCategory]}
+          defaultValues={DEFAULT_VALUES_INVENTORY[selectedCategory]}
+          categoryTitles={CATEGORY_TITLES}
+          formFields={getFormFields()}
+          headerColor={themes.inventory.formHeaderColor}
+          headerTextColor={themes.inventory.formHeaderTextColor}
+          buttonColor={themes.inventory.formButtonColor}
+          buttonTextColor={themes.inventory.formButtonTextColor}
+          switchActiveColor={themes.inventory.switchActiveColor}
+          switchInactiveColor={themes.inventory.switchInactiveColor}
+        />
+      )}
 
       <DynamicItemModal
         ref={itemModalRef}
