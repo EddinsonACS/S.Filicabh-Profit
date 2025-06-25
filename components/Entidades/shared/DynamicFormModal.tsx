@@ -697,29 +697,32 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                 </View>
               )}
 
-              {/* Botones dentro del ScrollView */}
-              <View className="bg-white border-t border-gray-100 pt-6 pb-6 px-0 mt-4">
-                <View className="flex-row">
-                  <TouchableOpacity
-                    className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
-                    onPress={onClose}
-                  >
-                    <Ionicons name="close-outline" size={18} color="#4b5563" />
-                    <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ backgroundColor: buttonColor }}
-                    className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
-                    onPress={handleSubmit(onSubmit)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={buttonTextColor} />
-                    <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
-                      {isEditing ? 'Actualizar' : 'Guardar'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              {/* Espacio adicional al final del scroll para evitar que el contenido quede oculto detrás de los botones */}
+              <View style={{ height: 80 }} />
             </ScrollView>
+
+            {/* Botones fijos en la parte inferior - FUERA del ScrollView */}
+            <View className="bg-white border-t border-gray-200 py-2 px-6 shadow-lg mb-4">
+              <View className="flex-row">
+                <TouchableOpacity
+                  className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
+                  onPress={onClose}
+                >
+                  <Ionicons name="close-outline" size={18} color="#4b5563" />
+                  <Text className="text-gray-800 font-medium ml-2">Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ backgroundColor: buttonColor }}
+                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center`}
+                  onPress={handleSubmit(onSubmit)}
+                >
+                  <Ionicons name="save-outline" size={18} color={buttonTextColor} />
+                  <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
+                    {isEditing ? 'Actualizar' : 'Guardar'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </KeyboardAvoidingView>
         </Animated.View>
       </Animated.View>

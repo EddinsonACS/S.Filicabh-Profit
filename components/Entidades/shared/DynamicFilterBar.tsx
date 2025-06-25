@@ -135,13 +135,31 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
   return (
     <Modal
       visible={isVisible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      transparent
+      animationType="none"
       onRequestClose={onClose}
     >
-        <View className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            overflow: 'hidden',
+            height: '95%'
+          }}
+        >
           {/* Header */}
-          <View 
+          <View
             className="px-4 py-4 border-b border-gray-200"
             style={{ backgroundColor: buttonColor }}
           >
@@ -174,16 +192,15 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                 >
                   <View className="flex-row items-center">
                     {option.icon && (
-                      <Ionicons 
-                        name={option.icon} 
-                        size={20} 
-                        color={filterState.sortBy === option.id ? buttonColor : "#6b7280"} 
+                      <Ionicons
+                        name={option.icon}
+                        size={20}
+                        color={filterState.sortBy === option.id ? buttonColor : "#6b7280"}
                       />
                     )}
-                    <Text 
-                      className={`ml-3 text-base ${
-                        filterState.sortBy === option.id ? 'font-semibold' : 'font-normal'
-                      }`}
+                    <Text
+                      className={`ml-3 text-base ${filterState.sortBy === option.id ? 'font-semibold' : 'font-normal'
+                        }`}
                       style={{ color: filterState.sortBy === option.id ? buttonColor : "#374151" }}
                     >
                       {option.label}
@@ -191,10 +208,10 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                   </View>
                   {filterState.sortBy === option.id && (
                     <View className="flex-row items-center">
-                      <Ionicons 
-                        name={filterState.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'} 
-                        size={20} 
-                        color={buttonColor} 
+                      <Ionicons
+                        name={filterState.sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
+                        size={20}
+                        color={buttonColor}
                       />
                     </View>
                   )}
@@ -216,15 +233,14 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                     className="flex-row items-center justify-between py-3 border-b border-gray-100"
                   >
                     <View className="flex-row items-center">
-                      <Ionicons 
-                        name={option.icon} 
-                        size={20} 
-                        color={filterState.status === option.id ? buttonColor : "#6b7280"} 
+                      <Ionicons
+                        name={option.icon}
+                        size={20}
+                        color={filterState.status === option.id ? buttonColor : "#6b7280"}
                       />
-                      <Text 
-                        className={`ml-3 text-base ${
-                          filterState.status === option.id ? 'font-semibold' : 'font-normal'
-                        }`}
+                      <Text
+                        className={`ml-3 text-base ${filterState.status === option.id ? 'font-semibold' : 'font-normal'
+                          }`}
                         style={{ color: filterState.status === option.id ? buttonColor : "#374151" }}
                       >
                         {option.label}
@@ -249,15 +265,14 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                     className="flex-row items-center justify-between py-3 border-b border-gray-100"
                   >
                     <View className="flex-row items-center">
-                      <Ionicons 
-                        name="calendar" 
-                        size={20} 
-                        color={filterState.dateFilter === filter.id ? buttonColor : "#6b7280"} 
+                      <Ionicons
+                        name="calendar"
+                        size={20}
+                        color={filterState.dateFilter === filter.id ? buttonColor : "#6b7280"}
                       />
-                      <Text 
-                        className={`ml-3 text-base ${
-                          filterState.dateFilter === filter.id ? 'font-semibold' : 'font-normal'
-                        }`}
+                      <Text
+                        className={`ml-3 text-base ${filterState.dateFilter === filter.id ? 'font-semibold' : 'font-normal'
+                          }`}
                         style={{ color: filterState.dateFilter === filter.id ? buttonColor : "#374151" }}
                       >
                         {filter.label}
@@ -271,13 +286,13 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
 
                 {/* Custom Date Range */}
                 {filterState.dateFilter === 'custom' && (
-                  <View className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <View className="mt-4 p-4 bg-gray-50 rounded-2xl">
                     <Text className="text-sm font-medium text-gray-700 mb-3">Seleccionar rango de fechas</Text>
-                    
+
                     <View className="mb-3">
                       <Text className="text-sm text-gray-600 mb-1">Fecha desde:</Text>
                       <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+                        className="border border-gray-300 rounded-2xl px-3 py-2 bg-white"
                         placeholder="YYYY-MM-DD"
                         value={customStartDate}
                         onChangeText={setCustomStartDate}
@@ -288,7 +303,7 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                     <View className="mb-3">
                       <Text className="text-sm text-gray-600 mb-1">Fecha hasta:</Text>
                       <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+                        className="border border-gray-300 rounded-2xl px-3 py-2 bg-white"
                         placeholder="YYYY-MM-DD"
                         value={customEndDate}
                         onChangeText={setCustomEndDate}
@@ -299,7 +314,7 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
                     <TouchableOpacity
                       onPress={handleCustomDateApply}
                       style={{ backgroundColor: buttonColor }}
-                      className="py-2 px-4 rounded-lg"
+                      className="py-2 px-4 rounded-2xl"
                       disabled={!customStartDate || !customEndDate}
                     >
                       <Text style={{ color: buttonTextColor }} className="text-center font-medium">
@@ -317,14 +332,14 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
             <View className="flex-row space-x-3">
               <TouchableOpacity
                 onPress={resetFilters}
-                className="flex-1 py-3 rounded-lg border border-gray-300"
+                className="flex-1 py-3 rounded-2xl border border-gray-300"
               >
                 <Text className="text-center text-gray-700 font-medium">Limpiar filtros</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onClose}
                 style={{ backgroundColor: buttonColor }}
-                className="flex-1 py-3 rounded-lg"
+                className="flex-1 py-3 rounded-2xl"
               >
                 <Text style={{ color: buttonTextColor }} className="text-center font-medium">
                   Aplicar filtros
@@ -333,7 +348,8 @@ const DynamicFilterBar: React.FC<DynamicFilterBarProps> = ({
             </View>
           </View>
         </View>
-      </Modal>
+      </View>
+    </Modal>
   );
 };
 

@@ -33,22 +33,32 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, category, onPress, data
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>
               {category === 'cuentaBancaria' ? item.nroCuenta : item.nombre}
             </Text>
           </View>
-          
-          {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between items-center mb-2">
-            {subtitle && (
-              <View className="flex-1 mr-2">
-                <Text className="text-sm text-gray-600">{subtitle}</Text>
-              </View>
-            )}
 
-            {/* Estado a la derecha de la misma fila */}
+          {/* Información adicional */}
+          {subtitle && (
+            <View className="flex-1 mr-2">
+              <Text className="text-sm text-gray-600">{subtitle}</Text>
+            </View>
+          )}
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
             <View className={`px-2 py-1 rounded-full ${item.suspendido
               ? 'bg-red-100 border border-red-600'
               : 'bg-green-100 border border-green-600'
@@ -61,21 +71,10 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, category, onPress, data
               </Text>
             </View>
           </View>
-
-          {/* Información del sistema al final */}
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
         </View>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default ItemArticle; 
+export default ItemArticle;

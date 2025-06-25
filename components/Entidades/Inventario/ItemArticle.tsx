@@ -9,7 +9,7 @@ import { TipoDeArticulo } from '@/core/models/Inventario/TipoDeArticulo';
 import { TipoDeImpuesto } from '@/core/models/Inventario/TipoDeImpuesto';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'unidad';
 
@@ -46,7 +46,7 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
           </View>
-          
+
           {/* Fila final - Ventas, Compras y Estado en la misma fila */}
           <View className="flex-row justify-between items-center mb-2">
             <View className="flex-row space-x-2">
@@ -93,15 +93,15 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
             </View>
           </View>
 
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     </View>
@@ -115,13 +115,23 @@ const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => v
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
           </View>
-          
-          {/* Fila final - Estado al final */}
-          <View className="flex-row justify-end items-center mb-2">
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
             <View className={`px-2 py-1 rounded-full ${item.suspendido
               ? 'bg-red-100 border border-red-600'
               : 'bg-green-100 border border-green-600'
@@ -134,16 +144,6 @@ const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => v
               </Text>
             </View>
           </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -157,16 +157,26 @@ const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCat
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
           </View>
-          
-          {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-sm text-gray-600">Categoria: {dataCategory.find(c => c.id === item.codigoCategoria)?.nombre || 'No especificado'}</Text>
 
-            {/* Estado al lado derecho de la misma fila */}
+          {/* Información adicional */}
+          <Text className="text-sm text-gray-600 mb-2">Categoria: {dataCategory.find(c => c.id === item.codigoCategoria)?.nombre || 'No especificado'}</Text>
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
             <View className={`px-2 py-1 rounded-full ${item.suspendido
               ? 'bg-red-100 border border-red-600'
               : 'bg-green-100 border border-green-600'
@@ -179,36 +189,36 @@ const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCat
               </Text>
             </View>
           </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
         </View>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ItemDefault: React.FC<ItemProps> = ({ item, onPress,dataGrupo }) => {
+const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
       <TouchableOpacity
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
           </View>
-          
-          {/* Fila final - Estado al final */}
-          <View className="flex-row justify-end items-center mb-2">
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
             <View className={`px-2 py-1 rounded-full ${item.suspendido
               ? 'bg-red-100 border border-red-600'
               : 'bg-green-100 border border-green-600'
@@ -221,86 +231,126 @@ const ItemDefault: React.FC<ItemProps> = ({ item, onPress,dataGrupo }) => {
               </Text>
             </View>
           </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
         </View>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void; dataGrupo: Grupo[]; dataTalla: Talla[];   dataTipoArticulo: TipoDeArticulo[]; dataTipoImpuesto: TipoDeImpuesto[] }> = ({ item, onPress,  dataGrupo, dataTalla, dataTipoArticulo, dataTipoImpuesto }) => {
+const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void; dataGrupo: Grupo[]; dataTalla: Talla[]; dataTipoArticulo: TipoDeArticulo[]; dataTipoImpuesto: TipoDeImpuesto[] }> = ({ item, onPress, dataGrupo, dataTalla, dataTipoArticulo, dataTipoImpuesto }) => {
   return (
-    <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
+    <View className="bg-white rounded-lg mt-2 shadow-sm border border-gray-200 overflow-hidden">
       <TouchableOpacity
         onPress={() => onPress(item)}
         activeOpacity={0.7}
+        className="flex-row h-32"
       >
-        <View className="p-4">
-          <View className="mb-2 flex-row justify-between items-center">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
+        {/* Estado en la esquina superior izquierda */}
+        <View className="absolute top-1 left-1 z-10">
+          <View className={`px-2 py-1 rounded-full ${item.suspendido
+            ? 'bg-red-100 border border-red-600'
+            : 'bg-green-100 border border-green-600'
+            }`}>
+            <Text className={`text-xs font-medium ${item.suspendido
+              ? 'text-red-600'
+              : 'text-green-600'
               }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+              {item.suspendido ? 'Inactivo' : 'Activo'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Imagen del artículo */}
+        <View className="w-32 p-2">
+          {item.imagen ? (
+            <Image
+              source={{ uri: item.imagen }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="h-full bg-gray-50 items-center justify-center rounded-lg">
+              <Ionicons name="cube-outline" size={28} color="#9ca3af" />
+            </View>
+          )}
+        </View>
+
+        {/* Contenido Principal */}
+        <View className="flex-1 px-2 py-1 justify-between">
+          <View>
+            {/* Nombre */}
+            <Text className="text-base font-bold text-gray-800 flex-1 mr-2 mb-1" numberOfLines={1}>
+              {item.nombre}
+            </Text>
+
+            {/* Código */}
+            <Text className="text-xs text-gray-500">
+              Código: {item.codigo}
+            </Text>
+
+            {/* Precio y Stock en la misma línea */}
+            <View className="flex-row items-center">
+              <Text className="text-xs text-gray-500">Precio: </Text>
+              <Text className="text-xs font-semibold text-gray-700 mr-3">
+                ${item.precio || 0}
+              </Text>
+              <Text className="text-xs text-gray-500">Stock: </Text>
+              <Text className="text-xs font-semibold text-gray-700">
+                {item.stock || 0} un.
+              </Text>
+            </View>
+
+            {/* Presentación */}
+            <View className="flex-row items-center">
+              <Text className="text-xs text-gray-500">Prest: </Text>
+              <Text className="text-xs font-semibold text-gray-700 flex-1" numberOfLines={1}>
+                {dataTipoArticulo.find(g => g.id === item.codigoTipoArticulo)?.nombre || 'No especificado'}
               </Text>
             </View>
           </View>
-          
-          <View className="flex-row justify-between items-center mb-2">
-            <View className="flex">
-            <Text className="text-sm text-gray-600">Grupo: {dataGrupo.find(g => g.id === item.codigoGrupo)?.nombre || 'No especificado'}</Text>
-            <Text className="text-sm text-gray-600">Talla: {dataTalla.find(g => g.id === item.codigoTalla)?.nombre || 'No especificado'}</Text>
-            <Text className="text-sm text-gray-600">Tipo de Artículo: {dataTipoArticulo.find(g => g.id === item.codigoTipoArticulo)?.nombre || 'No especificado'}</Text>
-            <Text className="text-sm text-gray-600">Tipo de Impuesto: {dataTipoImpuesto.find(g => g.id === item.codigoImpuesto)?.nombre || 'No especificado'}</Text>
-            </View>            
-          </View>
 
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5 border-t border-gray-100">
+            <Text className="text-[10px] text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-[10px] text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; dataGrupo: Grupo[] }> = ({ item, onPress,  dataGrupo }) => {
+const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; dataGrupo: Grupo[] }> = ({ item, onPress, dataGrupo }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
       <TouchableOpacity
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
           </View>
-          
-          {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-sm text-gray-600">Grupo: {dataGrupo.find(g => g.id === item.codigoGrupo)?.nombre || 'No especificado'}</Text>
 
-            {/* Estado al lado derecho de la misma fila */}
+          {/* Información adicional */}
+          <Text className="text-sm text-gray-600 mb-2">Grupo: {dataGrupo.find(g => g.id === item.codigoGrupo)?.nombre || 'No especificado'}</Text>
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            <Text className="text-md text-gray-400">
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+            </Text>
+            <Text className="text-md text-gray-400">
+              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
             <View className={`px-2 py-1 rounded-full ${item.suspendido
               ? 'bg-red-100 border border-red-600'
               : 'bg-green-100 border border-green-600'
@@ -313,16 +363,6 @@ const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; d
               </Text>
             </View>
           </View>
-
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {new Date(item.fechaRegistro).toLocaleDateString()}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Creado por: {item.usuarioRegistroNombre}
-          </Text>
-          <Text className="text-xs text-gray-400">
-            Ultima modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-          </Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -342,6 +382,6 @@ export const ItemArticle: React.FC<ItemProps> = ({ item, category, onPress, data
     case 'articulo':
       return <ItemArticulo item={item as Articulo} onPress={onPress} dataGrupo={dataGrupo} dataTalla={dataTalla} dataTipoArticulo={dataTipoArticulo} dataTipoImpuesto={dataTipoImpuesto} />;
     default:
-      return <ItemDefault item={item} category={category} onPress={onPress} dataCategory={dataCategory} dataGrupo={dataGrupo} dataColor={dataColor} dataTalla={dataTalla} dataTipoArticulo={dataTipoArticulo} dataTipoImpuesto={dataTipoImpuesto}/>;
+      return <ItemDefault item={item} category={category} onPress={onPress} dataCategory={dataCategory} dataGrupo={dataGrupo} dataColor={dataColor} dataTalla={dataTalla} dataTipoArticulo={dataTipoArticulo} dataTipoImpuesto={dataTipoImpuesto} />;
   }
 };

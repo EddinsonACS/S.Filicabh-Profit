@@ -52,7 +52,7 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
   // Función auxiliar para obtener información adicional del item
   const getAdditionalInfo = (item: ItemUnion, category: CategoryId): string[] => {
     const info: string[] = [];
-    
+
     switch (category) {
       case 'acuerdodepago':
         info.push(`Días: ${(item as AcuerdoDePago).dias}`);
@@ -82,7 +82,7 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
         }
         break;
     }
-    
+
     return info;
   };
 
@@ -96,24 +96,39 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
         onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <View className="p-4">
+        <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
             <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>
               {entityName}
             </Text>
           </View>
-          
-          {/* Fila final - Información adicional y Estado en la misma fila */}
-          <View className="flex-row justify-between mb-2 items-baseline">
 
-            {additionalInfo.length > 0 && (
-              <View className="flex mr-2">
-                {additionalInfo.map((info, index) => (
-                  <Text key={index} className="text-sm text-gray-600">{info}</Text>
-                ))}
-              </View>
+          {/* Información adicional */}
+          {additionalInfo.length > 0 && (
+            <View className="flex mr-2">
+              {additionalInfo.map((info, index) => (
+                <Text key={index} className="text-sm text-gray-600">{info}</Text>
+              ))}
+            </View>
+          )}
+
+          {/* Información del sistema */}
+          <View className="flex-col justify-start items-start pt-0.5">
+            {item.usuarioRegistroNombre && (
+              <Text className="text-md text-gray-400">
+                Creado por: {item.usuarioRegistroNombre} • {item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : 'N/A'}
+              </Text>
             )}
-            {selectedCategory !== 'tasadecambio'  ? (
+            {item.fechaModificacion && (
+              <Text className="text-md text-gray-400">
+                Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+
+          {/* Estado posicionado en la esquina inferior derecha */}
+          <View className="absolute bottom-4 right-4">
+            {selectedCategory !== 'tasadecambio' ? (
               <View className={`px-2 py-1 rounded-full ${isSuspended
                 ? 'bg-red-100 border border-red-600'
                 : 'bg-green-100 border border-green-600'
@@ -133,21 +148,6 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
               </View>
             )}
           </View>
-
-          {/* Información del sistema al final */}
-          <Text className="text-xs text-gray-400 mt-2">
-            ID: {item.id} · Creado: {item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : 'N/A'}
-          </Text>
-          {item.usuarioRegistroNombre && (
-            <Text className="text-xs text-gray-400">
-              Creado por: {item.usuarioRegistroNombre}
-            </Text>
-          )}
-          {item.fechaModificacion && (
-            <Text className="text-xs text-gray-400">
-              Última modificación: {new Date(item.fechaModificacion).toLocaleDateString()}
-            </Text>
-          )}
         </View>
       </TouchableOpacity>
     </View>
