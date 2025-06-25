@@ -1,6 +1,19 @@
 import { useArticuloFoto } from '@/hooks/Inventario/useArticuloFoto';
 import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
 import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
+import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
+import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
+import { useMoneda } from '@/hooks/Ventas/useMoneda';
+
+interface ListaPrecioItem {
+  id: number;
+  codigoListasdePrecio: string;
+  codigoMoneda: string;
+  monto: string | number;
+  fechaDesde: string;
+  fechaHasta: string;
+  suspendido: boolean;
+}
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -23,13 +36,19 @@ interface FormField {
   optionValue?: string;
 }
 
+interface ArticleResponse {
+  id: number;
+  // Add other article properties as needed
+  [key: string]: any;
+}
+
 interface FormCompleteProcessProps {
   backendError?: string | null;
   visible: boolean;
   onClose: () => void;
   isEditing: boolean;
   currentItem: any;
-  handleCreate: (data: any) => Promise<boolean>;
+  handleCreate: (data: any) => Promise<boolean | ArticleResponse>;
   handleUpdate: (data: any) => Promise<boolean>;
   selectedCategory: string;
   schema: z.ZodType<any>;
@@ -80,12 +99,7 @@ const convertValueForSubmission = (fieldName: string, fieldType: string, value: 
 const formatName = (text: string): string => {
   return text
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
-};
-
-const formatAccountNumber = (text: string): string => {
-  return text.replace(/\D/g, ''); // Solo números
 };
 
 const formatEmail = (text: string): string => {
@@ -309,6 +323,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('articulo');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdArticleId, setCreatedArticleId] = useState<number | null>(currentItem?.id || null);
   const [showDatePicker, setShowDatePicker] = useState<{ [key: string]: boolean }>({});
   const [openSelect, setOpenSelect] = useState<string | null>(null);
 
@@ -316,26 +331,88 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [principalImageIndex, setPrincipalImageIndex] = useState(0);
 
-  // Estados para manejar listas de precio
-  const [listasPrecios, setListasPrecios] = useState<any[]>([{
-    id: Date.now(),
-    codigoListasdePrecio: '',
-    codigoMoneda: '',
-    monto: 0,
+  // Estados para manejar las listas de precios
+  const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
+  const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>('');
+  const [selectedMoneda, setSelectedMoneda] = useState<string>('');
+  const [precioInputs, setPrecioInputs] = useState({
+    monto: '',
     fechaDesde: new Date().toISOString().split('T')[0],
-    fechaHasta: '',
-    suspendido: false
-  }]);
+    fechaHasta: ''
+  });
 
+  const {useGetListaDePrecioList} = useListaDePrecio();
+  const {data: listasPreciosData} = useGetListaDePrecioList(1,100);
+  
+  // Function to add a new price to the list
+  const addListaPrecio = () => {
+    if (precioInputs.monto && precioInputs.fechaDesde && selectedListaPrecio && selectedMoneda) {
+      const newPrice: ListaPrecioItem = {
+        id: Date.now(),
+        codigoListasdePrecio: selectedListaPrecio,
+        codigoMoneda: selectedMoneda,
+        monto: Number(precioInputs.monto) || 0,
+        fechaDesde: precioInputs.fechaDesde,
+        fechaHasta: precioInputs.fechaHasta || '',
+        suspendido: false
+      };
+      
+      setListasPrecios(prev => [...prev, newPrice]);
+      
+      // Clear the input fields after adding
+      setPrecioInputs(prev => ({
+        ...prev,
+        monto: '',
+        fechaHasta: ''
+      }));
+      setSelectedListaPrecio('');
+      setSelectedMoneda('');
+    }
+  };
+  
+  // Function to update a price in the list
+  const updateListaPrecio = (index: number, field: keyof ListaPrecioItem, value: string | boolean | number) => {
+    setListasPrecios(prev => {
+      const updated = [...prev];
+      if (field === 'monto' && typeof value === 'string') {
+        updated[index] = { ...updated[index], [field]: Number(value) || 0 };
+      } else {
+        updated[index] = { ...updated[index], [field]: value };
+      }
+      return updated;
+    });
+  };
+  
+  // Function to remove a price from the list
+  const removeListaPrecio = (id: number) => {
+    setListasPrecios(prev => prev.filter(item => item.id !== id));
+  };
+
+  const {useGetMonedaList} = useMoneda();
+  const {data: monedasData} = useGetMonedaList(1, 100);
+  
+  // Get Almacen data for Ubicaciones
+  const {useGetAlmacenList} = useAlmacen();
+  const {data: almacenesData} = useGetAlmacenList(1, 100);
+  
+  // Merge almacenes from props with data from API
+  const allAlmacenes = [
+    ...(almacenes || []),
+    ...(almacenesData?.data?.map(almacen => ({
+      id: almacen.id,
+      nombre: almacen.nombre
+    })) || [])
+  ];
+  
   // Estados para manejar ubicaciones
-  const [ubicaciones, setUbicaciones] = useState<any[]>([{
+  const [ubicaciones, setUbicaciones] = useState<Array<{
+    id: number;
+    codigoAlmacen: string;
+    ubicacion: string;
+  }>>([{
     id: Date.now() + 1,
     codigoAlmacen: '',
-    ubicacion: '',
-    otrosC1: '',
-    otrosC2: '',
-    otrosN1: 0,
-    otrosN2: 0
+    ubicacion: ''
   }]);
 
   // Estados para expandir/contraer secciones
@@ -463,12 +540,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     }
   };
 
-  // Función para actualizar lista de precio
-  const updateListaPrecio = (index: number, field: string, value: any) => {
-    setListasPrecios(prev => prev.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    ));
-  };
+  // This is a duplicate of the updateListaPrecio function above
+  // The function is already defined, so we'll comment this one out to avoid redeclaration
 
   // Función para actualizar ubicación
   const updateUbicacion = (index: number, field: string, value: any) => {
@@ -478,14 +551,14 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   };
 
   // Función para guardar fotos
-  const saveFotos = async () => {
-    if (!articuloId || selectedImages.length === 0) return true;
+  const saveFotos = async (articleId: number) => {
+    if (!articleId || selectedImages.length === 0) return true;
 
     try {
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
         const fotoData = {
-          CodigoArticulo: articuloId,
+          CodigoArticulo: articleId,
           ImageFile: image.file,
           EsPrincipal: i === principalImageIndex,
           Orden: i + 1
@@ -500,20 +573,20 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   };
 
   // Función para guardar listas de precio
-  const saveListasPrecios = async () => {
-    if (!articuloId || listasPrecios.length === 0) return true;
+  const saveListasPrecios = async (articleId: number) => {
+    if (!articleId || listasPrecios.length === 0) return true;
 
     try {
       for (const precio of listasPrecios) {
-        if (precio.codigoListasdePrecio && precio.codigoMoneda && precio.monto > 0) {
+        if (precio.codigoListasdePrecio && precio.codigoMoneda && Number(precio.monto) > 0) {
           const precioData = {
-            codigoArticulo: articuloId,
+            codigoArticulo: articleId,
             codigoListasdePrecio: Number(precio.codigoListasdePrecio),
             codigoMoneda: Number(precio.codigoMoneda),
             monto: Number(precio.monto),
             fechaDesde: precio.fechaDesde,
             fechaHasta: precio.fechaHasta || '',
-            suspendido: precio.suspendido
+            suspendido: Boolean(precio.suspendido)
           };
           await createPrecioMutation.mutateAsync(precioData);
         }
@@ -526,20 +599,16 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   };
 
   // Función para guardar ubicaciones
-  const saveUbicaciones = async () => {
-    if (!articuloId || ubicaciones.length === 0) return true;
+  const saveUbicaciones = async (articleId: number) => {
+    if (!articleId || ubicaciones.length === 0) return true;
 
     try {
       for (const ubicacion of ubicaciones) {
         if (ubicacion.codigoAlmacen && ubicacion.ubicacion) {
           const ubicacionData = {
-            codigoArticulo: articuloId,
+            codigoArticulo: articleId,
             codigoAlmacen: Number(ubicacion.codigoAlmacen),
-            ubicacion: ubicacion.ubicacion,
-            otrosC1: ubicacion.otrosC1 || '',
-            otrosC2: ubicacion.otrosC2 || '',
-            otrosN1: Number(ubicacion.otrosN1) || 0,
-            otrosN2: Number(ubicacion.otrosN2) || 0
+            ubicacion: ubicacion.ubicacion
           };
           await createUbicacionMutation.mutateAsync(ubicacionData);
         }
@@ -558,13 +627,22 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     let success = false;
 
     try {
-      // Paso 1: Artículo
+      // Step 1: Article
       if (activeTab === 'articulo') {
         if (!isEditing) {
-          // Si es nuevo artículo, guardar y obtener ID
-          success = await handleCreate(data);
+          // For new article, save and get the ID
+          const result: boolean | ArticleResponse = await handleCreate(data);
+          console.log('Result:', result);
+          // Check if result is an ArticleResponse (has id) or a boolean true
+          if (result === true || (typeof result === 'object' && 'id' in result)) {
+            // If result is an ArticleResponse, extract the id
+            if (typeof result === 'object' && 'id' in result) {
+              setCreatedArticleId(result.id);
+            }
+            success = true;
+          }
         } else {
-          // Si es edición, solo pasar al siguiente paso
+          // For editing, just move to the next step
           success = true;
         }
 
@@ -572,39 +650,50 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           setActiveTab('adicional');
         }
       }
-      // Paso 2: Adicional
+      // Step 2: Additional Info
       else if (activeTab === 'adicional') {
-        if (!isEditing) {
-          const preciosSuccess = await saveListasPrecios();
-          const ubicacionesSuccess = await saveUbicaciones();
-          success = preciosSuccess && ubicacionesSuccess;
-        } else {
-          success = true;
+        const articleId = isEditing ? currentItem.id : createdArticleId;
+        if (!articleId) {
+          console.error('Article ID is missing');
+          return;
         }
+
+        const preciosSuccess = await saveListasPrecios(articleId);
+        const ubicacionesSuccess = await saveUbicaciones(articleId);
+        success = preciosSuccess && ubicacionesSuccess;
 
         if (success) {
           setActiveTab('detalles');
         }
       }
-      // Paso 3: Detalles y guardado final
+      // Step 3: Details and final save
       else if (activeTab === 'detalles') {
+        const articleId = isEditing ? currentItem.id : createdArticleId;
+        if (!articleId) {
+          console.error('Article ID is missing');
+          return;
+        }
+
         if (isEditing) {
-          // En modo edición, guardar todo al final
+          // In edit mode, update the article and related data
           success = await handleUpdate(data);
           if (success) {
-            const preciosSuccess = await saveListasPrecios();
-            const ubicacionesSuccess = await saveUbicaciones();
-            const fotosSuccess = await saveFotos();
+            const preciosSuccess = await saveListasPrecios(articleId);
+            const ubicacionesSuccess = await saveUbicaciones(articleId);
+            const fotosSuccess = await saveFotos(articleId);
             success = preciosSuccess && ubicacionesSuccess && fotosSuccess;
           }
         } else {
-          success = await saveFotos();
+          // In create mode, just save the photos
+          success = await saveFotos(articleId);
         }
 
         if (success) {
           handleClose();
         }
       }
+    } catch (error) {
+      console.error('Error in form submission:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -754,6 +843,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           >
             <ScrollView
               className="p-6"
+              nestedScrollEnabled={true}
               keyboardShouldPersistTaps="handled"
             >
               {activeTab === 'articulo' && (
@@ -987,126 +1077,164 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                     {expandedSections.listaPrecio && (
                       <View className="mt-2">
+                        {/* List and Currency Selection */}
+                        <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
+                          {/* Lista de Precio */}
+                          <View className="mb-4">
+                            <Text className="text-sm font-medium text-gray-700 mb-1">Lista de Precio</Text>
+                            <View className="relative">
+                              <TouchableOpacity
+                                onPress={() => setOpenSelect('listaPrecio')}
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                              >
+                                <Text className="text-gray-700">
+                                  {selectedListaPrecio ?
+                                    listasPreciosData?.data.find(l => l.id === Number(selectedListaPrecio))?.nombre || 'Seleccione' :
+                                    'Seleccione una lista'
+                                  }
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                              </TouchableOpacity>
+
+                              {openSelect === 'listaPrecio' && (
+                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                                  <ScrollView 
+                                  nestedScrollEnabled={true}
+                                  className="max-h-48">
+                                    {listasPreciosData?.data.map((lista) => (
+                                      <TouchableOpacity
+                                        key={lista.id}
+                                        onPress={() => {
+                                          setSelectedListaPrecio(String(lista.id));
+                                          setOpenSelect(null);
+                                        }}
+                                        className="px-4 py-3 border-b border-gray-100"
+                                      >
+                                        <Text className="text-gray-700">{lista.nombre}</Text>
+                                      </TouchableOpacity>
+                                    ))}
+                                  </ScrollView>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+
+                          {/* Moneda */}
+                          <View className="mb-4">
+                            <Text className="text-sm font-medium text-gray-700 mb-1">Moneda</Text>
+                            <View className="relative">
+                              <TouchableOpacity
+                                onPress={() => setOpenSelect('moneda')}
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                              >
+                                <Text className="text-gray-700">
+                                  {selectedMoneda ?
+                                    monedasData?.data.find(m => m.id === Number(selectedMoneda))?.nombre || 'Seleccione' :
+                                    'Seleccione una moneda'
+                                  }
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                              </TouchableOpacity>
+
+                              {openSelect === 'moneda' && (
+                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                                  <ScrollView 
+                                  nestedScrollEnabled={true}
+                                  className="max-h-48">
+                                    {monedasData?.data.map((moneda) => (
+                                      <TouchableOpacity
+                                        key={moneda.id}
+                                        onPress={() => {
+                                          setSelectedMoneda(String(moneda.id));
+                                          setOpenSelect(null);
+                                        }}
+                                        className="px-4 py-3 border-b border-gray-100"
+                                      >
+                                        <Text className="text-gray-700">{moneda.nombre}</Text>
+                                      </TouchableOpacity>
+                                    ))}
+                                  </ScrollView>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+
+                          {/* Monto */}
+                          <View className="mb-4">
+                            <Text className="text-sm font-medium text-gray-700 mb-1">Monto</Text>
+                            <TextInput
+                              className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                              placeholder="0.00"
+                              value={precioInputs.monto}
+                              onChangeText={(text) => setPrecioInputs(prev => ({...prev, monto: text}))}
+                              keyboardType="numeric"
+                            />
+                          </View>
+
+                          {/* Fechas */}
+                          <View className="flex-row space-x-3 mb-4">
+                            <View className="flex-1">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Desde</Text>
+                              <TextInput
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                placeholder="YYYY-MM-DD"
+                                value={precioInputs.fechaDesde}
+                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaDesde: text}))}
+                              />
+                            </View>
+                            <View className="flex-1">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Hasta (opcional)</Text>
+                              <TextInput
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                placeholder="YYYY-MM-DD"
+                                value={precioInputs.fechaHasta}
+                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaHasta: text}))}
+                              />
+                            </View>
+                          </View>
+
+                          <TouchableOpacity
+                            onPress={addListaPrecio}
+                            className="bg-blue-500 py-2 px-4 rounded-lg items-center"
+                            disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
+                          >
+                            <Text className="text-white font-medium">Agregar Precio</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* List of Added Prices */}
                         {listasPrecios.map((precio, index) => (
                           <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
                             <View className="space-y-3">
-                              {/* Lista de Precio */}
-                              <View>
-                                <View className="relative">
+                              <View className="flex-row justify-between items-center">
+                                <View>
+                                  <Text className="font-medium">
+                                    {listasPreciosData?.data.find(l => l.id === Number(precio.codigoListasdePrecio))?.nombre || 'Lista de Precio'}
+                                  </Text>
+                                  <Text className="text-gray-600">
+                                    {monedasData?.data.find(m => m.id === Number(precio.codigoMoneda))?.nombre || 'Moneda'}
+                                  </Text>
+                                  <Text className="font-bold text-lg">{Number(precio.monto).toFixed(2)}</Text>
+                                  <Text className="text-sm text-gray-500">
+                                    {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ''}
+                                  </Text>
+                                </View>
+                                <View className="items-end">
+                                  <View className="flex-row items-center mb-2">
+                                    <Text className="text-sm font-medium text-gray-700 mr-2">Suspendido</Text>
+                                    <Switch
+                                      value={precio.suspendido}
+                                      onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
+                                      trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
+                                    />
+                                  </View>
                                   <TouchableOpacity
-                                    onPress={() => setOpenSelect(`listaPrecio_${index}`)}
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                                    onPress={() => removeListaPrecio(precio.id)}
+                                    className="bg-red-100 py-1 px-3 rounded"
                                   >
-                                    <Text className="text-gray-700">
-                                      {precio.codigoListasdePrecio ?
-                                        listasPrecio.find(l => l.id === Number(precio.codigoListasdePrecio))?.nombre || 'Seleccione' :
-                                        'Seleccione una lista'
-                                      }
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                    <Text className="text-red-600 text-sm">Eliminar</Text>
                                   </TouchableOpacity>
-
-                                  {openSelect === `listaPrecio_${index}` && (
-                                    <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                      <ScrollView className="max-h-32">
-                                        {listasPrecio.map((lista) => (
-                                          <TouchableOpacity
-                                            key={lista.id}
-                                            onPress={() => {
-                                              updateListaPrecio(index, 'codigoListasdePrecio', lista.id);
-                                              setOpenSelect(null);
-                                            }}
-                                            className="px-4 py-3 border-b border-gray-100"
-                                          >
-                                            <Text className="text-gray-700">{lista.nombre}</Text>
-                                          </TouchableOpacity>
-                                        ))}
-                                      </ScrollView>
-                                    </View>
-                                  )}
                                 </View>
-                              </View>
-
-                              {/* Moneda */}
-                              <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Moneda</Text>
-                                <View className="relative">
-                                  <TouchableOpacity
-                                    onPress={() => setOpenSelect(`moneda_${index}`)}
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
-                                  >
-                                    <Text className="text-gray-700">
-                                      {precio.codigoMoneda ?
-                                        monedas.find(m => m.id === Number(precio.codigoMoneda))?.nombre || 'Seleccione' :
-                                        'Seleccione una moneda'
-                                      }
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                                  </TouchableOpacity>
-
-                                  {openSelect === `moneda_${index}` && (
-                                    <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                      <ScrollView className="max-h-32">
-                                        {monedas.map((moneda) => (
-                                          <TouchableOpacity
-                                            key={moneda.id}
-                                            onPress={() => {
-                                              updateListaPrecio(index, 'codigoMoneda', moneda.id);
-                                              setOpenSelect(null);
-                                            }}
-                                            className="px-4 py-3 border-b border-gray-100"
-                                          >
-                                            <Text className="text-gray-700">{moneda.nombre}</Text>
-                                          </TouchableOpacity>
-                                        ))}
-                                      </ScrollView>
-                                    </View>
-                                  )}
-                                </View>
-                              </View>
-
-                              {/* Monto */}
-                              <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Monto</Text>
-                                <TextInput
-                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                  placeholder="0.00"
-                                  value={String(precio.monto)}
-                                  onChangeText={(text) => updateListaPrecio(index, 'monto', text)}
-                                  keyboardType="numeric"
-                                />
-                              </View>
-
-                              {/* Fechas */}
-                              <View className="flex-row space-x-3">
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Desde</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="YYYY-MM-DD"
-                                    value={precio.fechaDesde}
-                                    onChangeText={(text) => updateListaPrecio(index, 'fechaDesde', text)}
-                                  />
-                                </View>
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Hasta</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="YYYY-MM-DD (opcional)"
-                                    value={precio.fechaHasta}
-                                    onChangeText={(text) => updateListaPrecio(index, 'fechaHasta', text)}
-                                  />
-                                </View>
-                              </View>
-
-                              {/* Switch Suspendido */}
-                              <View className="flex-row items-center justify-between">
-                                <Text className="text-sm font-medium text-gray-700">Suspendido</Text>
-                                <Switch
-                                  value={precio.suspendido}
-                                  onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
-                                  trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
-                                />
                               </View>
                             </View>
                           </View>
@@ -1144,7 +1272,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                   >
                                     <Text className="text-gray-700">
                                       {ubicacion.codigoAlmacen ?
-                                        almacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Seleccione' :
+                                        allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Seleccione' :
                                         'Seleccione un almacén'
                                       }
                                     </Text>
@@ -1153,8 +1281,10 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                                   {openSelect === `almacen_${index}` && (
                                     <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                      <ScrollView className="max-h-32">
-                                        {almacenes.map((almacen) => (
+                                      <ScrollView 
+                                      nestedScrollEnabled={true}
+                                      className="max-h-32">
+                                        {allAlmacenes.map((almacen) => (
                                           <TouchableOpacity
                                             key={almacen.id}
                                             onPress={() => {
@@ -1183,50 +1313,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 />
                               </View>
 
-                              {/* Campos adicionales */}
-                              <View className="flex-row space-x-3">
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Descripción 1</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="Información adicional"
-                                    value={ubicacion.otrosC1}
-                                    onChangeText={(text) => updateUbicacion(index, 'otrosC1', text)}
-                                  />
-                                </View>
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Descripción 2</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="Información adicional"
-                                    value={ubicacion.otrosC2}
-                                    onChangeText={(text) => updateUbicacion(index, 'otrosC2', text)}
-                                  />
-                                </View>
-                              </View>
 
-                              <View className="flex-row space-x-3">
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Cantidad Mínima</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="0"
-                                    value={String(ubicacion.otrosN1)}
-                                    onChangeText={(text) => updateUbicacion(index, 'otrosN1', text)}
-                                    keyboardType="numeric"
-                                  />
-                                </View>
-                                <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Cantidad Máxima</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="0"
-                                    value={String(ubicacion.otrosN2)}
-                                    onChangeText={(text) => updateUbicacion(index, 'otrosN2', text)}
-                                    keyboardType="numeric"
-                                  />
-                                </View>
-                              </View>
                             </View>
                           </View>
                         ))}

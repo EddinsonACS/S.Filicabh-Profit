@@ -96,12 +96,12 @@ export const endpoints = {
       "update": (id: number) => `/api/articulofoto/${id}`,
       "delete": (id: number) => `/api/articulofoto/${id}`
     },
-    "articulolistadeprecio": {
-      "list": "/api/articulolistadeprecio",
-      "create": "/api/articulolistadeprecio",
-      "getOne": (id: number) => `/api/articulolistadeprecio/${id}`,
-      "update": (id: number) => `/api/articulolistadeprecio/${id}`,
-      "delete": (id: number) => `/api/articulolistadeprecio/${id}`
+    "articulolistaprecio": {
+      "list": "/api/articulolistaprecio",
+      "create": "/api/articulolistaprecio",
+      "getOne": (id: number) => `/api/articulolistaprecio/${id}`,
+      "update": (id: number) => `/api/articulolistaprecio/${id}`,
+      "delete": (id: number) => `/api/articulolistaprecio/${id}`
     },
     "articuloubicacion": {
       "list": "/api/articuloubicacion",
