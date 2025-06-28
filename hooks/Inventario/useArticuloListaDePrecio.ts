@@ -11,7 +11,7 @@ export const useArticuloListaDePrecio = () => {
   const useGetArticuloListaDePrecioList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<ArticuloListaPrecio>, Error>({
       queryKey: ['articulolistadeprecio', 'list', page, size],
-      queryFn: () => apiArticuloListaPrecio.getList(endpoints.inventory.articulolistadeprecio.list, page, size),
+      queryFn: () => apiArticuloListaPrecio.getList(endpoints.inventory.articulolistaprecio.list, page, size),
       onSettled: (_: ListDataResponse<ArticuloListaPrecio> | undefined, error: Error | null) => {
         if (error) {
           console.error('Error fetching articulo lista de precio list:', error);
@@ -23,7 +23,7 @@ export const useArticuloListaDePrecio = () => {
   const useGetArticuloListaDePrecioItem = (id: number) => {
     return useQuery<ArticuloListaPrecio, Error>({
       queryKey: ['articulolistadeprecio', 'item', id],
-      queryFn: () => apiArticuloListaPrecio.getOne(endpoints.inventory.articulolistadeprecio.getOne(id)),
+      queryFn: () => apiArticuloListaPrecio.getOne(endpoints.inventory.articulolistaprecio.getOne(id)),
       enabled: !!id,
       onSettled: (_: ArticuloListaPrecio | undefined, error: Error | null) => {
         if (error) {
@@ -44,10 +44,18 @@ export const useArticuloListaDePrecio = () => {
           equipo: formData.equipo || 'equipo',
           fechaDesde: formData.fechaDesde || new Date().toISOString(),
           suspendido: formData.suspendido || false,
-          usuario: formData.usuario || 0
+          usuario: formData.usuario || 0,
+          otrosF1: new Date().toISOString(),
+          otrosN1: formData.otrosN1 || 0,
+          otrosN2: formData.otrosN2 || 0,
+          otrosC1: formData.otrosC1 || '',
+          otrosC2: formData.otrosC2 || '',
+          otrosC3: formData.otrosC3 || '',
+          otrosC4: formData.otrosC4 || '',
+          otrosT1: formData.otrosT1 || '',
         } as Omit<ArticuloListaPrecio, 'id'>;
         
-        return apiArticuloListaPrecio.create(endpoints.inventory.articulolistadeprecio.create, data);
+        return apiArticuloListaPrecio.create(endpoints.inventory.articulolistaprecio.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['articulolistadeprecio', 'list'] });
@@ -68,7 +76,7 @@ export const useArticuloListaDePrecio = () => {
           ...formData,
           id,
         };
-        return apiArticuloListaPrecio.update(endpoints.inventory.articulolistadeprecio.update(id), data);
+        return apiArticuloListaPrecio.update(endpoints.inventory.articulolistaprecio.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['articulolistadeprecio', 'list'] });
@@ -82,7 +90,7 @@ export const useArticuloListaDePrecio = () => {
 
   const useDeleteArticuloListaDePrecio = () => {
     return useMutation({
-      mutationFn: (id: number) => apiArticuloListaPrecio.delete(endpoints.inventory.articulolistadeprecio.delete(id)),
+      mutationFn: (id: number) => apiArticuloListaPrecio.delete(endpoints.inventory.articulolistaprecio.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['articulolistadeprecio', 'list'] });
       },

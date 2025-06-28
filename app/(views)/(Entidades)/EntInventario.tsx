@@ -471,7 +471,7 @@ const EntInventario: React.FC = () => {
     }
   }, [queryClient, selectedCategory]);
 
-  const handleCreate = async (formData: any): Promise<boolean> => {
+  const handleCreate = async (formData: any): Promise<boolean | any> => {
     setBackendFormError(null);
     return new Promise((resolve) => {
       const commonOnSuccess = (createdItem: any, entityName: string) => {
@@ -479,7 +479,13 @@ const EntInventario: React.FC = () => {
         setCurrentPage(1);
         setHasMore(true);
         showCreateSuccess(`el ${entityName.toLowerCase()}`);
-        resolve(true);
+        
+        // For Articulo, return the full created item, otherwise return true
+        if (selectedCategory === 'articulo') {
+          resolve(createdItem);
+        } else {
+          resolve(true);
+        }
       };
 
       const commonOnError = (error: any, entityType: string) => {
