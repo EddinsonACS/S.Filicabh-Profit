@@ -126,9 +126,6 @@ const formatRIF = (text: string): string => {
   return text;
 };
 
-const formatNIT = (text: string): string => {
-  return text.replace(/\D/g, ''); // Solo números
-};
 
 const formatDecimalNumber = (text: string): string => {
   // Permite números decimales con coma o punto como separador
@@ -519,12 +516,27 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     });
 
     if (!result.canceled) {
+      const fileName = result.assets[0].fileName || `image_${Date.now()}.jpg`;
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+      
+      let mimeType = 'image/jpeg'; // default
+      if (fileExtension === 'png') {
+        mimeType = 'image/png';
+      } else if (fileExtension === 'gif') {
+        mimeType = 'image/gif';
+      } else if (fileExtension === 'webp') {
+        mimeType = 'image/webp';
+      }
+      
       const newImage = {
         id: Date.now(),
         uri: result.assets[0].uri,
-        name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
-        type: result.assets[0].type || 'image/jpeg',
-        file: result.assets[0]
+        name: fileName,
+        type: mimeType,
+        file: {
+          ...result.assets[0],
+          type: mimeType
+        }
       };
       setSelectedImages(prev => [...prev, newImage]);
     }
@@ -550,25 +562,46 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     ));
   };
 
-  // Función para guardar fotos
+  // Función para guardar fotos de forma secuencial
   const saveFotos = async (articleId: number) => {
     if (!articleId || selectedImages.length === 0) return true;
 
     try {
-      for (let i = 0; i < selectedImages.length; i++) {
-        const image = selectedImages[i];
-        const fotoData = {
-          CodigoArticulo: articleId,
-          ImageFile: image.file,
-          EsPrincipal: i === principalImageIndex,
-          Orden: i + 1
+      // Subir las imágenes de forma secuencial
+      for (let index = 0; index < selectedImages.length; index++) {
+        const image = selectedImages[index];
+        const file = {
+          uri: image.file.uri,
+          name: image.file.fileName || image.name || `image_${Date.now()}_${index}.jpg`,
+          type: image.type, // Usar el tipo MIME correcto que ya establecimos
         };
-        await createFotoMutation.mutateAsync(fotoData);
+
+        try {
+          // Esperar a que cada imagen se suba antes de continuar con la siguiente
+          await createFotoMutation.mutateAsync({
+            CodigoArticulo: articleId,
+            EsPrincipal: index === principalImageIndex,
+            Orden: index + 1,
+            Equipo: 'equipo',
+            ImageFile: file
+          });
+          
+          // Pequeña pausa entre subidas para evitar sobrecargar el servidor
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          // Si hay un error, lo mostramos pero continuamos con las siguientes imágenes
+          console.error(`Error al subir la imagen ${index + 1}:`, error);
+          // Podrías querer mostrar un mensaje al usuario aquí si lo prefieres
+          // Por ahora solo continuamos con la siguiente imagen
+          continue;
+        }
       }
+      
       return true;
     } catch (error) {
-      console.error('Error saving fotos:', error);
-      return false;
+      console.error('Error inesperado en saveFotos:', error);
+      // Relanzar el error para que sea manejado por el componente padre
+      throw error;
     }
   };
 
@@ -642,15 +675,15 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             success = true;
           }
         } else {
-          // For editing, just move to the next step
-          success = true;
+          // In edit mode, just update the article data
+          success = await handleUpdate(data);
         }
 
         if (success) {
           setActiveTab('adicional');
         }
       }
-      // Step 2: Additional Info
+      // Step 2: Additional Info (Precios y Ubicaciones)
       else if (activeTab === 'adicional') {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
@@ -658,6 +691,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           return;
         }
 
+        // Only save precios and ubicaciones for the current tab
         const preciosSuccess = await saveListasPrecios(articleId);
         const ubicacionesSuccess = await saveUbicaciones(articleId);
         success = preciosSuccess && ubicacionesSuccess;
@@ -666,7 +700,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           setActiveTab('detalles');
         }
       }
-      // Step 3: Details and final save
+      // Step 3: Photos and final save
       else if (activeTab === 'detalles') {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
@@ -674,19 +708,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           return;
         }
 
-        if (isEditing) {
-          // In edit mode, update the article and related data
-          success = await handleUpdate(data);
-          if (success) {
-            const preciosSuccess = await saveListasPrecios(articleId);
-            const ubicacionesSuccess = await saveUbicaciones(articleId);
-            const fotosSuccess = await saveFotos(articleId);
-            success = preciosSuccess && ubicacionesSuccess && fotosSuccess;
-          }
-        } else {
-          // In create mode, just save the photos
-          success = await saveFotos(articleId);
-        }
+        // Only save photos for the detalles tab
+        success = await saveFotos(articleId);
 
         if (success) {
           handleClose();

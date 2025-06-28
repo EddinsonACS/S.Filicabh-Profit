@@ -17,11 +17,20 @@ export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
     },
 
     create: async (url: string, data: U, isFile: boolean = false): Promise<T> => {
-      const response = await api.post(url, data, {
-        headers: {
-          'Content-Type': isFile ? 'multipart/form-data' : 'application/json'
-        }
-      });
+      const config: any = {};
+      
+      if (isFile) {
+        config.headers = {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'multipart/form-data'
+        };
+      } else {
+        config.headers = {
+          'Content-Type': 'application/json'
+        };
+      }
+      
+      const response = await api.post(url, data, config);
       return response.data;
     },
 
@@ -32,11 +41,24 @@ export function createApiService<T, U = Partial<T>>(): ApiServiceConfig<T, U> {
 
     update: async (url: string, data: U, isFile: boolean = false): Promise<T> => {
       console.log(data)
-      const response = await api.put(url, data, {
-        headers: {
-          'Content-Type': isFile ? 'multipart/form-data' : 'application/json'
-        }
-      });
+      const config: any = {};
+      
+      if (isFile) {
+        // Para FormData, forzar que axios reconozca el tipo correcto
+        config.headers = {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'multipart/form-data'
+        };
+        // Forzar que axios no transforme el FormData
+        config.transformRequest = [(data: any) => data];
+      } else {
+        // Para JSON, establecer Content-Type manualmente
+        config.headers = {
+          'Content-Type': 'application/json'
+        };
+      }
+      
+      const response = await api.put(url, data, config);
       return response.data;
     },
 
