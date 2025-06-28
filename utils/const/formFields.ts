@@ -229,7 +229,7 @@ export const FORM_FIELDS_INVENTORY = {
       placeholder: 'Seleccione una presentación',
       description: 'Seleccione la presentación del artículo',
       options: [],
-      optionLabel: 'codigoPresentacion',
+      optionLabel: 'equivalencia',
       optionValue: 'codigoPresentacion'
     }
   ],

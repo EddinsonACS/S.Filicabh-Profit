@@ -830,7 +830,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         <Animated.View
           style={{
             transform: [{ translateY: slideAnim }],
-            maxHeight: height * 0.9,
+            height: height * 0.85, // Altura fija basada en el contenido del tab Artículo
           }}
           className="bg-white rounded-t-3xl overflow-hidden"
         >
@@ -940,581 +940,584 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             className="flex-1"
           >
             <ScrollView
-              className="p-6"
+              className="flex-1 px-6"
               nestedScrollEnabled={true}
               keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              {activeTab === 'articulo' && (
-                <>
-                  {/* Campos de texto y número */}
-                  {textFields.map((field) => (
-                    <View key={field.name} className="mb-4">
-                      <View className="flex-row mb-1">
-                        <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                        {field.required && <Text className="text-red-600">*</Text>}
-                      </View>
-                      <Controller
-                        control={control}
-                        name={field.name}
-                        render={({ field: { onChange, value } }) => (
-                          <TextInput
-                            className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
-                              }`}
-                            placeholder={field.placeholder}
-                            value={String(value || '')}
-                            onChangeText={(text) => {
-                              const formattedText = getFormattedValueByType(field.name, field.type, text);
-                              onChange(formattedText);
-                            }}
-                            onBlur={() => {
-                              // Convertir a número cuando el usuario termine de escribir
-                              if (field.type === 'number') {
-                                const currentValue = watch(field.name);
-                                const convertedValue = convertValueForSubmission(field.name, field.type, currentValue);
-                                onChange(convertedValue);
-                              }
-                            }}
-                            keyboardType={getKeyboardType(field.name, field.type)}
-                            returnKeyType="next"
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            selectTextOnFocus={false}
-                            clearButtonMode="while-editing"
-                          />
-                        )}
-                      />
-                      {field.description && (
-                        <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
-                      )}
-                      {errors[field.name] && (
-                        <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-
-                  {/* Campos de fecha */}
-                  {dateFields.map((field) => (
-                    <View key={field.name} className="mb-4">
-                      <View className="flex-row mb-1">
-                        <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                        {field.required && <Text className="text-red-600">*</Text>}
-                      </View>
-                      <Controller
-                        control={control}
-                        name={field.name}
-                        render={({ field: { onChange, value } }) => (
-                          <View>
-                            <TouchableOpacity
-                              onPress={() => setShowDatePicker(prev => ({ ...prev, [field.name]: true }))}
-                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
+              <View className="py-6">
+                {activeTab === 'articulo' && (
+                  <>
+                    {/* Campos de texto y número */}
+                    {textFields.map((field) => (
+                      <View key={field.name} className="mb-4">
+                        <View className="flex-row mb-1">
+                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
+                          {field.required && <Text className="text-red-600">*</Text>}
+                        </View>
+                        <Controller
+                          control={control}
+                          name={field.name}
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
                                 }`}
-                            >
-                              <Text className="text-gray-700">
-                                {value ? new Date(value).toLocaleDateString('es-ES') : field.placeholder}
-                              </Text>
-                              <Ionicons name="calendar-outline" size={20} color="#6B7280" />
-                            </TouchableOpacity>
-
-                            {showDatePicker[field.name] && (
-                              <DateTimePicker
-                                value={value ? new Date(value) : new Date()}
-                                mode="date"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                onChange={(event: any, selectedDate: Date | undefined) => {
-                                  setShowDatePicker(prev => ({ ...prev, [field.name]: false }));
-                                  if (selectedDate) {
-                                    // Formatear la fecha como YYYY-MM-DD
-                                    const formattedDate = selectedDate.toISOString().split('T')[0];
-                                    onChange(formattedDate);
-                                  }
-                                }}
-                              />
-                            )}
-                          </View>
+                              placeholder={field.placeholder}
+                              value={String(value || '')}
+                              onChangeText={(text) => {
+                                const formattedText = getFormattedValueByType(field.name, field.type, text);
+                                onChange(formattedText);
+                              }}
+                              onBlur={() => {
+                                // Convertir a número cuando el usuario termine de escribir
+                                if (field.type === 'number') {
+                                  const currentValue = watch(field.name);
+                                  const convertedValue = convertValueForSubmission(field.name, field.type, currentValue);
+                                  onChange(convertedValue);
+                                }
+                              }}
+                              keyboardType={getKeyboardType(field.name, field.type)}
+                              returnKeyType="next"
+                              autoCorrect={false}
+                              autoCapitalize="none"
+                              selectTextOnFocus={false}
+                              clearButtonMode="while-editing"
+                            />
+                          )}
+                        />
+                        {field.description && (
+                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
                         )}
-                      />
-                      {field.description && (
-                        <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
-                      )}
-                      {errors[field.name] && (
-                        <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-
-                  {/* Campos de selección */}
-                  {selectFields.map((field) => (
-                    <View key={field.name} className="mb-4">
-                      <View className="flex-row mb-1">
-                        <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                        {field.required && <Text className="text-red-600">*</Text>}
+                        {errors[field.name] && (
+                          <Text className="text-red-500 text-sm mt-1">
+                            {errors[field.name]?.message as string}
+                          </Text>
+                        )}
                       </View>
-                      <Controller
-                        control={control}
-                        name={field.name}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedOption = field.options?.find(
-                            opt => String(opt[field.optionValue || 'id']) === String(value)
-                          );
+                    ))}
 
-                          return (
+                    {/* Campos de fecha */}
+                    {dateFields.map((field) => (
+                      <View key={field.name} className="mb-4">
+                        <View className="flex-row mb-1">
+                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
+                          {field.required && <Text className="text-red-600">*</Text>}
+                        </View>
+                        <Controller
+                          control={control}
+                          name={field.name}
+                          render={({ field: { onChange, value } }) => (
                             <View>
                               <TouchableOpacity
-                                onPress={() => handleSelectPress(field.name)}
+                                onPress={() => setShowDatePicker(prev => ({ ...prev, [field.name]: true }))}
                                 className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
                                   }`}
                               >
                                 <Text className="text-gray-700">
-                                  {selectedOption ? selectedOption[field.optionLabel || 'nombre'] : 'Seleccione una opción'}
+                                  {value ? new Date(value).toLocaleDateString('es-ES') : field.placeholder}
                                 </Text>
-                                <Ionicons
-                                  name={openSelect === field.name ? "chevron-up" : "chevron-down"}
-                                  size={20}
-                                  color="#6B7280"
-                                />
+                                <Ionicons name="calendar-outline" size={20} color="#6B7280" />
                               </TouchableOpacity>
 
-                              {openSelect === field.name && (
-                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                  <ScrollView
-                                    nestedScrollEnabled={true}
-                                    className="max-h-48">
-                                    {field.options?.map((option) => (
-                                      <TouchableOpacity
-                                        key={String(option[field.optionValue || 'id'])}
-                                        onPress={() => {
-                                          onChange(option[field.optionValue || 'id']);
-                                          setOpenSelect(null);
-                                        }}
-                                        className={`px-4 py-3 border-b border-gray-100 ${String(value) === String(option[field.optionValue || 'id']) ? 'bg-blue-50' : ''
-                                          }`}
-                                      >
-                                        <Text className={`${String(value) === String(option[field.optionValue || 'id']) ? 'text-blue-600' : 'text-gray-700'
-                                          }`}>
-                                          {option[field.optionLabel || 'nombre']}
-                                        </Text>
-                                      </TouchableOpacity>
-                                    ))}
-                                  </ScrollView>
-                                </View>
-                              )}
-                            </View>
-                          );
-                        }}
-                      />
-                      {field.description && (
-                        <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
-                      )}
-                      {errors[field.name] && (
-                        <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-
-                  {/* Tarjeta de switches */}
-                  {switchFields.length > 0 && (
-                    <View className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <Text className="text-gray-800 font-medium mb-3">Configuración general</Text>
-                      {switchFields.map((field, idx) => (
-                        <View key={field.name} className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
-                          <View className="w-3/4">
-                            <Text className="text-gray-700 font-medium">{field.label}</Text>
-                            {field.description && (
-                              <Text className="text-gray-500 text-xs">{field.description}</Text>
-                            )}
-                          </View>
-                          <Controller
-                            control={control}
-                            name={field.name}
-                            render={({ field: { onChange, value } }) => (
-                              <Switch
-                                value={value}
-                                onValueChange={onChange}
-                                trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
-                              />
-                            )}
-                          />
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {backendError && (
-                    <View className="my-3 p-3 bg-red-100 border border-red-300 rounded-lg shadow-sm">
-                      <View className="flex-row items-center">
-                        <Ionicons name="alert-circle-outline" size={20} color="#c81e1e" />
-                        <Text className="text-red-700 text-sm ml-2 font-medium">Error de Servidor</Text>
-                      </View>
-                      <Text className="text-red-600 text-sm mt-1 ml-1">{backendError}</Text>
-                    </View>
-                  )}
-                </>
-              )}
-
-              {activeTab === 'adicional' && (
-                <>
-                  {/* Sección de Lista de Precio */}
-                  <View className="mb-4">
-                    <TouchableOpacity
-                      onPress={() => toggleSection('listaPrecio')}
-                      className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <Text className="text-md font-semibold text-gray-800">Lista de Precio</Text>
-                      <Ionicons
-                        name={expandedSections.listaPrecio ? "chevron-up" : "chevron-down"}
-                        size={20}
-                        color="#6B7280"
-                      />
-                    </TouchableOpacity>
-
-                    {expandedSections.listaPrecio && (
-                      <View className="mt-2">
-                        {/* List and Currency Selection */}
-                        <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
-                          {/* Lista de Precio */}
-                          <View className="mb-4">
-                            <Text className="text-sm font-medium text-gray-700 mb-1">Lista de Precio</Text>
-                            <View className="relative">
-                              <TouchableOpacity
-                                onPress={() => setOpenSelect('listaPrecio')}
-                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
-                              >
-                                <Text className="text-gray-700">
-                                  {selectedListaPrecio ?
-                                    listasPreciosData?.data.find(l => l.id === Number(selectedListaPrecio))?.nombre || 'Seleccione' :
-                                    'Seleccione una lista'
-                                  }
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                              </TouchableOpacity>
-
-                              {openSelect === 'listaPrecio' && (
-                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                  <ScrollView 
-                                  nestedScrollEnabled={true}
-                                  className="max-h-48">
-                                    {listasPreciosData?.data.map((lista) => (
-                                      <TouchableOpacity
-                                        key={lista.id}
-                                        onPress={() => {
-                                          setSelectedListaPrecio(String(lista.id));
-                                          setOpenSelect(null);
-                                        }}
-                                        className="px-4 py-3 border-b border-gray-100"
-                                      >
-                                        <Text className="text-gray-700">{lista.nombre}</Text>
-                                      </TouchableOpacity>
-                                    ))}
-                                  </ScrollView>
-                                </View>
-                              )}
-                            </View>
-                          </View>
-
-                          {/* Moneda */}
-                          <View className="mb-4">
-                            <Text className="text-sm font-medium text-gray-700 mb-1">Moneda</Text>
-                            <View className="relative">
-                              <TouchableOpacity
-                                onPress={() => setOpenSelect('moneda')}
-                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
-                              >
-                                <Text className="text-gray-700">
-                                  {selectedMoneda ?
-                                    monedasData?.data.find(m => m.id === Number(selectedMoneda))?.nombre || 'Seleccione' :
-                                    'Seleccione una moneda'
-                                  }
-                                </Text>
-                                <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                              </TouchableOpacity>
-
-                              {openSelect === 'moneda' && (
-                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                  <ScrollView 
-                                  nestedScrollEnabled={true}
-                                  className="max-h-48">
-                                    {monedasData?.data.map((moneda) => (
-                                      <TouchableOpacity
-                                        key={moneda.id}
-                                        onPress={() => {
-                                          setSelectedMoneda(String(moneda.id));
-                                          setOpenSelect(null);
-                                        }}
-                                        className="px-4 py-3 border-b border-gray-100"
-                                      >
-                                        <Text className="text-gray-700">{moneda.nombre}</Text>
-                                      </TouchableOpacity>
-                                    ))}
-                                  </ScrollView>
-                                </View>
-                              )}
-                            </View>
-                          </View>
-
-                          {/* Monto */}
-                          <View className="mb-4">
-                            <Text className="text-sm font-medium text-gray-700 mb-1">Monto</Text>
-                            <TextInput
-                              className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                              placeholder="0.00"
-                              value={precioInputs.monto}
-                              onChangeText={(text) => setPrecioInputs(prev => ({...prev, monto: text}))}
-                              keyboardType="numeric"
-                            />
-                          </View>
-
-                          {/* Fechas */}
-                          <View className="flex-row space-x-3 mb-4">
-                            <View className="flex-1">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Desde</Text>
-                              <TextInput
-                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                placeholder="YYYY-MM-DD"
-                                value={precioInputs.fechaDesde}
-                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaDesde: text}))}
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Hasta (opcional)</Text>
-                              <TextInput
-                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                placeholder="YYYY-MM-DD"
-                                value={precioInputs.fechaHasta}
-                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaHasta: text}))}
-                              />
-                            </View>
-                          </View>
-
-                          <TouchableOpacity
-                            onPress={addListaPrecio}
-                            className="bg-blue-500 py-2 px-4 rounded-lg items-center"
-                            disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
-                          >
-                            <Text className="text-white font-medium">Agregar Precio</Text>
-                          </TouchableOpacity>
-                        </View>
-
-                        {/* List of Added Prices */}
-                        {listasPrecios.map((precio, index) => (
-                          <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                            <View className="space-y-3">
-                              <View className="flex-row justify-between items-center">
-                                <View>
-                                  <Text className="font-medium">
-                                    {listasPreciosData?.data.find(l => l.id === Number(precio.codigoListasdePrecio))?.nombre || 'Lista de Precio'}
-                                  </Text>
-                                  <Text className="text-gray-600">
-                                    {monedasData?.data.find(m => m.id === Number(precio.codigoMoneda))?.nombre || 'Moneda'}
-                                  </Text>
-                                  <Text className="font-bold text-lg">{Number(precio.monto).toFixed(2)}</Text>
-                                  <Text className="text-sm text-gray-500">
-                                    {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ''}
-                                  </Text>
-                                </View>
-                                <View className="items-end">
-                                  <View className="flex-row items-center mb-2">
-                                    <Text className="text-sm font-medium text-gray-700 mr-2">Suspendido</Text>
-                                    <Switch
-                                      value={precio.suspendido}
-                                      onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
-                                      trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
-                                    />
-                                  </View>
-                                  <TouchableOpacity
-                                    onPress={() => removeListaPrecio(precio.id)}
-                                    className="bg-red-100 py-1 px-3 rounded"
-                                  >
-                                    <Text className="text-red-600 text-sm">Eliminar</Text>
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Sección de Ubicacion */}
-                  <View className="mb-2">
-                    <TouchableOpacity
-                      onPress={() => toggleSection('ubicaciones')}
-                      className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <Text className="text-md font-semibold text-gray-800">Ubicación</Text>
-                      <Ionicons
-                        name={expandedSections.ubicaciones ? "chevron-up" : "chevron-down"}
-                        size={20}
-                        color="#6B7280"
-                      />
-                    </TouchableOpacity>
-
-                    {expandedSections.ubicaciones && (
-                      <View className="mt-2">
-                        {ubicaciones.map((ubicacion, index) => (
-                          <View key={ubicacion.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                            <View className="space-y-3">
-                              {/* Almacén */}
-                              <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Almacén</Text>
-                                <View className="relative">
-                                  <TouchableOpacity
-                                    onPress={() => setOpenSelect(`almacen_${index}`)}
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
-                                  >
-                                    <Text className="text-gray-700">
-                                      {ubicacion.codigoAlmacen ?
-                                        allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Seleccione' :
-                                        'Seleccione un almacén'
-                                      }
-                                    </Text>
-                                    <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                                  </TouchableOpacity>
-
-                                  {openSelect === `almacen_${index}` && (
-                                    <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                      <ScrollView 
-                                      nestedScrollEnabled={true}
-                                      className="max-h-32">
-                                        {allAlmacenes.map((almacen) => (
-                                          <TouchableOpacity
-                                            key={almacen.id}
-                                            onPress={() => {
-                                              updateUbicacion(index, 'codigoAlmacen', almacen.id);
-                                              setOpenSelect(null);
-                                            }}
-                                            className="px-4 py-3 border-b border-gray-100"
-                                          >
-                                            <Text className="text-gray-700">{almacen.nombre}</Text>
-                                          </TouchableOpacity>
-                                        ))}
-                                      </ScrollView>
-                                    </View>
-                                  )}
-                                </View>
-                              </View>
-
-                              {/* Ubicación */}
-                              <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Ubicación Específica</Text>
-                                <TextInput
-                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                  placeholder="Ej: Pasillo A, Estante 3, Nivel 2"
-                                  value={ubicacion.ubicacion}
-                                  onChangeText={(text) => updateUbicacion(index, 'ubicacion', text)}
-                                />
-                              </View>
-
-
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                </>
-              )}
-
-              {activeTab === 'detalles' && (
-                <>
-                  {/* Sección de Fotos */}
-                  <View className="mb-6">
-                    {selectedImages.length === 0 ? (
-                      <>
-                        {/* Vista cuando no hay fotos - botón completo */}
-                        <TouchableOpacity
-                          onPress={showImagePicker}
-                          className="w-full py-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
-                        >
-                          <Ionicons name="camera-outline" size={48} color="#6B7280" />
-                          <Text className="text-gray-600 font-medium mt-3">Agregar Foto</Text>
-                          <Text className="text-gray-500 text-sm mt-1">Toca para tomar foto o seleccionar de galería</Text>
-                        </TouchableOpacity>
-
-                        {/* Mensaje cuando no hay imágenes */}
-                        <View className="p-4 bg-gray-50 rounded-lg">
-                          <Text className="text-gray-500 text-center text-sm">
-                            No hay fotos seleccionadas. Toca el botón superior para agregar la primera imagen.
-                          </Text>
-                        </View>
-                      </>
-                    ) : (
-                      <>
-                        {/* Vista grid cuando hay fotos */}
-                        <View className="flex-row flex-wrap">
-                          {/* Botón para agregar foto - siempre en primera posición */}
-                          <View className="w-[32%] mb-4 mr-[2%]">
-                            <TouchableOpacity
-                              onPress={showImagePicker}
-                              className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center"
-                            >
-                              <Ionicons name="camera-outline" size={24} color="#6B7280" />
-                              <Text className="text-gray-500 text-xs mt-1 text-center">Agregar{'\n'}Foto</Text>
-                            </TouchableOpacity>
-                          </View>
-
-                          {/* Grid de imágenes existentes */}
-                          {selectedImages.map((image, index) => (
-                            <View key={image.id} className={`w-[32%] mb-4 ${(index + 1) % 3 !== 0 ? 'mr-[2%]' : ''}`}>
-                              <View className="relative">
-                                {/* Imagen con onPress para marcar como favorita */}
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    console.log('🖱️ Imagen tocada, índice:', index);
-                                    console.log('🖱️ principalImageIndex actual:', principalImageIndex);
-                                    
-                                    // Marcar como favorita si no es la actual
-                                    if (index !== principalImageIndex) {
-                                      console.log('🖱️ Marcando como favorita...');
-                                      setImageAsFavorite(index);
-                                    } else {
-                                      console.log('🖱️ Esta imagen ya es favorita, no hacer nada');
+                              {showDatePicker[field.name] && (
+                                <DateTimePicker
+                                  value={value ? new Date(value) : new Date()}
+                                  mode="date"
+                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                  onChange={(event: any, selectedDate: Date | undefined) => {
+                                    setShowDatePicker(prev => ({ ...prev, [field.name]: false }));
+                                    if (selectedDate) {
+                                      // Formatear la fecha como YYYY-MM-DD
+                                      const formattedDate = selectedDate.toISOString().split('T')[0];
+                                      onChange(formattedDate);
                                     }
                                   }}
-                                  activeOpacity={0.9}
+                                />
+                              )}
+                            </View>
+                          )}
+                        />
+                        {field.description && (
+                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                        )}
+                        {errors[field.name] && (
+                          <Text className="text-red-500 text-sm mt-1">
+                            {errors[field.name]?.message as string}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+
+                    {/* Campos de selección */}
+                    {selectFields.map((field) => (
+                      <View key={field.name} className="mb-4">
+                        <View className="flex-row mb-1">
+                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
+                          {field.required && <Text className="text-red-600">*</Text>}
+                        </View>
+                        <Controller
+                          control={control}
+                          name={field.name}
+                          render={({ field: { onChange, value } }) => {
+                            const selectedOption = field.options?.find(
+                              opt => String(opt[field.optionValue || 'id']) === String(value)
+                            );
+
+                            return (
+                              <View>
+                                <TouchableOpacity
+                                  onPress={() => handleSelectPress(field.name)}
+                                  className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
+                                    }`}
                                 >
-                                  <Image
-                                    source={{ uri: image.uri }}
-                                    style={{ width: '100%', aspectRatio: 1, borderRadius: 8 }}
-                                    contentFit="cover"
+                                  <Text className="text-gray-700">
+                                    {selectedOption ? String(selectedOption[field.optionLabel || 'nombre']) : 'Seleccione una opción'}
+                                  </Text>
+                                  <Ionicons
+                                    name={openSelect === field.name ? "chevron-up" : "chevron-down"}
+                                    size={20}
+                                    color="#6B7280"
                                   />
                                 </TouchableOpacity>
 
-                                {/* Botón eliminar - siempre visible */}
+                                {openSelect === field.name && (
+                                  <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                                    <ScrollView
+                                      nestedScrollEnabled={true}
+                                      className="max-h-48">
+                                      {field.options?.map((option) => (
+                                        <TouchableOpacity
+                                          key={String(option[field.optionValue || 'id'])}
+                                          onPress={() => {
+                                            onChange(option[field.optionValue || 'id']);
+                                            setOpenSelect(null);
+                                          }}
+                                          className={`px-4 py-3 border-b border-gray-100 ${String(value) === String(option[field.optionValue || 'id']) ? 'bg-blue-50' : ''
+                                            }`}
+                                        >
+                                          <Text className={`${String(value) === String(option[field.optionValue || 'id']) ? 'text-blue-600' : 'text-gray-700'
+                                            }`}>
+                                            {option[field.optionLabel || 'nombre']}
+                                          </Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
+                                  </View>
+                                )}
+                              </View>
+                            );
+                          }}
+                        />
+                        {field.description && (
+                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                        )}
+                        {errors[field.name] && (
+                          <Text className="text-red-500 text-sm mt-1">
+                            {errors[field.name]?.message as string}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+
+                    {/* Tarjeta de switches */}
+                    {switchFields.length > 0 && (
+                      <View className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <Text className="text-gray-800 font-medium mb-3">Configuración general</Text>
+                        {switchFields.map((field, idx) => (
+                          <View key={field.name} className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
+                            <View className="w-3/4">
+                              <Text className="text-gray-700 font-medium">{field.label}</Text>
+                              {field.description && (
+                                <Text className="text-gray-500 text-xs">{field.description}</Text>
+                              )}
+                            </View>
+                            <Controller
+                              control={control}
+                              name={field.name}
+                              render={({ field: { onChange, value } }) => (
+                                <Switch
+                                  value={value}
+                                  onValueChange={onChange}
+                                  trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
+                                />
+                              )}
+                            />
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {backendError && (
+                      <View className="my-3 p-3 bg-red-100 border border-red-300 rounded-lg shadow-sm">
+                        <View className="flex-row items-center">
+                          <Ionicons name="alert-circle-outline" size={20} color="#c81e1e" />
+                          <Text className="text-red-700 text-sm ml-2 font-medium">Error de Servidor</Text>
+                        </View>
+                        <Text className="text-red-600 text-sm mt-1 ml-1">{backendError}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'adicional' && (
+                  <>
+                    {/* Sección de Lista de Precio */}
+                    <View className="mb-4">
+                      <TouchableOpacity
+                        onPress={() => toggleSection('listaPrecio')}
+                        className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <Text className="text-md font-semibold text-gray-800">Lista de Precio</Text>
+                        <Ionicons
+                          name={expandedSections.listaPrecio ? "chevron-up" : "chevron-down"}
+                          size={20}
+                          color="#6B7280"
+                        />
+                      </TouchableOpacity>
+
+                      {expandedSections.listaPrecio && (
+                        <View className="mt-2">
+                          {/* List and Currency Selection */}
+                          <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
+                            {/* Lista de Precio */}
+                            <View className="mb-4">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Lista de Precio</Text>
+                              <View className="relative">
                                 <TouchableOpacity
-                                  onPress={() => removeImage(index)}
-                                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-lg z-10"
+                                  onPress={() => setOpenSelect('listaPrecio')}
+                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
                                 >
-                                  <Ionicons name="close" size={16} color="white" />
+                                  <Text className="text-gray-700">
+                                    {selectedListaPrecio ?
+                                      listasPreciosData?.data.find(l => l.id === Number(selectedListaPrecio))?.nombre || 'Seleccione' :
+                                      'Seleccione una lista'
+                                    }
+                                  </Text>
+                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
                                 </TouchableOpacity>
 
-                                {/* Botón favorito - solo aparece en la imagen favorita actual */}
-                                {principalImageIndex === index && (
-                                  <TouchableOpacity
-                                    onPress={() => {
-                                      // Quitar la marca de favorita
-                                      setPrincipalImageIndex(-1);
-                                    }}
-                                    className="absolute top-2 left-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center shadow-lg z-10"
-                                  >
-                                    <Ionicons name="star" size={16} color="white" />
-                                  </TouchableOpacity>
+                                {openSelect === 'listaPrecio' && (
+                                  <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                                    <ScrollView 
+                                    nestedScrollEnabled={true}
+                                    className="max-h-48">
+                                      {listasPreciosData?.data.map((lista) => (
+                                        <TouchableOpacity
+                                          key={lista.id}
+                                          onPress={() => {
+                                            setSelectedListaPrecio(String(lista.id));
+                                            setOpenSelect(null);
+                                          }}
+                                          className="px-4 py-3 border-b border-gray-100"
+                                        >
+                                          <Text className="text-gray-700">{lista.nombre}</Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
+                                  </View>
                                 )}
+                              </View>
+                            </View>
+
+                            {/* Moneda */}
+                            <View className="mb-4">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Moneda</Text>
+                              <View className="relative">
+                                <TouchableOpacity
+                                  onPress={() => setOpenSelect('moneda')}
+                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                                >
+                                  <Text className="text-gray-700">
+                                    {selectedMoneda ?
+                                      monedasData?.data.find(m => m.id === Number(selectedMoneda))?.nombre || 'Seleccione' :
+                                      'Seleccione una moneda'
+                                    }
+                                  </Text>
+                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                </TouchableOpacity>
+
+                                {openSelect === 'moneda' && (
+                                  <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
+                                    <ScrollView 
+                                    nestedScrollEnabled={true}
+                                    className="max-h-48">
+                                      {monedasData?.data.map((moneda) => (
+                                        <TouchableOpacity
+                                          key={moneda.id}
+                                          onPress={() => {
+                                            setSelectedMoneda(String(moneda.id));
+                                            setOpenSelect(null);
+                                          }}
+                                          className="px-4 py-3 border-b border-gray-100"
+                                        >
+                                          <Text className="text-gray-700">{moneda.nombre}</Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
+                                  </View>
+                                )}
+                              </View>
+                            </View>
+
+                            {/* Monto */}
+                            <View className="mb-4">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Monto</Text>
+                              <TextInput
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                placeholder="0.00"
+                                value={precioInputs.monto}
+                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, monto: text}))}
+                                keyboardType="numeric"
+                              />
+                            </View>
+
+                            {/* Fechas */}
+                            <View className="flex-row space-x-3 mb-4">
+                              <View className="flex-1">
+                                <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Desde</Text>
+                                <TextInput
+                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                  placeholder="YYYY-MM-DD"
+                                  value={precioInputs.fechaDesde}
+                                  onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaDesde: text}))}
+                                />
+                              </View>
+                              <View className="flex-1">
+                                <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Hasta (opcional)</Text>
+                                <TextInput
+                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                  placeholder="YYYY-MM-DD"
+                                  value={precioInputs.fechaHasta}
+                                  onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaHasta: text}))}
+                                />
+                              </View>
+                            </View>
+
+                            <TouchableOpacity
+                              onPress={addListaPrecio}
+                              className="bg-blue-500 py-2 px-4 rounded-lg items-center"
+                              disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
+                            >
+                              <Text className="text-white font-medium">Agregar Precio</Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* List of Added Prices */}
+                          {listasPrecios.map((precio, index) => (
+                            <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                              <View className="space-y-3">
+                                <View className="flex-row justify-between items-center">
+                                  <View>
+                                    <Text className="font-medium">
+                                      {listasPreciosData?.data.find(l => l.id === Number(precio.codigoListasdePrecio))?.nombre || 'Lista de Precio'}
+                                    </Text>
+                                    <Text className="text-gray-600">
+                                      {monedasData?.data.find(m => m.id === Number(precio.codigoMoneda))?.nombre || 'Moneda'}
+                                    </Text>
+                                    <Text className="font-bold text-lg">{Number(precio.monto).toFixed(2)}</Text>
+                                    <Text className="text-sm text-gray-500">
+                                      {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ''}
+                                    </Text>
+                                  </View>
+                                  <View className="items-end">
+                                    <View className="flex-row items-center mb-2">
+                                      <Text className="text-sm font-medium text-gray-700 mr-2">Suspendido</Text>
+                                      <Switch
+                                        value={precio.suspendido}
+                                        onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
+                                        trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
+                                      />
+                                    </View>
+                                    <TouchableOpacity
+                                      onPress={() => removeListaPrecio(precio.id)}
+                                      className="bg-red-100 py-1 px-3 rounded"
+                                    >
+                                      <Text className="text-red-600 text-sm">Eliminar</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
                               </View>
                             </View>
                           ))}
                         </View>
-                      </>
-                    )}
-                  </View>
-                </>
-              )}
+                      )}
+                    </View>
+
+                    {/* Sección de Ubicacion */}
+                    <View className="mb-2">
+                      <TouchableOpacity
+                        onPress={() => toggleSection('ubicaciones')}
+                        className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <Text className="text-md font-semibold text-gray-800">Ubicación</Text>
+                        <Ionicons
+                          name={expandedSections.ubicaciones ? "chevron-up" : "chevron-down"}
+                          size={20}
+                          color="#6B7280"
+                        />
+                      </TouchableOpacity>
+
+                      {expandedSections.ubicaciones && (
+                        <View className="mt-2">
+                          {ubicaciones.map((ubicacion, index) => (
+                            <View key={ubicacion.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                              <View className="space-y-3">
+                                {/* Almacén */}
+                                <View>
+                                  <Text className="text-sm font-medium text-gray-700 mb-1">Almacén</Text>
+                                  <View className="relative">
+                                    <TouchableOpacity
+                                      onPress={() => setOpenSelect(`almacen_${index}`)}
+                                      className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                                    >
+                                      <Text className="text-gray-700">
+                                        {ubicacion.codigoAlmacen ?
+                                          allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Seleccione' :
+                                          'Seleccione un almacén'
+                                        }
+                                      </Text>
+                                      <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                    </TouchableOpacity>
+
+                                    {openSelect === `almacen_${index}` && (
+                                      <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
+                                        <ScrollView 
+                                        nestedScrollEnabled={true}
+                                        className="max-h-32">
+                                          {allAlmacenes.map((almacen) => (
+                                            <TouchableOpacity
+                                              key={almacen.id}
+                                              onPress={() => {
+                                                updateUbicacion(index, 'codigoAlmacen', almacen.id);
+                                                setOpenSelect(null);
+                                              }}
+                                              className="px-4 py-3 border-b border-gray-100"
+                                            >
+                                              <Text className="text-gray-700">{almacen.nombre}</Text>
+                                            </TouchableOpacity>
+                                          ))}
+                                        </ScrollView>
+                                      </View>
+                                    )}
+                                  </View>
+                                </View>
+
+                                {/* Ubicación */}
+                                <View>
+                                  <Text className="text-sm font-medium text-gray-700 mb-1">Ubicación Específica</Text>
+                                  <TextInput
+                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                    placeholder="Ej: Pasillo A, Estante 3, Nivel 2"
+                                    value={ubicacion.ubicacion}
+                                    onChangeText={(text) => updateUbicacion(index, 'ubicacion', text)}
+                                  />
+                                </View>
+
+
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  </>
+                )}
+
+                {activeTab === 'detalles' && (
+                  <>
+                    {/* Sección de Fotos */}
+                    <View className="mb-6">
+                      {selectedImages.length === 0 ? (
+                        <>
+                          {/* Vista cuando no hay fotos - botón completo */}
+                          <TouchableOpacity
+                            onPress={showImagePicker}
+                            className="w-full py-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
+                          >
+                            <Ionicons name="camera-outline" size={48} color="#6B7280" />
+                            <Text className="text-gray-600 font-medium mt-3">Agregar Foto</Text>
+                            <Text className="text-gray-500 text-sm mt-1">Toca para tomar foto o seleccionar de galería</Text>
+                          </TouchableOpacity>
+
+                          {/* Mensaje cuando no hay imágenes */}
+                          <View className="p-4 bg-gray-50 rounded-lg">
+                            <Text className="text-gray-500 text-center text-sm">
+                              No hay fotos seleccionadas. Toca el botón superior para agregar la primera imagen.
+                            </Text>
+                          </View>
+                        </>
+                      ) : (
+                        <>
+                          {/* Vista grid cuando hay fotos */}
+                          <View className="flex-row flex-wrap">
+                            {/* Botón para agregar foto - siempre en primera posición */}
+                            <View className="w-[32%] mb-4 mr-[2%]">
+                              <TouchableOpacity
+                                onPress={showImagePicker}
+                                className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center"
+                              >
+                                <Ionicons name="camera-outline" size={24} color="#6B7280" />
+                                <Text className="text-gray-500 text-xs mt-1 text-center">Agregar{'\n'}Foto</Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* Grid de imágenes existentes */}
+                            {selectedImages.map((image, index) => (
+                              <View key={image.id} className={`w-[32%] mb-4 ${(index + 1) % 3 !== 0 ? 'mr-[2%]' : ''}`}>
+                                <View className="relative">
+                                  {/* Imagen con onPress para marcar como favorita */}
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      console.log('🖱️ Imagen tocada, índice:', index);
+                                      console.log('🖱️ principalImageIndex actual:', principalImageIndex);
+                                      
+                                      // Marcar como favorita si no es la actual
+                                      if (index !== principalImageIndex) {
+                                        console.log('🖱️ Marcando como favorita...');
+                                        setImageAsFavorite(index);
+                                      } else {
+                                        console.log('🖱️ Esta imagen ya es favorita, no hacer nada');
+                                      }
+                                    }}
+                                    activeOpacity={0.9}
+                                  >
+                                    <Image
+                                      source={{ uri: image.uri }}
+                                      style={{ width: '100%', aspectRatio: 1, borderRadius: 8 }}
+                                      contentFit="cover"
+                                    />
+                                  </TouchableOpacity>
+
+                                  {/* Botón eliminar - siempre visible */}
+                                  <TouchableOpacity
+                                    onPress={() => removeImage(index)}
+                                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-lg z-10"
+                                  >
+                                    <Ionicons name="close" size={16} color="white" />
+                                  </TouchableOpacity>
+
+                                  {/* Botón favorito - solo aparece en la imagen favorita actual */}
+                                  {principalImageIndex === index && (
+                                    <TouchableOpacity
+                                      onPress={() => {
+                                        // Quitar la marca de favorita
+                                        setPrincipalImageIndex(-1);
+                                      }}
+                                      className="absolute top-2 left-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center shadow-lg z-10"
+                                    >
+                                      <Ionicons name="star" size={16} color="white" />
+                                    </TouchableOpacity>
+                                  )}
+                                </View>
+                              </View>
+                            ))}
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  </>
+                )}
+              </View>
             </ScrollView>
 
             {/* Footer Buttons */}

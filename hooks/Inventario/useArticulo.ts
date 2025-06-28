@@ -75,15 +75,18 @@ export const useArticulo = () => {
         const data: Partial<Articulo> = {
           ...formData,
           id,
+          presentaciones: [formData.presentaciones as number],
+          equipo: 'equipo'
         };
+        console.log('data', data);
         return apiArticulo.update(endpoints.inventory.articulo.update(id), data);
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
         queryClient.invalidateQueries({ queryKey: ['articulo', 'item', variables.id] });
       },
-      onError: (error) => {
-        console.error('Error updating articulo:', error);
+      onError: (error:any) => {
+        console.error('Error updating articulo:', error.response);
       }
     });
   };
