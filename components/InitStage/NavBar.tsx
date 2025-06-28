@@ -19,32 +19,24 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
     { name: 'Inicio', icon: 'home-outline', route: '/Home', color: '#1e3a8a' },
     { name: 'Ventas', icon: 'cart-outline', route: '/Ventas', color: '#007C2DFF' },
     { name: 'Inventario', icon: 'bag-handle-outline', route: '/Inventario', color: '#7c3aed' },
-    { name: 'Entidades', icon: 'menu-outline', route: '/Entidades', color: '#1e3a8a'},
+    { name: 'Configuración', icon: 'settings-outline', route: '/Configuracion', color: '#1e3a8a'},
   ];
 
   // Obtener el color activo usando el sistema centralizado
   const getActiveColor = (): string => {
-    // Si estamos en entidades y hay una sección específica seleccionada, usar esa
     if (currentPath.includes('/Entidades') && currentEntitySection) {
       return SECTION_COLORS[currentEntitySection];
     }
-    // Sino, usar el sistema de detección automática
     return getCurrentSectionColor(currentPath);
   };
 
   // Manejar la navegación de forma segura
   const handleNavigation = (tab: any) => {
     try {
-      // Verificar si el tab está deshabilitado
       if (isTabDisabled(tab.name)) {
-        return; // No hacer nada si está deshabilitado
+        return;
       }
-
-      if (tab.isMenu && onMenuPress) {
-        onMenuPress();
-      } else if (tab.route) {
-        router.push(tab.route);
-      }
+      router.push(tab.route);
     } catch (error) {
       console.log('Error de navegación:', error);
     }
@@ -52,7 +44,6 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
 
   // Verificar si el tab está activo
   const isActive = (tab: any) => {
-    if (tab.isMenu) return false;
     return isRouteActive(currentPath, tab.route);
   };
 
@@ -75,7 +66,7 @@ export default function NavBar({ onMenuPress }: NavBarProps) {
               flex: 1, 
               alignItems: 'center', 
               paddingVertical: 4,
-              opacity: disabled ? 0.4 : 1 // Reducir opacidad si está deshabilitado
+              opacity: disabled ? 0.4 : 1
             }}
             onPress={() => handleNavigation(tab)}
             disabled={disabled}

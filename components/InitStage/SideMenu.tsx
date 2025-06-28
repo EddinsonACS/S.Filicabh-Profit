@@ -133,7 +133,6 @@ export default function SideMenu({ isVisible, onClose }: SideMenuProps) {
             </View>
             <View>
               <Text className="text-white font-semibold text-lg">Usuario</Text>
-              <Text className="text-white text-xs">usuario@miempresa.com</Text>
             </View>
           </View>
           <TouchableOpacity
