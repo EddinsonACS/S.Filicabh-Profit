@@ -326,7 +326,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   // Estados para manejar fotos
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
-  const [principalImageIndex, setPrincipalImageIndex] = useState(0);
+  const [principalImageIndex, setPrincipalImageIndex] = useState(-1);
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
 
   // Estados para manejar las listas de precios
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
@@ -499,22 +500,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     reset();
   };
 
-  // Función para manejar selección de imagen
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      Alert.alert('Permisos requeridos', 'Se necesitan permisos para acceder a la galería');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
+  // Función helper para procesar la imagen seleccionada
+  const processSelectedImage = (result: any) => {
     if (!result.canceled) {
       const fileName = result.assets[0].fileName || `image_${Date.now()}.jpg`;
       const fileExtension = fileName.split('.').pop()?.toLowerCase();
@@ -542,18 +529,79 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     }
   };
 
+  // Función para seleccionar imagen desde la galería
+  const pickImageFromGallery = async () => {
+    console.log('📱 Abriendo galería...');
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert('Permisos requeridos', 'Se necesitan permisos para acceder a la galería');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log('📱 Resultado de galería:', result.canceled ? 'Cancelado' : 'Imagen seleccionada');
+    processSelectedImage(result);
+    setShowImagePickerModal(false);
+  };
+
+  // Función para tomar foto con la cámara
+  const takePhotoWithCamera = async () => {
+    console.log('📷 Abriendo cámara...');
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert('Permisos requeridos', 'Se necesitan permisos para acceder a la cámara');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log('📷 Resultado de cámara:', result.canceled ? 'Cancelado' : 'Foto tomada');
+    processSelectedImage(result);
+    setShowImagePickerModal(false);
+  };
+
+  // Función para mostrar el modal de selección
+  const showImagePicker = () => {
+    setShowImagePickerModal(true);
+  };
+
   // Función para eliminar imagen
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
     if (principalImageIndex === index) {
-      setPrincipalImageIndex(0);
+      setPrincipalImageIndex(-1);
     } else if (principalImageIndex > index) {
       setPrincipalImageIndex(prev => prev - 1);
     }
   };
 
-  // This is a duplicate of the updateListaPrecio function above
-  // The function is already defined, so we'll comment this one out to avoid redeclaration
+  // Función para marcar imagen como favorita
+  const setImageAsFavorite = (index: number) => {
+    console.log('🎯 setImageAsFavorite llamado con índice:', index);
+    console.log('🎯 Estado actual de principalImageIndex:', principalImageIndex);
+    console.log('🎯 Total de imágenes:', selectedImages.length);
+    
+    if (index >= 0 && index < selectedImages.length) {
+      setPrincipalImageIndex(index);
+      console.log(`⭐ Imagen ${index + 1} marcada como favorita`);
+      console.log('🎯 Nuevo principalImageIndex será:', index);
+    } else {
+      console.log('❌ Índice inválido para setImageAsFavorite:', index);
+    }
+  };
 
   // Función para actualizar ubicación
   const updateUbicacion = (index: number, field: string, value: any) => {
@@ -567,39 +615,61 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     if (!articleId || selectedImages.length === 0) return true;
 
     try {
+      console.log('📸 Iniciando subida de fotos...');
+      console.log('📸 Total de imágenes a subir:', selectedImages.length);
+      console.log('📸 Índice de imagen favorita:', principalImageIndex);
+      
+      // Validar que haya una imagen favorita seleccionada
+      if (principalImageIndex < 0 || principalImageIndex >= selectedImages.length) {
+        console.log('⚠️ No hay imagen favorita seleccionada, seleccionando la primera por defecto');
+        setPrincipalImageIndex(0);
+      }
+      
       // Subir las imágenes de forma secuencial
       for (let index = 0; index < selectedImages.length; index++) {
         const image = selectedImages[index];
+        const isPrincipal = index === principalImageIndex;
+        
         const file = {
           uri: image.file.uri,
           name: image.file.fileName || image.name || `image_${Date.now()}_${index}.jpg`,
           type: image.type, // Usar el tipo MIME correcto que ya establecimos
         };
 
+        console.log(`📸 Subiendo imagen ${index + 1}/${selectedImages.length}:`, {
+          nombre: file.name,
+          tipo: file.type,
+          esPrincipal: isPrincipal,
+          orden: index + 1
+        });
+
         try {
           // Esperar a que cada imagen se suba antes de continuar con la siguiente
           await createFotoMutation.mutateAsync({
             CodigoArticulo: articleId,
-            EsPrincipal: index === principalImageIndex,
+            EsPrincipal: isPrincipal, // Usar el estado de imagen favorita
             Orden: index + 1,
             Equipo: 'equipo',
             ImageFile: file
           });
           
+          console.log(`✅ Imagen ${index + 1} subida exitosamente${isPrincipal ? ' (FAVORITA)' : ''}`);
+          
           // Pequeña pausa entre subidas para evitar sobrecargar el servidor
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
           // Si hay un error, lo mostramos pero continuamos con las siguientes imágenes
-          console.error(`Error al subir la imagen ${index + 1}:`, error);
+          console.error(`❌ Error al subir la imagen ${index + 1}:`, error);
           // Podrías querer mostrar un mensaje al usuario aquí si lo prefieres
           // Por ahora solo continuamos con la siguiente imagen
           continue;
         }
       }
       
+      console.log('🎉 Proceso de subida de fotos completado');
       return true;
     } catch (error) {
-      console.error('Error inesperado en saveFotos:', error);
+      console.error('❌ Error inesperado en saveFotos:', error);
       // Relanzar el error para que sea manejado por el componente padre
       throw error;
     }
@@ -735,6 +805,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       [section]: !prev[section]
     }));
   };
+
+  // Debug: Monitorear cambios en principalImageIndex
+  useEffect(() => {
+    console.log('🔄 principalImageIndex cambió a:', principalImageIndex);
+  }, [principalImageIndex]);
 
   if (!visible) return null;
 
@@ -1354,12 +1429,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                       <>
                         {/* Vista cuando no hay fotos - botón completo */}
                         <TouchableOpacity
-                          onPress={pickImage}
+                          onPress={showImagePicker}
                           className="w-full py-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
                         >
                           <Ionicons name="camera-outline" size={48} color="#6B7280" />
                           <Text className="text-gray-600 font-medium mt-3">Agregar Foto</Text>
-                          <Text className="text-gray-500 text-sm mt-1">Toca para seleccionar una imagen</Text>
+                          <Text className="text-gray-500 text-sm mt-1">Toca para tomar foto o seleccionar de galería</Text>
                         </TouchableOpacity>
 
                         {/* Mensaje cuando no hay imágenes */}
@@ -1376,7 +1451,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           {/* Botón para agregar foto - siempre en primera posición */}
                           <View className="w-[32%] mb-4 mr-[2%]">
                             <TouchableOpacity
-                              onPress={pickImage}
+                              onPress={showImagePicker}
                               className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center"
                             >
                               <Ionicons name="camera-outline" size={24} color="#6B7280" />
@@ -1388,42 +1463,48 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           {selectedImages.map((image, index) => (
                             <View key={image.id} className={`w-[32%] mb-4 ${(index + 1) % 3 !== 0 ? 'mr-[2%]' : ''}`}>
                               <View className="relative">
-                                <Image
-                                  source={{ uri: image.uri }}
-                                  style={{ width: '100%', aspectRatio: 1, borderRadius: 8 }}
-                                  contentFit="cover"
-                                />
+                                {/* Imagen con onPress para marcar como favorita */}
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    console.log('🖱️ Imagen tocada, índice:', index);
+                                    console.log('🖱️ principalImageIndex actual:', principalImageIndex);
+                                    
+                                    // Marcar como favorita si no es la actual
+                                    if (index !== principalImageIndex) {
+                                      console.log('🖱️ Marcando como favorita...');
+                                      setImageAsFavorite(index);
+                                    } else {
+                                      console.log('🖱️ Esta imagen ya es favorita, no hacer nada');
+                                    }
+                                  }}
+                                  activeOpacity={0.9}
+                                >
+                                  <Image
+                                    source={{ uri: image.uri }}
+                                    style={{ width: '100%', aspectRatio: 1, borderRadius: 8 }}
+                                    contentFit="cover"
+                                  />
+                                </TouchableOpacity>
 
-                                {/* Overlay con controles */}
-                                <View className="absolute inset-0 bg-black/40 rounded-lg opacity-0 active:opacity-100">
-                                  <View className="flex-1 justify-between p-2">
-                                    {/* Botón eliminar */}
-                                    <TouchableOpacity
-                                      onPress={() => removeImage(index)}
-                                      className="self-end p-1 bg-red-500 rounded-full"
-                                    >
-                                      <Ionicons name="close" size={12} color="white" />
-                                    </TouchableOpacity>
+                                {/* Botón eliminar - siempre visible */}
+                                <TouchableOpacity
+                                  onPress={() => removeImage(index)}
+                                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-lg z-10"
+                                >
+                                  <Ionicons name="close" size={16} color="white" />
+                                </TouchableOpacity>
 
-                                    {/* Botón marcar como principal */}
-                                    <TouchableOpacity
-                                      onPress={() => setPrincipalImageIndex(index)}
-                                      className="self-center p-1 bg-white/90 rounded-full"
-                                    >
-                                      <Ionicons
-                                        name={principalImageIndex === index ? "star" : "star-outline"}
-                                        size={16}
-                                        color={principalImageIndex === index ? "#F59E0B" : "#6B7280"}
-                                      />
-                                    </TouchableOpacity>
-                                  </View>
-                                </View>
-
-                                {/* Indicador de imagen principal */}
+                                {/* Botón favorito - solo aparece en la imagen favorita actual */}
                                 {principalImageIndex === index && (
-                                  <View className="absolute top-1 left-1 bg-yellow-500 rounded-full p-1">
-                                    <Ionicons name="star" size={12} color="white" />
-                                  </View>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      // Quitar la marca de favorita
+                                      setPrincipalImageIndex(-1);
+                                    }}
+                                    className="absolute top-2 left-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center shadow-lg z-10"
+                                  >
+                                    <Ionicons name="star" size={16} color="white" />
+                                  </TouchableOpacity>
                                 )}
                               </View>
                             </View>
@@ -1497,6 +1578,58 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             </View>
           </KeyboardAvoidingView>
         </Animated.View>
+
+        {/* Modal de selección de imagen */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showImagePickerModal}
+          onRequestClose={() => setShowImagePickerModal(false)}
+        >
+          <View className="flex-1 bg-black/50 justify-center items-center">
+            <View className="bg-white rounded-2xl p-6 mx-6 w-80">
+              <Text className="text-xl font-bold text-center mb-6 text-gray-800">
+                Seleccionar Imagen
+              </Text>
+              
+              {/* Opción: Tomar Foto */}
+              <TouchableOpacity
+                onPress={takePhotoWithCamera}
+                className="flex-row items-center p-4 bg-blue-50 rounded-lg mb-3"
+              >
+                <View className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center mr-4">
+                  <Ionicons name="camera" size={24} color="white" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-lg font-semibold text-gray-800">Tomar Foto</Text>
+                  <Text className="text-sm text-gray-600">Usar la cámara para tomar una nueva foto</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Opción: Galería */}
+              <TouchableOpacity
+                onPress={pickImageFromGallery}
+                className="flex-row items-center p-4 bg-green-50 rounded-lg mb-6"
+              >
+                <View className="w-12 h-12 bg-green-500 rounded-full items-center justify-center mr-4">
+                  <Ionicons name="images" size={24} color="white" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-lg font-semibold text-gray-800">Galería</Text>
+                  <Text className="text-sm text-gray-600">Seleccionar una imagen existente</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Botón Cancelar */}
+              <TouchableOpacity
+                onPress={() => setShowImagePickerModal(false)}
+                className="bg-gray-200 py-3 rounded-lg"
+              >
+                <Text className="text-center text-gray-700 font-medium">Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Modal>
   );
