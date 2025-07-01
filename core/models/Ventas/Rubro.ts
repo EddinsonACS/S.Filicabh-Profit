@@ -1,7 +1,8 @@
 export interface Rubro {
     id: number;
     nombre: string;
-    codigoListaPrecio: number;
+    idListaPrecio: number;
+    listaPrecioNombre: string;
     suspendido: boolean;
     otrosF1: string;
     otrosN1: number;

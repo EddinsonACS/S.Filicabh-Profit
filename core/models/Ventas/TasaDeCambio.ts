@@ -1,6 +1,7 @@
 export interface TasaDeCambio {
     id: number;
-    codigoMoneda: number;
+    idMoneda: number;
+    monedaNombre: string;
     fecha: string;
     tasaVenta: number;
     tasaCompra: number;

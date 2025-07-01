@@ -36,7 +36,7 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
     }
     if (selectedCategory === 'tasadecambio') {
       const tasaItem = item as TasaDeCambio;
-      return `Tasa ${tasaItem.codigoMoneda} - ${new Date(tasaItem.fecha).toLocaleDateString()}`;
+      return `Tasa ${tasaItem.idMoneda} - ${new Date(tasaItem.fecha).toLocaleDateString()}`;
     }
     return `ID: ${item.id}`;
   };

@@ -92,7 +92,7 @@ export default function Actions({
                   <View className="flex-row justify-between mb-3">
                     <Text className="text-gray-600">Stock disponible:</Text>
                     <View className="bg-gray-100 rounded-full px-2 py-0.5">
-                      <Text className="text-gray-800 font-medium">{selectedArticle.stock} unidades</Text>
+                      <Text className="text-gray-800 font-medium">{selectedArticle.stock} presentaciones</Text>
                     </View>
                   </View>
 

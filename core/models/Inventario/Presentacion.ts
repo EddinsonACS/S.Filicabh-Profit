@@ -1,4 +1,4 @@
-export interface Unidad {
+export interface Presentacion {
     otrosF1: string;
     otrosN1: number;
     otrosN2: number;

@@ -17,9 +17,9 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, category, onPress, data
       case 'banco':
         return '';
       case 'caja':
-        return `Moneda: ${dataMoneda.find(m => m.id === item.codigoMoneda)?.nombre || 'N/A'}`;
+        return `Moneda: ${dataMoneda.find(m => m.id === item.idMoneda)?.nombre || 'N/A'}`;
       case 'cuentaBancaria':
-        return `Banco: ${dataBanco.find(b => b.id === item.codigoBanco)?.nombre || 'N/A'}`;
+        return `Banco: ${dataBanco.find(b => b.id === item.idBanco)?.nombre || 'N/A'}`;
       default:
         return '';
     }

@@ -39,29 +39,77 @@ export const useArticulo = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        // Aquí puedes agregar lógica para los campos requeridos y defaults
-        // El backend debe aceptar los campos tal como el modelo Articulo
-        const data: Omit<Articulo, 'id'> = {
-          ...formData,
+        console.log('🔵 Datos del formulario recibidos:', formData);
+        
+        // Verificar que tenemos los campos requeridos
+        if (!formData.nombre || !formData.descripcion) {
+          throw new Error('Nombre y descripción son requeridos');
+        }
+        if (!formData.idGrupo || !formData.idTipoArticulo || !formData.idImpuesto) {
+          throw new Error('Debe seleccionar grupo, tipo de artículo e impuesto');
+        }
+        
+        // Asegurar que presentaciones sea un array de enteros
+        let presentacionesArray: number[] = [];
+        if (formData.presentaciones) {
+          if (Array.isArray(formData.presentaciones)) {
+            presentacionesArray = formData.presentaciones.map(p => Number(p)).filter(p => p > 0);
+          } else {
+            const num = Number(formData.presentaciones);
+            if (num > 0) {
+              presentacionesArray = [num];
+            }
+          }
+        }
+        
+        const data = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          codigo: formData.codigo || '',
+          codigoArticulo: formData.codigoArticulo || '',
+          codigoModelo: formData.codigoModelo || '',
+          codigoBarra: formData.codigoBarra || '',
+          idGrupo: Number(formData.idGrupo),
+          idColor: Number(formData.idColor) || 1,
+          idTalla: Number(formData.idTalla) || 1,
+          idTipoArticulo: Number(formData.idTipoArticulo),
+          idImpuesto: Number(formData.idImpuesto),
+          peso: Number(formData.peso) || 1,
+          volumen: Number(formData.volumen) || 1,
+          metroCubico: Number(formData.metroCubico) || 1,
+          pie: Number(formData.pie) || 1,
+          manejaLote: Boolean(formData.manejaLote),
+          manejaSerial: Boolean(formData.manejaSerial),
+          poseeGarantia: Boolean(formData.poseeGarantia),
+          descripcionGarantia: formData.descripcionGarantia || '',
+          manejaPuntoMinimo: Boolean(formData.manejaPuntoMinimo),
+          puntoMinimo: Number(formData.puntoMinimo) || 0,
+          manejaPuntoMaximo: Boolean(formData.manejaPuntoMaximo),
+          puntoMaximo: Number(formData.puntoMaximo) || 0,
+          suspendido: Boolean(formData.suspendido),
+          presentaciones: presentacionesArray,
           otrosF1: new Date().toISOString(),
-          otrosN1: 0,
-          otrosN2: 0,
-          otrosC1: '',
-          otrosC2: '',
-          otrosC3: '',
-          otrosC4: '',
-          otrosT1: '',
-          equipo: 'equipo',
+          otrosN1: Number(formData.otrosN1) || 0,
+          otrosN2: Number(formData.otrosN2) || 0,
+          otrosC1: formData.otrosC1 || '',
+          otrosC2: formData.otrosC2 || '',
+          otrosC3: formData.otrosC3 || '',
+          otrosC4: formData.otrosC4 || '',
+          otrosT1: formData.otrosT1 || '',
           usuario: 0,
-          presentaciones: [formData.presentaciones as number],
-        } as Omit<Articulo, 'id'>;
+          equipo: 'equipo'
+        };
+        
+        console.log('🔵 Datos que se enviarán al servidor:', JSON.stringify(data, null, 2));
         return apiArticulo.create(endpoints.inventory.articulo.create, data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error('Error creating articulo:', error);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
       }
     });
   };
@@ -72,13 +120,43 @@ export const useArticulo = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
+
+        // Asegurar que los campos numéricos sean números
         const data: Partial<Articulo> = {
           ...formData,
           id,
-          presentaciones: [formData.presentaciones as number],
+          idGrupo: Number(formData.idGrupo),
+          idColor: Number(formData.idColor) || 1,
+          idTalla: Number(formData.idTalla) || 1,
+          idTipoArticulo: Number(formData.idTipoArticulo),
+          idImpuesto: Number(formData.idImpuesto),
+          peso: Number(formData.peso) || 0,
+          volumen: Number(formData.volumen) || 0,
+          metroCubico: Number(formData.metroCubico) || 0,
+          pie: Number(formData.pie) || 0,
+          puntoMinimo: Number(formData.puntoMinimo) || 0,
+          puntoMaximo: Number(formData.puntoMaximo) || 0,
+          // Asegurar que los campos booleanos sean booleanos
+          manejaLote: Boolean(formData.manejaLote),
+          manejaSerial: Boolean(formData.manejaSerial),
+          poseeGarantia: Boolean(formData.poseeGarantia),
+          manejaPuntoMinimo: Boolean(formData.manejaPuntoMinimo),
+          manejaPuntoMaximo: Boolean(formData.manejaPuntoMaximo),
+          suspendido: Boolean(formData.suspendido),
+          // Asegurar que presentaciones sea un array de números
+          presentaciones: Array.isArray(formData.presentaciones) 
+            ? formData.presentaciones.map(p => Number(p))
+            : formData.presentaciones ? [Number(formData.presentaciones)] : [],
+          // Campos de texto
+          codigo: formData.codigo || '',
+          codigoArticulo: formData.codigoArticulo || '',
+          codigoModelo: formData.codigoModelo || '',
+          codigoBarra: formData.codigoBarra || '',
+          descripcionGarantia: formData.descripcionGarantia || '',
           equipo: 'equipo'
         };
-        console.log('data', data);
+        
+        console.log('Datos formateados para actualización:', data);
         return apiArticulo.update(endpoints.inventory.articulo.update(id), data);
       },
       onSuccess: (_, variables) => {

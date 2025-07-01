@@ -12,8 +12,10 @@ export default interface CuentaBancaria {
     id: number;
     nroCuenta: string;
     tipoDeCuenta: string;
-    codigoMoneda: number;
-    codigoBanco: number;
+    idMoneda: number;
+    monedaNombre: string;
+    idBanco: number;
+    bancoNombre: string;
     fechaApertura: string;
     sucursal: string;
     direccion: string;

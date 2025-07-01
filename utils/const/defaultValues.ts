@@ -6,17 +6,30 @@ export const DEFAULT_VALUES_INVENTORY = {
         suspendido: false
     },
     "articulo":{
-        codigoGrupo: undefined,
-        codigoColor: undefined,
-        codigoTalla: undefined,
-        codigoTipoArticulo: undefined,
-        codigoImpuesto: undefined,
+        nombre: '',
+        descripcion: '',
+        codigo: '',
+        codigoArticulo: '',
+        codigoModelo: '',
+        codigoBarra: '',
+        idGrupo: 1,
+        idColor: 1,
+        idTalla: 1,
+        idTipoArticulo: 1,
+        idImpuesto: 1,
+        peso: 1,
+        volumen: 1,
+        metroCubico: 1,
+        pie: 1,
         manejaLote: false,
         manejaSerial: false,
         poseeGarantia: false,
+        descripcionGarantia: '',
         manejaPuntoMinimo: false,
+        puntoMinimo: 0,
         presentaciones: undefined,
         manejaPuntoMaximo: false,
+        puntoMaximo: 0,
         suspendido: false,
     },
     "categoria":{
@@ -29,7 +42,8 @@ export const DEFAULT_VALUES_INVENTORY = {
     },
     "grupo":{
         nombre: '',
-        suspendido: false
+        suspendido: false,
+        idCategoria: undefined
     },
     "origen":{
         nombre: '',
@@ -51,9 +65,9 @@ export const DEFAULT_VALUES_INVENTORY = {
     "seccion":{
         nombre: '',
         suspendido: false,
-        codigoGrupo: undefined
+        idGrupo: undefined
     },
-    "unidad":{
+    "presentacion":{
         nombre: '',
         suspendido: false
     }
@@ -67,14 +81,14 @@ export const DEFAULT_VALUES_FINANZAS = {
     "caja":{
         nombre: '',
         suspendido: false,
-        codigoMoneda: undefined
+        idMoneda: undefined
     },
     "cuentaBancaria":{
         suspendido: false,
         nroCuenta: '',
         tipoDeCuenta: '',
-        codigoMoneda: undefined,
-        codigoBanco: undefined,
+        idMoneda: undefined,
+        idBanco: undefined,
         sucursal: '',
         direccion: '',
         nombreEjecutivo: '',

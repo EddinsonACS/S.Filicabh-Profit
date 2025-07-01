@@ -40,7 +40,10 @@ export const useSeccion = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        const data: Omit<Seccion, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
+        if (!formData.idGrupo || formData.idGrupo === 0) {
+          throw new Error('Debe seleccionar un grupo');
+        }
+        const data: Omit<Seccion, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario' | 'grupoNombre'> = {
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
@@ -52,12 +55,12 @@ export const useSeccion = () => {
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
-          codigoGrupo: formData.codigoGrupo || 0
+          idGrupo: formData.idGrupo
         };
         return apiSeccion.create(endpoints.inventory.seccion.create, data);
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['seccion'] });
       },
       onError: (error) => {
         console.error('Error creating seccion:', error);
@@ -70,6 +73,9 @@ export const useSeccion = () => {
       mutationFn: ({ id, formData }: { id: number; formData: Partial<Seccion> }) => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
+        }
+        if (!formData.idGrupo || formData.idGrupo === 0) {
+          throw new Error('Debe seleccionar un grupo');
         }
         const data: Partial<Seccion> = {
           id: id,
@@ -84,13 +90,12 @@ export const useSeccion = () => {
           otrosC4: formData.otrosC4 || null,
           otrosT1: formData.otrosT1 || null,
           equipo: 'equipo',
-          codigoGrupo: formData.codigoGrupo || 0
+          idGrupo: formData.idGrupo
         };
         return apiSeccion.update(endpoints.inventory.seccion.update(id), data);
       },
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['seccion', 'item', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['seccion'] });
       },
       onError: (error) => {
         console.error('Error updating seccion:', error);
@@ -102,7 +107,7 @@ export const useSeccion = () => {
     return useMutation({
       mutationFn: (id: number) => apiSeccion.delete(endpoints.inventory.seccion.delete(id)),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['seccion'] });
       },
       onError: (error) => {
         console.error('Error deleting seccion:', error);

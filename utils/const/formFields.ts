@@ -69,7 +69,7 @@ export const FORM_FIELDS_INVENTORY = {
       description: 'Ingrese el código de barra'
     },
     {
-      name: 'codigoGrupo',
+      name: 'idGrupo',
       label: 'Grupo',
       type: 'select' as const,
       required: true,
@@ -80,7 +80,7 @@ export const FORM_FIELDS_INVENTORY = {
       optionValue: 'id'
     },
     {
-      name: 'codigoColor',
+      name: 'idColor',
       label: 'Color',
       type: 'select' as const,
       required: true,
@@ -91,7 +91,7 @@ export const FORM_FIELDS_INVENTORY = {
       optionValue: 'id'
     },
     {
-      name: 'codigoTalla',
+      name: 'idTalla',
       label: 'Talla',
       type: 'select' as const,
       required: true,
@@ -102,7 +102,7 @@ export const FORM_FIELDS_INVENTORY = {
       optionValue: 'id'
     },
     {
-      name: 'codigoTipoArticulo',
+      name: 'idTipoArticulo',
       label: 'Tipo de Artículo',
       type: 'select' as const,
       required: true,
@@ -113,7 +113,7 @@ export const FORM_FIELDS_INVENTORY = {
       optionValue: 'id'
     },
     {
-      name: 'codigoImpuesto',
+      name: 'idImpuesto',
       label: 'Impuesto',
       type: 'select' as const,
       required: true,
@@ -229,8 +229,8 @@ export const FORM_FIELDS_INVENTORY = {
       placeholder: 'Seleccione una presentación',
       description: 'Seleccione la presentación del artículo',
       options: [],
-      optionLabel: 'equivalencia',
-      optionValue: 'codigoPresentacion'
+      optionLabel: 'nombre',
+      optionValue: 'id'
     }
   ],
   "categoria": [
@@ -275,7 +275,7 @@ export const FORM_FIELDS_INVENTORY = {
       description: 'Ingrese el nombre del nuevo registro'
     },
     {
-      name: 'codigoCategoria',
+      name: 'idCategoria',
       label: 'Categoría',
       type: 'select' as const,
       required: true,
@@ -378,7 +378,7 @@ export const FORM_FIELDS_INVENTORY = {
       description: 'El artículo está inactivo'
     },
     {
-      name: 'codigoGrupo',
+      name: 'idGrupo',
       label: 'Grupo',
       type: 'select' as const,
       required: true,
@@ -389,7 +389,7 @@ export const FORM_FIELDS_INVENTORY = {
       optionValue: 'id'
     }
   ],
-  "unidad": [
+  "presentacion": [
     {
       name: 'nombre',
       label: 'Nombre',
@@ -434,7 +434,7 @@ export const FORM_FIELDS_FINANZAS = {
       description: 'Nombre descriptivo de la caja'
     },
     {
-      name: 'codigoMoneda',
+      name: 'idMoneda',
       label: 'Moneda',
       type: 'select' as const,
       required: true,
@@ -472,7 +472,7 @@ export const FORM_FIELDS_FINANZAS = {
       optionValue: 'id'
     },
     {
-      name: 'codigoMoneda',
+      name: 'idMoneda',
       label: 'Moneda',
       type: 'select' as const,
       required: true,
@@ -483,7 +483,7 @@ export const FORM_FIELDS_FINANZAS = {
       optionValue: 'id'
     },
     {
-      name: 'codigoBanco',
+      name: 'idBanco',
       label: 'Banco',
       type: 'select' as const,
       required: true,

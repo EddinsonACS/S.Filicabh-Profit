@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 interface FormField {
@@ -175,7 +176,7 @@ const getFormattedValue = (fieldName: string, text: string): string => {
   }
   
   // Campos que deben ser solo números enteros
-  if (['nroCuenta', 'telefono', 'dias', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
     return formatInteger(text);
   }
   
@@ -229,7 +230,7 @@ const getFormattedValueByType = (fieldName: string, fieldType: string, text: str
   }
   
   // Para campos enteros específicos
-  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'idListaPrecio'].includes(fieldName)) {
     return formatInteger(text);
   }
   
@@ -243,7 +244,7 @@ const getKeyboardType = (fieldName: string, fieldType: string) => {
   // Campos que requieren teclado decimal
   if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'porceRetencionIva', 'peso', 'volumen', 'metroCubico', 'pie', 'precio', 'costo', 'margen'].includes(fieldName)) return 'decimal-pad';
   // Campos que solo requieren números enteros
-  if (['nroCuenta', 'telefono', 'dias', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) return 'numeric';
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) return 'numeric';
   // Por defecto, campos numéricos utilizan teclado decimal
   if (fieldType === 'number') return 'decimal-pad';
   // Campos de email
@@ -262,7 +263,7 @@ const convertValueForSubmission = (fieldName: string, fieldType: string, value: 
     const cleanedValue = value.trim().replace(',', '.');
     
     // Campos que deben ser enteros
-    if (['dias', 'nroCuenta', 'telefono', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
+    if (['dias', 'nroCuenta', 'telefono', 'nit', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
       const numericValue = parseInt(cleanedValue, 10);
       return isNaN(numericValue) ? 0 : numericValue;
     }
@@ -295,6 +296,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   switchInactiveColor,
   backendError
 }) => {
+  const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(height)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -442,15 +444,15 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           style={{
             transform: [{ translateY }],
             position: 'absolute',
-            bottom: 0,
+            bottom: Platform.OS === 'ios' ? insets.bottom : 0,
             left: 0,
             right: 0,
             backgroundColor: 'white',
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             overflow: 'hidden',
-            height: '85%',
-            maxHeight: height - 30
+            height: '75%',
+            maxHeight: Platform.OS === 'ios' ? height - insets.top - insets.bottom - 50 : height - 100
           }}
         >
           <View

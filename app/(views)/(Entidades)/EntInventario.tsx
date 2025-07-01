@@ -22,8 +22,7 @@ import { useSeccion } from '@/hooks/Inventario/useSeccion';
 import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
-import { useUnidad } from '@/hooks/Inventario/useUnidad';
-import { useArticuloPresentaciones } from '@/hooks/Inventario/useArticuloPresentaciones';
+import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
@@ -45,7 +44,7 @@ const CATEGORIES = [
   { id: 'tipodearticulo', label: 'Tipo de Artículo', icon: 'cube-outline' as const },
   { id: 'tipodeimpuesto', label: 'Tipo de Impuesto', icon: 'calculator' as const },
   { id: 'seccion', label: 'Sección', icon: 'layers' as const },
-  { id: 'unidad', label: 'Unidad', icon: 'scale' as const },
+  { id: 'presentacion', label: 'Presentación', icon: 'scale' as const },
   { id: 'articulo', label: 'Artículo', icon: 'cube' as const }
 ];
 
@@ -59,7 +58,7 @@ const CATEGORY_TITLES = {
   tipodearticulo: 'Tipo de Artículo',
   tipodeimpuesto: 'Tipo de Impuesto',
   seccion: 'Sección',
-  unidad: 'Unidad',
+  presentacion: 'Presentación',
   articulo: 'Artículo'
 };
 
@@ -105,11 +104,11 @@ const EntInventario: React.FC = () => {
   } = useSeccion();
 
   const {
-    useGetUnidadList,
-    useCreateUnidad,
-    useUpdateUnidad,
-    useDeleteUnidad
-  } = useUnidad();
+    useGetPresentacionList,
+    useCreatePresentacion,
+    useUpdatePresentacion,
+    useDeletePresentacion
+  } = usePresentacion();
 
   const {
     useGetTallaList,
@@ -146,9 +145,6 @@ const EntInventario: React.FC = () => {
     useDeleteOrigen
   } = useOrigen();
 
-  const {
-    useGetArticuloPresentacionesList,
-  } = useArticuloPresentaciones();
 
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -204,7 +200,7 @@ const EntInventario: React.FC = () => {
   const { data: categoriaData, isLoading: isLoadingCategoria } = useGetCategoriaList(currentPage, PAGE_SIZE);
   const { data: grupoData, isLoading: isLoadingGrupo } = useGetGrupoList(currentPage, PAGE_SIZE);
   const { data: seccionData, isLoading: isLoadingSeccion } = useGetSeccionList(currentPage, PAGE_SIZE);
-  const { data: unidadData, isLoading: isLoadingUnidad } = useGetUnidadList(currentPage, PAGE_SIZE);
+  const { data: presentacionData, isLoading: isLoadingPresentacion } = useGetPresentacionList(currentPage, PAGE_SIZE);
   const { data: tallaData, isLoading: isLoadingTalla } = useGetTallaList(currentPage, PAGE_SIZE);
   const { data: colorData, isLoading: isLoadingColor } = useGetColorList(currentPage, PAGE_SIZE);
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
@@ -227,7 +223,7 @@ const EntInventario: React.FC = () => {
   const { data: tallasDataArticulo } = useGetTallaList(1, 1000);
   const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
   const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
-  const { data: articuloPresentacionesDataArticulo } = useGetArticuloPresentacionesList(1, 1000);
+  const { data: presentacionesDataArticulo } = useGetPresentacionList(1, 1000);
   
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
@@ -265,9 +261,9 @@ const EntInventario: React.FC = () => {
   const updateSeccionMutation = useUpdateSeccion();
   const deleteSeccionMutation = useDeleteSeccion();
 
-  const createUnidadMutation = useCreateUnidad();
-  const updateUnidadMutation = useUpdateUnidad();
-  const deleteUnidadMutation = useDeleteUnidad();
+  const createPresentacionMutation = useCreatePresentacion();
+  const updatePresentacionMutation = useUpdatePresentacion();
+  const deletePresentacionMutation = useDeletePresentacion();
 
   const { data: categoriasData } = useGetCategoriaList(1, 1000);
   const { data: gruposData } = useGetGrupoList(1, 1000);
@@ -276,7 +272,7 @@ const EntInventario: React.FC = () => {
     const fields = FORM_FIELDS_INVENTORY[selectedCategory];
     if (selectedCategory === 'grupo' && categoriasData?.data) {
       return fields.map(field => {
-        if (field.name === 'codigoCategoria') {
+        if (field.name === 'idCategoria') {
           return {
             ...field,
             options: categoriasData.data
@@ -287,7 +283,7 @@ const EntInventario: React.FC = () => {
     }
     if (selectedCategory === 'seccion' && gruposData?.data) {
       return fields.map(field => {
-        if (field.name === 'codigoGrupo') {
+        if (field.name === 'idGrupo') {
           return {
             ...field,
             options: gruposData.data
@@ -298,29 +294,29 @@ const EntInventario: React.FC = () => {
     }
     if (selectedCategory === 'articulo') {
       return fields.map(field => {
-        if (field.name === 'codigoGrupo' && gruposDataArticulo?.data) {
+        if (field.name === 'idGrupo' && gruposDataArticulo?.data) {
           return { ...field, options: gruposDataArticulo.data };
         }
-        if (field.name === 'codigoColor' && coloresDataArticulo?.data) {
+        if (field.name === 'idColor' && coloresDataArticulo?.data) {
           return { ...field, options: coloresDataArticulo.data };
         }
-        if (field.name === 'codigoTalla' && tallasDataArticulo?.data) {
+        if (field.name === 'idTalla' && tallasDataArticulo?.data) {
           return { ...field, options: tallasDataArticulo.data };
         }
-        if (field.name === 'codigoTipoArticulo' && tiposArticuloDataArticulo?.data) {
+        if (field.name === 'idTipoArticulo' && tiposArticuloDataArticulo?.data) {
           return { ...field, options: tiposArticuloDataArticulo.data };
         }
-        if (field.name === 'codigoImpuesto' && impuestosDataArticulo?.data) {
+        if (field.name === 'idImpuesto' && impuestosDataArticulo?.data) {
           return { ...field, options: impuestosDataArticulo.data };
         }
-        if (field.name === 'presentaciones' && articuloPresentacionesDataArticulo?.data) {
-          return { ...field, options: articuloPresentacionesDataArticulo.data };
+        if (field.name === 'presentaciones' && presentacionesDataArticulo?.data) {
+          return { ...field, options: presentacionesDataArticulo.data };
         }
         return field;
       });
     }
     return fields;
-  }, [selectedCategory, categoriasData, gruposData, gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo, articuloPresentacionesDataArticulo]);
+  }, [selectedCategory, categoriasData, gruposData, gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo, presentacionesDataArticulo]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -370,8 +366,8 @@ const EntInventario: React.FC = () => {
       case 'seccion':
         processData(seccionData);
         break;
-      case 'unidad':
-        processData(unidadData);
+      case 'presentacion':
+        processData(presentacionData);
         break;
       case 'talla':
         processData(tallaData);
@@ -395,7 +391,7 @@ const EntInventario: React.FC = () => {
         break;
     }
   }, [
-    almacenData, categoriaData, grupoData, seccionData, unidadData, 
+    almacenData, categoriaData, grupoData, seccionData, presentacionData, 
     tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, 
     articuloData,
     currentPage, selectedCategory, PAGE_SIZE
@@ -431,7 +427,7 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'categoria' ? isLoadingCategoria :
                     selectedCategory === 'grupo' ? isLoadingGrupo :
                     selectedCategory === 'seccion' ? isLoadingSeccion :
-                    selectedCategory === 'unidad' ? isLoadingUnidad :
+                    selectedCategory === 'presentacion' ? isLoadingPresentacion :
                     selectedCategory === 'talla' ? isLoadingTalla :
                     selectedCategory === 'color' ? isLoadingColor :
                     selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
@@ -514,10 +510,10 @@ const EntInventario: React.FC = () => {
           onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.seccion),
           onError: (err) => commonOnError(err, CATEGORY_TITLES.seccion)
         });
-      } else if (selectedCategory === 'unidad') {
-        createUnidadMutation.mutate(formData, {
-          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.unidad),
-          onError: (err) => commonOnError(err, CATEGORY_TITLES.unidad)
+      } else if (selectedCategory === 'presentacion') {
+        createPresentacionMutation.mutate(formData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.presentacion),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.presentacion)
         });
       } else if (selectedCategory === 'talla') {
         createTallaMutation.mutate(formData, {
@@ -602,10 +598,10 @@ const EntInventario: React.FC = () => {
           onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.seccion),
           onError: (err) => commonOnError(err, CATEGORY_TITLES.seccion)
         });
-      } else if (selectedCategory === 'unidad') {
-        updateUnidadMutation.mutate(mutationData, {
-          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.unidad),
-          onError: (err) => commonOnError(err, CATEGORY_TITLES.unidad)
+      } else if (selectedCategory === 'presentacion') {
+        updatePresentacionMutation.mutate(mutationData, {
+          onSuccess: (item) => commonOnSuccess(item, CATEGORY_TITLES.presentacion),
+          onError: (err) => commonOnError(err, CATEGORY_TITLES.presentacion)
         });
       } else if (selectedCategory === 'talla') {
         updateTallaMutation.mutate(mutationData, {
@@ -682,9 +678,9 @@ const EntInventario: React.FC = () => {
         onSuccess: () => commonOnSuccess('la sección'),
         onError: commonOnError
       });
-    } else if (selectedCategory === 'unidad') {
-      deleteUnidadMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('la unidad'),
+    } else if (selectedCategory === 'presentacion') {
+      deletePresentacionMutation.mutate(id, {
+        onSuccess: () => commonOnSuccess('la presentación'),
         onError: commonOnError
       });
     } else if (selectedCategory === 'talla') {
@@ -724,7 +720,7 @@ const EntInventario: React.FC = () => {
     }
   };
 
-  const getSystemFieldsForCategory = (category: string, item: any) => {
+  const getSystemFieldsForCategory = (item: any) => {
     if (!item) return []
 
     const baseFields = [
@@ -915,7 +911,7 @@ const EntInventario: React.FC = () => {
           activeText: 'Activo',
           inactiveText: 'Inactivo'
         }}
-        systemFields={getSystemFieldsForCategory(selectedCategory, currentItem)}
+        systemFields={getSystemFieldsForCategory(currentItem)}
         headerColor={themes.inventory.itemHeaderColor}
         headerTextColor={themes.inventory.itemHeaderTextColor}
         badgeColor={themes.inventory.badgeColor}

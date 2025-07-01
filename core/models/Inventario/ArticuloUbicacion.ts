@@ -1,6 +1,6 @@
 export interface ArticuloUbicacion {
-    codigoAlmacen: number
-    codigoArticulo: number
+    idAlmacen: number
+    idArticulo: number
     equipo: string
     ubicacion: string
     otrosF1: string

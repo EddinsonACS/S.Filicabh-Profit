@@ -63,7 +63,7 @@ export const ventasSchema = {
   
   ciudad: z.object({
     ...baseSchema,
-    codigoRegion: flexibleIntegerSchema
+    idRegion: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
   }),
   
@@ -97,9 +97,9 @@ export const ventasSchema = {
     email: emailSchema,
     esVendedor: z.boolean(),
     esCobrador: z.boolean(),
-    codigoRegion: flexibleIntegerSchema,
-    codigoTipoVendedor: flexibleIntegerSchema,
-    codigoListaPrecio: flexibleIntegerSchema,
+    idRegion: flexibleIntegerSchema,
+    idTipoVendedor: flexibleIntegerSchema,
+    idListaPrecio: flexibleIntegerSchema,
     suspendido: z.boolean()
   }),
   
@@ -111,7 +111,7 @@ export const ventasSchema = {
   }),
   
   tasadecambio: z.object({
-    codigoMoneda: flexibleIntegerSchema
+    idMoneda: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
     fecha: dateSchema,
     tasaVenta: flexibleNumberSchema
@@ -130,7 +130,7 @@ export const ventasSchema = {
   
   rubro: z.object({
     ...baseSchema,
-    codigoListaPrecio: flexibleIntegerSchema
+    idListaPrecio: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
   }),
   
@@ -143,19 +143,19 @@ export const ventasSchema = {
     email: emailSchema,
     emailAlterno: emailSchema,
     descripcionFiguraComercial: descriptionSchema,
-    codigoPais: flexibleIntegerSchema
+    idPais: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoCiudad: flexibleIntegerSchema
+    idCiudad: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoRubro: flexibleIntegerSchema
+    idRubro: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoSector: flexibleIntegerSchema
+    idSector: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoVendedor: flexibleIntegerSchema
+    idVendedor: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoAcuerdoDePago: flexibleIntegerSchema
+    idAcuerdoDePago: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
-    codigoTipoPersona: flexibleIntegerSchema
+    idTipoPersona: flexibleIntegerSchema
       .refine((val) => val >= 1, 'Campo requerido'),
     activoVentas: z.boolean(),
     activoCompras: z.boolean(),

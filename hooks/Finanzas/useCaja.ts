@@ -40,7 +40,7 @@ export const useCaja = () => {
         if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
-        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+        if (!formData.idMoneda || formData.idMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
 
@@ -56,7 +56,7 @@ export const useCaja = () => {
           otrosC4: null,
           otrosT1: null,
           equipo: "equipo",
-          codigoMoneda: Number(formData.codigoMoneda)
+          idMoneda: Number(formData.idMoneda)
         };
         return apiCaja.create(endpoints.finanzas.caja.create, data);
       },
@@ -78,7 +78,7 @@ export const useCaja = () => {
         if (!formData.nombre || formData.nombre.trim().length === 0) {
           throw new Error('El nombre es requerido');
         }
-        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+        if (!formData.idMoneda || formData.idMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
 
@@ -95,7 +95,7 @@ export const useCaja = () => {
           otrosC4: null,
           otrosT1: null,
           equipo: "equipo",
-          codigoMoneda: Number(formData.codigoMoneda)
+          idMoneda: Number(formData.idMoneda)
         };
         return apiCaja.update(endpoints.finanzas.caja.update(id), data);
       },

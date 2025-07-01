@@ -29,9 +29,9 @@ const baseCuentaBancariaSchema = {
     nroCuenta: accountNumberSchema,
     tipoDeCuenta: z.string({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
-    codigoMoneda: z.number({required_error: 'Campo requerido'})
+    idMoneda: z.number({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
-    codigoBanco: z.number({required_error: 'Campo requerido'})
+    idBanco: z.number({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
     sucursal: sucursalSchema,
     direccion: addressSchema,
@@ -46,7 +46,7 @@ export const finanzasSchema = {
   }),
   caja: z.object({
     ...baseSchema,
-    codigoMoneda: z.number({required_error: 'Campo requerido'})
+    idMoneda: z.number({required_error: 'Campo requerido'})
       .min(1, 'Campo requerido'),
   }),
   cuentaBancaria: z.object({

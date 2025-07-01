@@ -47,7 +47,7 @@ export const DEFAULT_VALUES: Record<CategoryId, any> = {
   },
   ciudad: {
     nombre: '',
-    codigoRegion: 0,
+    idRegion: 0,
     suspendido: false
   },
   region: {
@@ -76,9 +76,9 @@ export const DEFAULT_VALUES: Record<CategoryId, any> = {
     telefono: 0,
     esVendedor: false,
     esCobrador: false,
-    codigoRegion: 0,
-    codigoTipoVendedor: 0,
-    codigoListaPrecio: 0,
+    idRegion: 0,
+    idTipoVendedor: 0,
+    idListaPrecio: 0,
     suspendido: false
   },
   moneda: {
@@ -86,7 +86,7 @@ export const DEFAULT_VALUES: Record<CategoryId, any> = {
     suspendido: false
   },
   tasadecambio: {
-    codigoMoneda: 0,
+    idMoneda: 0,
     fecha: new Date().toISOString().split('T')[0],
     tasaVenta: 0,
     tasaCompra: 0
@@ -98,19 +98,19 @@ export const DEFAULT_VALUES: Record<CategoryId, any> = {
     suspendido: false
   },
   rubro: {
-    codigoListaPrecio: 0,
+    idListaPrecio: 0,
     suspendido: false
   },
   figuracomercial: {
     email: '',
     emailAlterno: '',
-    codigoPais: 0,
-    codigoCiudad: 0,
-    codigoRubro: 0,
-    codigoSector: 0,
-    codigoVendedor: 0,
-    codigoAcuerdoDePago: 0,
-    codigoTipoPersona: 0,
+    idPais: 0,
+    idCiudad: 0,
+    idRubro: 0,
+    idSector: 0,
+    idVendedor: 0,
+    idAcuerdoDePago: 0,
+    idTipoPersona: 0,
     activoVentas: true,
     activoCompras: true,
     esCasaMatriz: false,
@@ -129,7 +129,7 @@ export const SCHEMAS: Record<CategoryId, z.ZodSchema> = {
   }),
   ciudad: z.object({
     nombre: z.string({required_error: 'El nombre es requerido'}),
-    codigoRegion: z.number({required_error: 'La región es requerida'}).min(1, 'La región es requerida'),
+    idRegion: z.number({required_error: 'La región es requerida'}).min(1, 'La región es requerida'),
     suspendido: z.boolean()
   }),
   region: z.object({
@@ -161,9 +161,9 @@ export const SCHEMAS: Record<CategoryId, z.ZodSchema> = {
     email: z.string({required_error: 'El email es requerido'}).email('Email inválido'),
     esVendedor: z.boolean(),
     esCobrador: z.boolean(),
-    codigoRegion: z.number({required_error: 'La región es requerida'}),
-    codigoTipoVendedor: z.number({required_error: 'El tipo de vendedor es requerido'}),
-    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}),
+    idRegion: z.number({required_error: 'La región es requerida'}),
+    idTipoVendedor: z.number({required_error: 'El tipo de vendedor es requerido'}),
+    idListaPrecio: z.number({required_error: 'La lista de precio es requerida'}),
     suspendido: z.boolean()
   }),
   moneda: z.object({
@@ -173,7 +173,7 @@ export const SCHEMAS: Record<CategoryId, z.ZodSchema> = {
     suspendido: z.boolean()
   }),
   tasadecambio: z.object({
-    codigoMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
+    idMoneda: z.number({required_error: 'La moneda es requerida'}).min(1, 'La moneda es requerida'),
     fecha: z.string({required_error: 'La fecha es requerida'}).min(1, 'La fecha es requerida'),
     tasaVenta: z.number({required_error: 'La tasa de venta es requerida'}).min(0, 'La tasa de venta debe ser mayor o igual a 0'),
     tasaCompra: z.number({required_error: 'La tasa de compra es requerida'}).min(0, 'La tasa de compra debe ser mayor o igual a 0')
@@ -188,7 +188,7 @@ export const SCHEMAS: Record<CategoryId, z.ZodSchema> = {
   }),
   rubro: z.object({
     nombre: z.string({required_error: 'El nombre es requerido'}),
-    codigoListaPrecio: z.number({required_error: 'La lista de precio es requerida'}).min(1, 'La lista de precio es requerida'),
+    idListaPrecio: z.number({required_error: 'La lista de precio es requerida'}).min(1, 'La lista de precio es requerida'),
     suspendido: z.boolean()
   }),
   figuracomercial: z.object({
@@ -200,13 +200,13 @@ export const SCHEMAS: Record<CategoryId, z.ZodSchema> = {
     email: z.string({required_error: 'El email es requerido'}).email('Email inválido'), 
     emailAlterno: z.string({required_error: 'El email alterno es requerido'}).email('Email inválido'), 
     descripcionFiguraComercial: z.string({required_error: 'La descripción es requerida'}),
-    codigoPais: z.number({required_error: 'El país es requerido'}).min(1, 'El país es requerido'),
-    codigoCiudad: z.number({required_error: 'La ciudad es requerida'}).min(1, 'La ciudad es requerida'),
-    codigoRubro: z.number({required_error: 'El rubro es requerido'}).min(1, 'El rubro es requerido'),
-    codigoSector: z.number({required_error: 'El sector es requerido'}).min(1, 'El sector es requerido'),
-    codigoVendedor: z.number({required_error: 'El vendedor es requerido'}).min(1, 'El vendedor es requerido'),
-    codigoAcuerdoDePago: z.number({required_error: 'El acuerdo de pago es requerido'}).min(1, 'El acuerdo de pago es requerido'),
-    codigoTipoPersona: z.number({required_error: 'El tipo de persona es requerido'}).min(1, 'El tipo de persona es requerido'),
+    idPais: z.number({required_error: 'El país es requerido'}).min(1, 'El país es requerido'),
+    idCiudad: z.number({required_error: 'La ciudad es requerida'}).min(1, 'La ciudad es requerida'),
+    idRubro: z.number({required_error: 'El rubro es requerido'}).min(1, 'El rubro es requerido'),
+    idSector: z.number({required_error: 'El sector es requerido'}).min(1, 'El sector es requerido'),
+    idVendedor: z.number({required_error: 'El vendedor es requerido'}).min(1, 'El vendedor es requerido'),
+    idAcuerdoDePago: z.number({required_error: 'El acuerdo de pago es requerido'}).min(1, 'El acuerdo de pago es requerido'),
+    idTipoPersona: z.number({required_error: 'El tipo de persona es requerido'}).min(1, 'El tipo de persona es requerido'),
     activoVentas: z.boolean(),
     activoCompras: z.boolean(),
     esCasaMatriz: z.boolean(),

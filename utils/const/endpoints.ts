@@ -33,12 +33,12 @@ export const endpoints = {
       "update": (id: number) => `/api/seccion/${id}`,
       "delete": (id: number) => `/api/seccion/${id}`
     },
-    "unidad":{
-      "list": "/api/unidad",
-      "create": "/api/unidad",
-      "getOne": (id: number) => `/api/unidad/${id}`,
-      "update": (id: number) => `/api/unidad/${id}`,
-      "delete": (id: number) => `/api/unidad/${id}`
+    "presentacion":{
+      "list": "/api/presentacion",
+      "create": "/api/presentacion",
+      "getOne": (id: number) => `/api/presentacion/${id}`,
+      "update": (id: number) => `/api/presentacion/${id}`,
+      "delete": (id: number) => `/api/presentacion/${id}`
     },
     "talla":{
       "list": "/api/talla",

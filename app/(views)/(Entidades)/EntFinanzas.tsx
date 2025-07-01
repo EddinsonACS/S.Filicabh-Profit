@@ -163,7 +163,7 @@ const EntFinanzas: React.FC = () => {
     
     if (selectedCategory === 'caja' && monedasData?.data) {
       return fields.map(field => {
-        if (field.name === 'codigoMoneda') {
+        if (field.name === 'idMoneda') {
           return {
             ...field,
             options: monedasData.data
@@ -176,7 +176,7 @@ const EntFinanzas: React.FC = () => {
     if (selectedCategory === 'cuentaBancaria') {
       return fields.map(field => {
         // Agregar opciones de banco
-        if (field.name === 'codigoBanco' && bancosData?.data) {
+        if (field.name === 'idBanco' && bancosData?.data) {
           return {
             ...field,
             options: bancosData.data
@@ -336,7 +336,7 @@ const EntFinanzas: React.FC = () => {
       } else if (selectedCategory === 'caja') {
         const cajaData = {
           ...formData,
-          codigoMoneda: Number(formData.codigoMoneda)
+          idMoneda: Number(formData.idMoneda)
         };
         createCajaMutation.mutate(cajaData, {
           onSuccess: (createdItem) => commonOnSuccess(createdItem, 'la caja'),
@@ -345,8 +345,8 @@ const EntFinanzas: React.FC = () => {
       } else if (selectedCategory === 'cuentaBancaria') {
         const cuentaBancariaData = {
           ...formData,
-          codigoBanco: Number(formData.codigoBanco),
-          codigoMoneda: Number(formData.codigoMoneda)
+          idBanco: Number(formData.idBanco),
+          idMoneda: Number(formData.idMoneda)
         };
         createCuentaBancariaMutation.mutate(cuentaBancariaData, {
           onSuccess: (createdItem) => commonOnSuccess(createdItem, 'la cuenta bancaria'),
@@ -391,7 +391,7 @@ const EntFinanzas: React.FC = () => {
       } else if (selectedCategory === 'caja') {
         const cajaData = {
           ...formData,
-          codigoMoneda: Number(formData.codigoMoneda)
+          idMoneda: Number(formData.idMoneda)
         };
         updateCajaMutation.mutate({ id: currentItem.id, formData: cajaData }, {
           onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'la caja'),
@@ -400,8 +400,8 @@ const EntFinanzas: React.FC = () => {
       } else if (selectedCategory === 'cuentaBancaria') {
         const cuentaBancariaData = {
           ...formData,
-          codigoBanco: Number(formData.codigoBanco),
-          codigoMoneda: Number(formData.codigoMoneda)
+          idBanco: Number(formData.idBanco),
+          idMoneda: Number(formData.idMoneda)
         };
         updateCuentaBancariaMutation.mutate({ id: currentItem.id, formData: cuentaBancariaData }, {
           onSuccess: (updatedItem) => commonOnSuccess(updatedItem, 'la cuenta bancaria'),

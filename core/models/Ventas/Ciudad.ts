@@ -1,7 +1,8 @@
 export interface Ciudad {
     id: number;
     nombre: string;
-    codigoRegion: number;
+    idRegion: number;
+    regionNombre: string;
     suspendido: boolean;
     otrosF1: string;
     otrosN1: number;

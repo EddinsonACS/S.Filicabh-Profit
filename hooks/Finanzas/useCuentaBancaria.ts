@@ -43,10 +43,10 @@ export const useCuentaBancaria = () => {
         if (!formData.tipoDeCuenta || formData.tipoDeCuenta.trim().length === 0) {
           throw new Error('El tipo de cuenta es requerido');
         }
-        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+        if (!formData.idMoneda || formData.idMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
-        if (!formData.codigoBanco || formData.codigoBanco === 0) {
+        if (!formData.idBanco || formData.idBanco === 0) {
           throw new Error('El banco es requerido');
         }
         if (!formData.sucursal || formData.sucursal.trim().length === 0) {
@@ -65,11 +65,11 @@ export const useCuentaBancaria = () => {
           throw new Error('El email es requerido');
         }
 
-        const data: Omit<CuentaBancaria, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario'> = {
+        const data: Omit<CuentaBancaria, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'usuario' | 'monedaNombre' | 'bancoNombre'> = {
           nroCuenta: formData.nroCuenta.trim(),
           tipoDeCuenta: formData.tipoDeCuenta.trim(),
-          codigoMoneda: Number(formData.codigoMoneda),
-          codigoBanco: Number(formData.codigoBanco),
+          idMoneda: Number(formData.idMoneda),
+          idBanco: Number(formData.idBanco),
           sucursal: formData.sucursal.trim(),
           direccion: formData.direccion.trim(),
           nombreEjecutivo: formData.nombreEjecutivo.trim(),
@@ -110,10 +110,10 @@ export const useCuentaBancaria = () => {
         if (!formData.tipoDeCuenta || formData.tipoDeCuenta.trim().length === 0) {
           throw new Error('El tipo de cuenta es requerido');
         }
-        if (!formData.codigoMoneda || formData.codigoMoneda === 0) {
+        if (!formData.idMoneda || formData.idMoneda === 0) {
           throw new Error('La moneda es requerida');
         }
-        if (!formData.codigoBanco || formData.codigoBanco === 0) {
+        if (!formData.idBanco || formData.idBanco === 0) {
           throw new Error('El banco es requerido');
         }
         if (!formData.sucursal || formData.sucursal.trim().length === 0) {
@@ -136,8 +136,8 @@ export const useCuentaBancaria = () => {
           id: id,
           nroCuenta: formData.nroCuenta.trim(),
           tipoDeCuenta: formData.tipoDeCuenta.trim(),
-          codigoMoneda: Number(formData.codigoMoneda),
-          codigoBanco: Number(formData.codigoBanco),
+          idMoneda: Number(formData.idMoneda),
+          idBanco: Number(formData.idBanco),
           sucursal: formData.sucursal.trim(),
           direccion: formData.direccion.trim(),
           nombreEjecutivo: formData.nombreEjecutivo.trim(),

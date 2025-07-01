@@ -1,9 +1,19 @@
+import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useArticuloFoto } from '@/hooks/Inventario/useArticuloFoto';
 import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
 import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
-import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
 import { useMoneda } from '@/hooks/Ventas/useMoneda';
+import { Ionicons } from '@expo/vector-icons';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Alert, Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { z } from 'zod';
 
 interface ListaPrecioItem {
   id: number;
@@ -14,15 +24,12 @@ interface ListaPrecioItem {
   fechaHasta: string;
   suspendido: boolean;
 }
-import { Ionicons } from '@expo/vector-icons';
-import { zodResolver } from '@hookform/resolvers/zod';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Alert, Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { z } from 'zod';
+
+interface PrecioInputs {
+  monto: string;
+  fechaDesde: string;
+  fechaHasta: string;
+}
 
 interface FormField {
   name: string;
@@ -222,7 +229,7 @@ const getFormattedValue = (fieldName: string, text: string): string => {
   }
 
   // Campos que deben ser solo números enteros
-  if (['nroCuenta', 'telefono', 'dias', 'nit', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
+  if (['nroCuenta', 'telefono', 'dias', 'nit', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
     return formatInteger(text);
   }
 
@@ -285,7 +292,7 @@ const getFormattedValueByType = (fieldName: string, fieldType: string, text: str
 };
 
 const getKeyboardType = (fieldName: string, fieldType: string) => {
-  if (fieldType === 'number' || ['nroCuenta', 'telefono', 'dias', 'nit', 'codigo', 'codigoRegion', 'codigoTipoVendedor', 'codigoListaPrecio', 'codigoMoneda', 'codigoPais', 'codigoCiudad', 'codigoRubro', 'codigoSector', 'codigoVendedor', 'codigoAcuerdoDePago', 'codigoTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
+  if (fieldType === 'number' || ['nroCuenta', 'telefono', 'dias', 'nit', 'codigo', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
     return 'numeric';
   }
   if (fieldType === 'email') {
@@ -293,6 +300,10 @@ const getKeyboardType = (fieldName: string, fieldType: string) => {
   }
   return 'default';
 };
+
+interface FormData {
+  [key: string]: any;
+}
 
 const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   visible,
@@ -320,27 +331,32 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('articulo');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdArticleId, setCreatedArticleId] = useState<number | null>(currentItem?.id || null);
-  const [showDatePicker, setShowDatePicker] = useState<{ [key: string]: boolean }>({});
-  const [openSelect, setOpenSelect] = useState<string | null>(null);
-
-  // Estados para manejar fotos
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
-  const [principalImageIndex, setPrincipalImageIndex] = useState(-1);
-  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
-
-  // Estados para manejar las listas de precios
+  const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<any[]>([]);
   const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>('');
   const [selectedMoneda, setSelectedMoneda] = useState<string>('');
-  const [precioInputs, setPrecioInputs] = useState({
+  const [showListaPrecioSection, setShowListaPrecioSection] = useState(true);
+  const [showUbicacionesSection, setShowUbicacionesSection] = useState(true);
+  const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState<{ [key: string]: boolean }>({});
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
+  const [selectedAlmacen, setSelectedAlmacen] = useState<string>('');
+  const [ubicacionInput, setUbicacionInput] = useState<string>('');
+  const [precioInputs, setPrecioInputs] = useState<PrecioInputs>({
     monto: '',
-    fechaDesde: new Date().toISOString().split('T')[0],
+    fechaDesde: '',
     fechaHasta: ''
   });
 
+  // Estados para manejar fotos
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
+
   const {useGetListaDePrecioList} = useListaDePrecio();
   const {data: listasPreciosData} = useGetListaDePrecioList(1,100);
+  
+  const insets = useSafeAreaInsets();
   
   // Function to add a new price to the list
   const addListaPrecio = () => {
@@ -358,7 +374,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       setListasPrecios(prev => [...prev, newPrice]);
       
       // Clear the input fields after adding
-      setPrecioInputs(prev => ({
+      setPrecioInputs((prev: PrecioInputs) => ({
         ...prev,
         monto: '',
         fechaHasta: ''
@@ -402,21 +418,10 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     })) || [])
   ];
   
-  // Estados para manejar ubicaciones
-  const [ubicaciones, setUbicaciones] = useState<Array<{
-    id: number;
-    codigoAlmacen: string;
-    ubicacion: string;
-  }>>([{
-    id: Date.now() + 1,
-    codigoAlmacen: '',
-    ubicacion: ''
-  }]);
-
   // Estados para expandir/contraer secciones
   const [expandedSections, setExpandedSections] = useState({
-    listaPrecio: false,
-    ubicaciones: false
+    listaPrecio: true,
+    ubicaciones: true
   });
 
   // Hooks para los pasos adicionales
@@ -475,24 +480,55 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     })
   ).current;
 
-  const { control, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      ...defaultValues,
-      ...currentItem,
-    },
+    defaultValues: isEditing ? currentItem : defaultValues
   });
 
   useEffect(() => {
-    if (visible) {
-      reset({
-        ...defaultValues,
-        ...currentItem,
+    if (isEditing && currentItem) {
+      console.log('Reseteando formulario con datos actuales:', currentItem);
+      reset(currentItem);
+      
+      // Inicializar presentaciones si existen
+      if (currentItem.presentaciones) {
+        const presentacionesArray = Array.isArray(currentItem.presentaciones) 
+          ? currentItem.presentaciones 
+          : [currentItem.presentaciones];
+        setValue('presentaciones', presentacionesArray);
+      }
+      
+      // Inicializar otros campos numéricos
+      ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo'].forEach(field => {
+        if (currentItem[field] !== undefined) {
+          setValue(field, Number(currentItem[field]));
+        }
       });
-      // Remove the sliding up animation
-      slideAnim.setValue(0);
+      
+      // Inicializar campos booleanos
+      ['manejaLote', 'manejaSerial', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'suspendido'].forEach(field => {
+        if (currentItem[field] !== undefined) {
+          setValue(field, Boolean(currentItem[field]));
+        }
+      });
+    } else {
+      reset(defaultValues);
+      setSelectedImages([]);
+      setPrincipalImageIndex(-1);
+      setListasPrecios([]);
+      setUbicaciones([]);
+      setSelectedListaPrecio('');
+      setSelectedMoneda('');
+      setCreatedArticleId(null);
     }
-  }, [visible, currentItem]);
+  }, [isEditing, currentItem, defaultValues, reset, setValue]);
 
   const handleClose = () => {
     // Skip animation when closing to match the new behavior
@@ -603,13 +639,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     }
   };
 
-  // Función para actualizar ubicación
-  const updateUbicacion = (index: number, field: string, value: any) => {
-    setUbicaciones(prev => prev.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    ));
-  };
-
   // Función para guardar fotos de forma secuencial
   const saveFotos = async (articleId: number) => {
     if (!articleId || selectedImages.length === 0) return true;
@@ -624,6 +653,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         console.log('⚠️ No hay imagen favorita seleccionada, seleccionando la primera por defecto');
         setPrincipalImageIndex(0);
       }
+      
+      let uploadedCount = 0;
+      let failedCount = 0;
       
       // Subir las imágenes de forma secuencial
       for (let index = 0; index < selectedImages.length; index++) {
@@ -640,34 +672,54 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           nombre: file.name,
           tipo: file.type,
           esPrincipal: isPrincipal,
-          orden: index + 1
+          orden: index + 1,
+          idArticulo: articleId
         });
 
         try {
           // Esperar a que cada imagen se suba antes de continuar con la siguiente
-          await createFotoMutation.mutateAsync({
-            CodigoArticulo: articleId,
-            EsPrincipal: isPrincipal, // Usar el estado de imagen favorita
-            Orden: index + 1,
-            Equipo: 'equipo',
-            ImageFile: file
+          const response = await createFotoMutation.mutateAsync({
+            idArticulo: Number(articleId),
+            esPrincipal: isPrincipal,
+            orden: index + 1,
+            equipo: 'equipo',
+            imageFile: file
           });
           
-          console.log(`✅ Imagen ${index + 1} subida exitosamente${isPrincipal ? ' (FAVORITA)' : ''}`);
+          console.log(`✅ Imagen ${index + 1} subida exitosamente${isPrincipal ? ' (FAVORITA)' : ''}`, response);
+          uploadedCount++;
           
           // Pequeña pausa entre subidas para evitar sobrecargar el servidor
           await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          // Si hay un error, lo mostramos pero continuamos con las siguientes imágenes
-          console.error(`❌ Error al subir la imagen ${index + 1}:`, error);
-          // Podrías querer mostrar un mensaje al usuario aquí si lo prefieres
-          // Por ahora solo continuamos con la siguiente imagen
+        } catch (error: any) {
+          failedCount++;
+          console.error(`❌ Error al subir la imagen ${index + 1}:`, {
+            error: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+          });
+          
+          // Si es la imagen principal la que falló, necesitamos manejar esto
+          if (isPrincipal) {
+            console.error('⚠️ La imagen principal falló al subirse');
+            // Si hay más imágenes, podríamos intentar hacer la siguiente imagen como principal
+            if (index < selectedImages.length - 1) {
+              setPrincipalImageIndex(index + 1);
+            }
+          }
+          
           continue;
         }
       }
       
-      console.log('🎉 Proceso de subida de fotos completado');
-      return true;
+      console.log('📊 Resumen de subida de fotos:', {
+        total: selectedImages.length,
+        exitosas: uploadedCount,
+        fallidas: failedCount
+      });
+      
+      // Solo retornamos true si al menos una imagen se subió correctamente
+      return uploadedCount > 0;
     } catch (error) {
       console.error('❌ Error inesperado en saveFotos:', error);
       // Relanzar el error para que sea manejado por el componente padre
@@ -706,20 +758,82 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     if (!articleId || ubicaciones.length === 0) return true;
 
     try {
+      console.log('📍 Iniciando guardado de ubicaciones para artículo:', articleId);
+      console.log('📍 Total de ubicaciones a guardar:', ubicaciones.length);
+      
       for (const ubicacion of ubicaciones) {
         if (ubicacion.codigoAlmacen && ubicacion.ubicacion) {
           const ubicacionData = {
-            codigoArticulo: articleId,
-            codigoAlmacen: Number(ubicacion.codigoAlmacen),
-            ubicacion: ubicacion.ubicacion
+            idArticulo: Number(articleId),
+            idAlmacen: Number(ubicacion.codigoAlmacen),
+            ubicacion: ubicacion.ubicacion,
+            equipo: 'equipo',
+            usuario: 0
           };
+          
+          console.log('📍 Guardando ubicación:', ubicacionData);
           await createUbicacionMutation.mutateAsync(ubicacionData);
+          console.log('✅ Ubicación guardada exitosamente');
         }
       }
+      console.log('🎉 Todas las ubicaciones guardadas exitosamente');
       return true;
     } catch (error) {
-      console.error('Error saving ubicaciones:', error);
-      return false;
+      console.error('❌ Error saving ubicaciones:', error);
+      throw error;
+    }
+  };
+
+  // Función para agregar ubicación
+  const addUbicacion = () => {
+    if (!selectedAlmacen || !ubicacionInput) return;
+
+    setUbicaciones(prev => [...prev, {
+      id: Date.now(),
+      codigoAlmacen: selectedAlmacen,
+      ubicacion: ubicacionInput
+    }]);
+
+    // Limpiar los campos después de agregar
+    setSelectedAlmacen('');
+    setUbicacionInput('');
+  };
+
+  // Función para eliminar ubicación
+  const removeUbicacion = async (index: number) => {
+    const ubicacion = ubicaciones[index];
+    if (ubicacion.id && typeof ubicacion.id === 'number') {
+      try {
+        await deleteUbicacionMutation.mutateAsync(ubicacion.id);
+      } catch (error) {
+        console.error('Error al eliminar ubicación:', error);
+      }
+    }
+    setUbicaciones(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Función para actualizar ubicación
+  const updateUbicacion = async (index: number, field: string, value: any) => {
+    const updatedUbicaciones = [...ubicaciones];
+    const ubicacion = { ...updatedUbicaciones[index], [field]: value };
+    updatedUbicaciones[index] = ubicacion;
+    setUbicaciones(updatedUbicaciones);
+
+    if (ubicacion.id && typeof ubicacion.id === 'number') {
+      try {
+        await updateUbicacionMutation.mutateAsync({
+          id: ubicacion.id,
+          formData: {
+            idArticulo: createdArticleId || articuloId,
+            idAlmacen: Number(ubicacion.codigoAlmacen),
+            ubicacion: ubicacion.ubicacion,
+            equipo: 'equipo',
+            usuario: 0
+          }
+        });
+      } catch (error) {
+        console.error('Error al actualizar ubicación:', error);
+      }
     }
   };
 
@@ -820,19 +934,25 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       visible={visible}
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-black/50">
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
         <TouchableOpacity
-          className="flex-1"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           activeOpacity={1}
           onPress={handleClose}
         />
-
         <Animated.View
           style={{
             transform: [{ translateY: slideAnim }],
-            height: height * 0.85, // Altura fija basada en el contenido del tab Artículo
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: height,
+            backgroundColor: 'white',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            overflow: 'hidden'
           }}
-          className="bg-white rounded-t-3xl overflow-hidden"
         >
           {/* Header */}
           <View
@@ -1138,7 +1258,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 <Switch
                                   value={value}
                                   onValueChange={onChange}
-                                  trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
+                                  trackColor={{ false: '#d1d5db', true: '#4b0082' }}
+                                  thumbColor={value ? '#f4f3f4' : '#f4f3f4'}
                                 />
                               )}
                             />
@@ -1168,20 +1289,21 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                         className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <Text className="text-md font-semibold text-gray-800">Lista de Precio</Text>
-                        <Ionicons
-                          name={expandedSections.listaPrecio ? "chevron-up" : "chevron-down"}
-                          size={20}
-                          color="#6B7280"
-                        />
+                        <View className="flex-row items-center">
+                          <Ionicons
+                            name={expandedSections.listaPrecio ? "chevron-up" : "chevron-down"}
+                            size={20}
+                            color="#6B7280"
+                          />
+                        </View>
                       </TouchableOpacity>
 
                       {expandedSections.listaPrecio && (
                         <View className="mt-2">
-                          {/* List and Currency Selection */}
+                          {/* Form inputs for new price */}
                           <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
                             {/* Lista de Precio */}
                             <View className="mb-4">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Lista de Precio</Text>
                               <View className="relative">
                                 <TouchableOpacity
                                   onPress={() => setOpenSelect('listaPrecio')}
@@ -1266,7 +1388,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                 placeholder="0.00"
                                 value={precioInputs.monto}
-                                onChangeText={(text) => setPrecioInputs(prev => ({...prev, monto: text}))}
+                                onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, monto: text}))}
                                 keyboardType="numeric"
                               />
                             </View>
@@ -1279,7 +1401,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                   placeholder="YYYY-MM-DD"
                                   value={precioInputs.fechaDesde}
-                                  onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaDesde: text}))}
+                                  onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, fechaDesde: text}))}
                                 />
                               </View>
                               <View className="flex-1">
@@ -1288,23 +1410,41 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                   placeholder="YYYY-MM-DD"
                                   value={precioInputs.fechaHasta}
-                                  onChangeText={(text) => setPrecioInputs(prev => ({...prev, fechaHasta: text}))}
+                                  onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, fechaHasta: text}))}
                                 />
                               </View>
                             </View>
 
-                            <TouchableOpacity
-                              onPress={addListaPrecio}
-                              className="bg-blue-500 py-2 px-4 rounded-lg items-center"
-                              disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
-                            >
-                              <Text className="text-white font-medium">Agregar Precio</Text>
-                            </TouchableOpacity>
+                            {/* Botón agregar al final del formulario */}
+                            <View className="flex-row justify-end items-center mt-4">
+                              <TouchableOpacity
+                                onPress={addListaPrecio}
+                                disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
+                                className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
+                                  !precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda
+                                    ? 'bg-gray-100'
+                                    : 'bg-blue-500'
+                                }`}
+                              >
+                                <Ionicons 
+                                  name="add-circle" 
+                                  size={20} 
+                                  color={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda ? "#9CA3AF" : "#FFFFFF"} 
+                                />
+                                <Text className={`text-sm font-medium ${
+                                  !precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda
+                                    ? 'text-gray-400'
+                                    : 'text-white'
+                                }`}>
+                                  Agregar Precio
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
 
                           {/* List of Added Prices */}
                           {listasPrecios.map((precio, index) => (
-                            <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                            <View key={precio.id || `precio-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
                               <View className="space-y-3">
                                 <View className="flex-row justify-between items-center">
                                   <View>
@@ -1319,20 +1459,18 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                       {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ''}
                                     </Text>
                                   </View>
-                                  <View className="items-end">
-                                    <View className="flex-row items-center mb-2">
-                                      <Text className="text-sm font-medium text-gray-700 mr-2">Suspendido</Text>
-                                      <Switch
-                                        value={precio.suspendido}
-                                        onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
-                                        trackColor={{ false: switchInactiveColor, true: switchActiveColor }}
-                                      />
-                                    </View>
+                                  <View className="flex-row items-center space-x-2">
+                                    <Switch
+                                      value={precio.suspendido}
+                                      onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
+                                      trackColor={{ false: '#d1d5db', true: '#d1d5db' }}
+                                      thumbColor={precio.suspendido ? '#f4f3f4' : '#f4f3f4'}
+                                    />
                                     <TouchableOpacity
                                       onPress={() => removeListaPrecio(precio.id)}
-                                      className="bg-red-100 py-1 px-3 rounded"
+                                      className="p-2"
                                     >
-                                      <Text className="text-red-600 text-sm">Eliminar</Text>
+                                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
                                     </TouchableOpacity>
                                   </View>
                                 </View>
@@ -1359,61 +1497,102 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                       {expandedSections.ubicaciones && (
                         <View className="mt-2">
-                          {ubicaciones.map((ubicacion, index) => (
-                            <View key={ubicacion.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                              <View className="space-y-3">
-                                {/* Almacén */}
-                                <View>
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Almacén</Text>
-                                  <View className="relative">
-                                    <TouchableOpacity
-                                      onPress={() => setOpenSelect(`almacen_${index}`)}
-                                      className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                          {/* Form for location */}
+                          <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
+                            {/* Almacén */}
+                            <View className="mb-4">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Almacén</Text>
+                              <View className="relative">
+                                <TouchableOpacity
+                                  onPress={() => setOpenSelect('almacen')}
+                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
+                                >
+                                  <Text className="text-gray-700">
+                                    {selectedAlmacen ? allAlmacenes.find(a => a.id === Number(selectedAlmacen))?.nombre : 'Seleccione un almacén'}
+                                  </Text>
+                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                </TouchableOpacity>
+
+                                {openSelect === 'almacen' && (
+                                  <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
+                                    <ScrollView 
+                                      nestedScrollEnabled={true}
+                                      className="max-h-32"
                                     >
-                                      <Text className="text-gray-700">
-                                        {ubicacion.codigoAlmacen ?
-                                          allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Seleccione' :
-                                          'Seleccione un almacén'
-                                        }
-                                      </Text>
-                                      <Ionicons name="chevron-down" size={20} color="#6B7280" />
-                                    </TouchableOpacity>
-
-                                    {openSelect === `almacen_${index}` && (
-                                      <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                        <ScrollView 
-                                        nestedScrollEnabled={true}
-                                        className="max-h-32">
-                                          {allAlmacenes.map((almacen) => (
-                                            <TouchableOpacity
-                                              key={almacen.id}
-                                              onPress={() => {
-                                                updateUbicacion(index, 'codigoAlmacen', almacen.id);
-                                                setOpenSelect(null);
-                                              }}
-                                              className="px-4 py-3 border-b border-gray-100"
-                                            >
-                                              <Text className="text-gray-700">{almacen.nombre}</Text>
-                                            </TouchableOpacity>
-                                          ))}
-                                        </ScrollView>
-                                      </View>
-                                    )}
+                                      {allAlmacenes.map((almacen) => (
+                                        <TouchableOpacity
+                                          key={almacen.id}
+                                          onPress={() => {
+                                            setSelectedAlmacen(String(almacen.id));
+                                            setOpenSelect(null);
+                                          }}
+                                          className="px-4 py-3 border-b border-gray-100"
+                                        >
+                                          <Text className="text-gray-700">{almacen.nombre}</Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
                                   </View>
-                                </View>
+                                )}
+                              </View>
+                            </View>
 
-                                {/* Ubicación */}
+                            {/* Ubicación */}
+                            <View className="mb-4">
+                              <Text className="text-sm font-medium text-gray-700 mb-1">Ubicación Específica</Text>
+                              <TextInput
+                                className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                placeholder="Ej: Pasillo A, Estante 3, Nivel 2"
+                                value={ubicacionInput}
+                                onChangeText={setUbicacionInput}
+                              />
+                            </View>
+
+                            {/* Botón agregar al final del formulario */}
+                            <View className="flex-row justify-end items-center mt-4">
+                              <TouchableOpacity
+                                onPress={addUbicacion}
+                                disabled={!selectedAlmacen || !ubicacionInput}
+                                className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
+                                  !selectedAlmacen || !ubicacionInput
+                                    ? 'bg-gray-100'
+                                    : 'bg-blue-500'
+                                }`}
+                              >
+                                <Ionicons 
+                                  name="add-circle" 
+                                  size={20} 
+                                  color={!selectedAlmacen || !ubicacionInput ? "#9CA3AF" : "#FFFFFF"} 
+                                />
+                                <Text className={`text-sm font-medium ${
+                                  !selectedAlmacen || !ubicacionInput
+                                    ? 'text-gray-400'
+                                    : 'text-white'
+                                }`}>
+                                  Agregar Ubicación
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+
+                          {/* List of locations */}
+                          {ubicaciones.map((ubicacion, index) => (
+                            <View key={ubicacion.id || `ubicacion-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                              <View className="flex-row justify-between items-start">
                                 <View>
-                                  <Text className="text-sm font-medium text-gray-700 mb-1">Ubicación Específica</Text>
-                                  <TextInput
-                                    className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                    placeholder="Ej: Pasillo A, Estante 3, Nivel 2"
-                                    value={ubicacion.ubicacion}
-                                    onChangeText={(text) => updateUbicacion(index, 'ubicacion', text)}
-                                  />
+                                  <Text className="font-medium">
+                                    {allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Almacén no seleccionado'}
+                                  </Text>
+                                  <Text className="text-gray-600 mt-1">
+                                    {ubicacion.ubicacion || 'Sin ubicación específica'}
+                                  </Text>
                                 </View>
-
-
+                                <TouchableOpacity
+                                  onPress={() => removeUbicacion(index)}
+                                  className="p-2"
+                                >
+                                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                                </TouchableOpacity>
                               </View>
                             </View>
                           ))}
@@ -1448,7 +1627,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                         </>
                       ) : (
                         <>
-                          {/* Vista grid cuando hay fotos */}
+                          {/* Grid de imágenes existentes */}
                           <View className="flex-row flex-wrap">
                             {/* Botón para agregar foto - siempre en primera posición */}
                             <View className="w-[32%] mb-4 mr-[2%]">
@@ -1460,10 +1639,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 <Text className="text-gray-500 text-xs mt-1 text-center">Agregar{'\n'}Foto</Text>
                               </TouchableOpacity>
                             </View>
-
-                            {/* Grid de imágenes existentes */}
                             {selectedImages.map((image, index) => (
-                              <View key={image.id} className={`w-[32%] mb-4 ${(index + 1) % 3 !== 0 ? 'mr-[2%]' : ''}`}>
+                              <View key={image.id || `image-${index}`} className={`w-[32%] mb-4 ${(index + 1) % 3 === 2 ? 'mr-[2%]' : ''}`}>
                                 <View className="relative">
                                   {/* Imagen con onPress para marcar como favorita */}
                                   <TouchableOpacity

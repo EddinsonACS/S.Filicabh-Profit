@@ -39,11 +39,11 @@ export const useTasaDeCambio = () => {
     const useCreateTasaDeCambio = () => {
         return useMutation({
             mutationFn: (formData: Partial<TasaDeCambio>) => {
-                if (!formData.codigoMoneda) {
+                if (!formData.idMoneda) {
                     throw new Error('La moneda es requerida');
                 }
                 const data: Omit<TasaDeCambio, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
-                    codigoMoneda: formData.codigoMoneda,
+                    idMoneda: formData.idMoneda,
                     fecha: formData.fecha || new Date().toISOString(),
                     tasaVenta: formData.tasaVenta || 0,
                     tasaCompra: formData.tasaCompra || 0,
@@ -72,7 +72,7 @@ export const useTasaDeCambio = () => {
     const useUpdateTasaDeCambio = () => {
         return useMutation({
             mutationFn: ({ id, formData }: { id: number; formData: Partial<TasaDeCambio> }) => {
-                if (!formData.codigoMoneda) {
+                if (!formData.idMoneda) {
                     throw new Error('La moneda es requerida');
                 }
                 const data: Partial<TasaDeCambio> = {

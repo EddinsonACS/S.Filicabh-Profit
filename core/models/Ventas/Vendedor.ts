@@ -6,9 +6,12 @@ export interface Vendedor {
     email: string;
     esVendedor: boolean;
     esCobrador: boolean;
-    codigoRegion: number;
-    codigoTipoVendedor: number;
-    codigoListaPrecio: number;
+    idRegion: number;
+    regionNombre: string;
+    idTipoVendedor: number;
+    tipoVendedorNombre: string;
+    idListaPrecio: number;
+    listaPrecioNombre: string;
     suspendido: boolean;
     otrosF1: string;
     otrosN1: number;

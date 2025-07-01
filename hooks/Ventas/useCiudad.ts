@@ -40,12 +40,12 @@ export const useCiudad = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        if (!formData.codigoRegion) {
+        if (!formData.idRegion) {
           throw new Error('La región es requerida');
         }
         const data: Omit<Ciudad, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           nombre: formData.nombre,
-          codigoRegion: formData.codigoRegion,
+          idRegion: formData.idRegion,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,
@@ -75,13 +75,13 @@ export const useCiudad = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        if (!formData.codigoRegion) {
+        if (!formData.idRegion) {
           throw new Error('La región es requerida');
         }
         const data: Partial<Ciudad> = {
           id: id,
           nombre: formData.nombre,
-          codigoRegion: formData.codigoRegion,
+          idRegion: formData.idRegion,
           suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: 0,

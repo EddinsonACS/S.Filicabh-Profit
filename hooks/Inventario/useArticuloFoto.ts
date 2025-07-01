@@ -4,7 +4,6 @@ import { createApiService } from '@/data/api/apiGeneric';
 import { endpoints } from '@/utils/const/endpoints';
 import { queryClient } from '@/utils/libs/queryClient';
 import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 const apiArticuloFoto = createApiService<ArticuloFoto>();
 
@@ -43,22 +42,22 @@ export const useArticuloFoto = () => {
 
   // Define the input type for the mutation
   type CreateArticuloFotoInput = {
-    CodigoArticulo: number;
-    EsPrincipal: boolean;
-    Orden: number;
-    Equipo: string;
-    ImageFile: ReactNativeFile;
+    idArticulo: number;
+    esPrincipal: boolean;
+    orden: number;
+    equipo: string;
+    imageFile: ReactNativeFile;
   };
 
   // Type for the form data that will be sent to the API
   type ArticuloFotoFormData = FormData;
 
   type CreateArticuloFotoParams = {
-    CodigoArticulo: number;
-    EsPrincipal: boolean;
-    Orden: number;
-    Equipo: string;
-    ImageFile: {
+    idArticulo: number;
+    esPrincipal: boolean;
+    orden: number;
+    equipo: string;
+    imageFile: {
       uri: string;
       name: string;
       type: string;
@@ -69,34 +68,83 @@ export const useArticuloFoto = () => {
     return useMutation<ArticuloFoto, Error, CreateArticuloFotoParams>({
       mutationFn: async (params) => {
         try {
+          console.log('📸 Iniciando subida de foto con parámetros:', {
+            idArticulo: params.idArticulo,
+            esPrincipal: params.esPrincipal,
+            orden: params.orden,
+            equipo: params.equipo,
+            imageFile: {
+              name: params.imageFile.name,
+              type: params.imageFile.type
+            }
+          });
+          
+          // Validar parámetros requeridos
+          if (!params.idArticulo || params.idArticulo <= 0) {
+            throw new Error('ID de artículo inválido');
+          }
+          
+          if (!params.imageFile || !params.imageFile.uri) {
+            throw new Error('Archivo de imagen requerido');
+          }
+          
           const formData = new FormData();
           
-          formData.append('CodigoArticulo', params.CodigoArticulo.toString());
-          formData.append('EsPrincipal', params.EsPrincipal.toString());
-          formData.append('Orden', params.Orden.toString());
-          formData.append('Equipo', params.Equipo);
+          // Campos requeridos
+          formData.append('IdArticulo', params.idArticulo.toString());
+          formData.append('EsPrincipal', params.esPrincipal.toString());
+          formData.append('Orden', params.orden.toString());
+          formData.append('Equipo', params.equipo);
           
+          // Campos adicionales
+          formData.append('OtrosF1', new Date().toISOString());
+          formData.append('OtrosN1', '0');
+          formData.append('OtrosN2', '0');
+          formData.append('OtrosC1', '');
+          formData.append('OtrosC2', '');
+          formData.append('OtrosC3', '');
+          formData.append('OtrosC4', '');
+          formData.append('OtrosT1', '');
+          formData.append('Usuario', '0');
+          
+          // Preparar archivo
           const file = {
-            uri: params.ImageFile.uri,
-            name: params.ImageFile.name || `image_${Date.now()}.jpg`,
-            type: params.ImageFile.type || 'image/jpeg',
+            uri: params.imageFile.uri,
+            name: params.imageFile.name || `image_${Date.now()}.jpg`,
+            type: params.imageFile.type || 'image/jpeg',
           };
           
+          console.log('📸 Archivo a subir:', {
+            name: file.name,
+            type: file.type
+          });
+          
+          // Agregar archivo al FormData
           formData.append('ImageFile', {
             uri: file.uri,
             name: file.name,
             type: file.type,
           } as any);
           
+          console.log('📸 FormData preparado con campos:', {
+            IdArticulo: params.idArticulo,
+            EsPrincipal: params.esPrincipal,
+            Orden: params.orden,
+            Equipo: params.equipo,
+            ImageFile: file.name
+          });
           
-          return await apiArticuloFoto.create(
+          const response = await apiArticuloFoto.create(
             endpoints.inventory.articulofoto.create, 
             formData as unknown as Partial<ArticuloFoto>,
             true
           ) as ArticuloFoto;
           
+          console.log('📸 Respuesta del servidor:', response);
+          return response;
+          
         } catch (error: any) {
-          console.error('Error en useCreateArticuloFoto - mutationFn:');
+          console.error('❌ Error en useCreateArticuloFoto - mutationFn:');
           if (error.response) {
             console.error('Error del servidor:', {
               status: error.response.status,
@@ -109,7 +157,7 @@ export const useArticuloFoto = () => {
             console.error('Error al configurar la petición:', error.message);
           }
           console.error('Stack trace:', error.stack);
-          throw error; // Re-lanzar el error para que sea manejado por onError
+          throw error;
         }
       },
       onError: (error: any) => {

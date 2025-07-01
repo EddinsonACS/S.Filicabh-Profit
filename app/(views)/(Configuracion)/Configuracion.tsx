@@ -147,11 +147,6 @@ export default function Configuracion() {
               className="w-28 h-28 rounded-full items-center justify-center"
               style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 5
               }}
             >
               {profileImage ? (
@@ -168,10 +163,10 @@ export default function Configuracion() {
               className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white items-center justify-center"
               style={{
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 3
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.15,
+                shadowRadius: 2,
+                elevation: 2
               }}
             >
               <Ionicons name="camera" size={16} color={getActiveColor()} />
@@ -186,10 +181,10 @@ export default function Configuracion() {
         className="flex-1 -mt-6 rounded-t-3xl bg-white px-4"
         style={{
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 5
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 3
         }}
       >
         <ScrollView className="flex-1 pt-4">
@@ -201,11 +196,6 @@ export default function Configuracion() {
                   className="flex-row items-center py-3 px-4 rounded-xl"
                   style={{ 
                     backgroundColor: styles.bg,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: item.name === 'Cerrar sesión' ? 0 : 2
                   }}
                   onPress={() => {
                     if (!item.disabled && item.route) {
@@ -218,9 +208,9 @@ export default function Configuracion() {
                     style={{ 
                       backgroundColor: item.name === 'Cerrar sesión' ? '#fee2e2' : 'white',
                       shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 3,
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 2,
                       elevation: item.name === 'Cerrar sesión' ? 0 : 1
                     }}
                   >

@@ -95,7 +95,7 @@ const TopProductList: React.FC<TopProductListProps> = ({ period }) => {
             <Text className="font-semibold">{product.name}</Text>
             <View className="flex-row mt-1">
               <Text className="text-xs text-gray-500 mr-4">
-                <Ionicons name="bag-outline" size={12} color="#666" /> {product.units} unidades
+                <Ionicons name="bag-outline" size={12} color="#666" /> {product.units} presentaciones
               </Text>
               <View className="flex-row items-center">
                 <Ionicons 

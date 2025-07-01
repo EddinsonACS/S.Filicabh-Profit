@@ -2,7 +2,8 @@ export interface Grupo {
     id: number;
     nombre: string;
     suspendido: boolean;
-    codigoCategoria: number;
+    idCategoria: number;
+    categoriaNombre: string;
     equipo: string;
     otrosF1: string;
     otrosN1: number;

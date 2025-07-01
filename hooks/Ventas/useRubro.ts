@@ -44,7 +44,7 @@ export const useRubro = () => {
                 }
                 const data: Omit<Rubro, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
                     nombre: formData.nombre,
-                    codigoListaPrecio: formData.codigoListaPrecio || 0,
+                    idListaPrecio: formData.idListaPrecio || 0,
                     suspendido: formData.suspendido || false,
                     otrosF1: new Date().toISOString(),
                     otrosN1: 0,

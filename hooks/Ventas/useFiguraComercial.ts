@@ -53,13 +53,13 @@ export const useFiguraComercial = () => {
           email: formData.email || '',
           emailAlterno: formData.emailAlterno || '',
           descripcionFiguraComercial: formData.descripcionFiguraComercial || '',
-          codigoPais: formData.codigoPais || 0, // Assuming 0 or a valid default
-          codigoCiudad: formData.codigoCiudad || 0, // Assuming 0 or a valid default
-          codigoRubro: formData.codigoRubro || 0, // Assuming 0 or a valid default
-          codigoSector: formData.codigoSector || 0, // Assuming 0 or a valid default
-          codigoVendedor: formData.codigoVendedor || 0, // Assuming 0 or a valid default
-          codigoAcuerdoDePago: formData.codigoAcuerdoDePago || 0, // Assuming 0 or a valid default
-          codigoTipoPersona: formData.codigoTipoPersona || 0, // Assuming 0 or a valid default
+          idPais: formData.idPais || 0, // Assuming 0 or a valid default
+          idCiudad: formData.idCiudad || 0, // Assuming 0 or a valid default
+          idRubro: formData.idRubro || 0, // Assuming 0 or a valid default
+          idSector: formData.idSector || 0, // Assuming 0 or a valid default
+          idVendedor: formData.idVendedor || 0, // Assuming 0 or a valid default
+          idAcuerdoDePago: formData.idAcuerdoDePago || 0, // Assuming 0 or a valid default
+          idTipoPersona: formData.idTipoPersona || 0, // Assuming 0 or a valid default
           activoVentas: formData.activoVentas !== undefined ? formData.activoVentas : true,
           activoCompras: formData.activoCompras !== undefined ? formData.activoCompras : true,
           esCasaMatriz: formData.esCasaMatriz !== undefined ? formData.esCasaMatriz : false,

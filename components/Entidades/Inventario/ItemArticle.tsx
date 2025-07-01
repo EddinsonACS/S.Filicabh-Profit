@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
-type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'unidad';
+type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'presentacion';
 
 interface BaseItem {
   id: number;
@@ -96,10 +96,10 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -123,10 +123,10 @@ const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => v
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
 
@@ -163,15 +163,15 @@ const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCat
           </View>
 
           {/* Información adicional */}
-          <Text className="text-sm text-gray-600 mb-2">Categoria: {dataCategory.find(c => c.id === item.codigoCategoria)?.nombre || 'No especificado'}</Text>
+          <Text className="text-sm text-gray-600 mb-2">Categoria: {dataCategory.find(c => c.id === item.idCategoria)?.nombre || 'No especificado'}</Text>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
 
@@ -210,10 +210,10 @@ const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
 
@@ -304,7 +304,7 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
             <View className="flex-row items-center">
               <Text className="text-xs text-gray-500">Prest: </Text>
               <Text className="text-xs font-semibold text-gray-700 flex-1" numberOfLines={1}>
-                {dataTipoArticulo.find(g => g.id === item.codigoTipoArticulo)?.nombre || 'No especificado'}
+                {dataTipoArticulo.find(g => g.id === item.idTipoArticulo)?.nombre || 'No especificado'}
               </Text>
             </View>
           </View>
@@ -312,10 +312,10 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5 border-t border-gray-100">
             <Text className="text-[10px] text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-[10px] text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -337,15 +337,15 @@ const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; d
           </View>
 
           {/* Información adicional */}
-          <Text className="text-sm text-gray-600 mb-2">Grupo: {dataGrupo.find(g => g.id === item.codigoGrupo)?.nombre || 'No especificado'}</Text>
+          <Text className="text-sm text-gray-600 mb-2">Grupo: {dataGrupo.find(g => g.id === item.idGrupo)?.nombre || 'No especificado'}</Text>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion).toLocaleDateString()}
+              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
             </Text>
           </View>
 

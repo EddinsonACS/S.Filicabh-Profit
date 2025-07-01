@@ -142,7 +142,7 @@ const FORM_FIELDS = {
       description: 'Ingrese el nombre de la ciudad.'
     },
     {
-      name: 'codigoRegion',
+      name: 'idRegion',
       label: 'Región',
       type: 'select' as const,
       required: true,
@@ -294,7 +294,7 @@ const FORM_FIELDS = {
       description: 'Ingrese el email del vendedor.'
     },
     {
-      name: 'codigoTipoVendedor',
+      name: 'idTipoVendedor',
       label: 'Tipo de Vendedor',
       type: 'select' as const,
       required: true,
@@ -305,7 +305,7 @@ const FORM_FIELDS = {
       optionValue: 'id'
     },
     {
-      name: 'codigoRegion',
+      name: 'idRegion',
       label: 'Región',
       type: 'select' as const,
       required: true,
@@ -316,7 +316,7 @@ const FORM_FIELDS = {
       optionValue: 'id'
     },
     {
-      name: 'codigoListaPrecio',
+      name: 'idListaPrecio',
       label: 'Lista de Precio',
       type: 'select' as const,
       required: true,
@@ -461,7 +461,7 @@ const FORM_FIELDS = {
       description: 'Ingrese el nombre del rubro.'
     },
     {
-      name: 'codigoListaPrecio',
+      name: 'idListaPrecio',
       label: 'Lista de Precio',
       type: 'select' as const,
       required: true,
@@ -488,13 +488,13 @@ const FORM_FIELDS = {
     { name: 'email', label: 'Email Principal', type: 'text' as const, placeholder: 'correo@ejemplo.com', description: 'Dirección de correo electrónico principal.', required: true },
     { name: 'emailAlterno', label: 'Email Alterno', type: 'text' as const, placeholder: 'correo.alterno@ejemplo.com', description: 'Dirección de correo electrónico alternativa.', required: true },
     { name: 'descripcionFiguraComercial', label: 'Descripción', type: 'text' as const, placeholder: 'Descripción adicional', description: 'Notas o descripción relevante sobre la figura comercial.', required: false },
-    { name: 'codigoPais', label: 'País', type: 'select' as const, required: true, placeholder: 'Seleccione un país', description: 'País de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoCiudad', label: 'Ciudad', type: 'select' as const, required: true, placeholder: 'Seleccione una ciudad', description: 'Ciudad de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoRubro', label: 'Rubro', type: 'select' as const, required: true, placeholder: 'Seleccione un rubro', description: 'Rubro principal de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoSector', label: 'Sector', type: 'select' as const, required: true, placeholder: 'Seleccione un sector', description: 'Sector de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoVendedor', label: 'Vendedor Asignado', type: 'select' as const, required: true, placeholder: 'Seleccione un vendedor', description: 'Vendedor asignado a esta figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoAcuerdoDePago', label: 'Acuerdo de Pago', type: 'select' as const, required: true, placeholder: 'Seleccione acuerdo', description: 'Acuerdo de pago predeterminado.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
-    { name: 'codigoTipoPersona', label: 'Tipo de Persona', type: 'select' as const, required: true, placeholder: 'Seleccione tipo persona', description: 'Clasificación del tipo de persona.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idPais', label: 'País', type: 'select' as const, required: true, placeholder: 'Seleccione un país', description: 'País de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idCiudad', label: 'Ciudad', type: 'select' as const, required: true, placeholder: 'Seleccione una ciudad', description: 'Ciudad de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idRubro', label: 'Rubro', type: 'select' as const, required: true, placeholder: 'Seleccione un rubro', description: 'Rubro principal de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idSector', label: 'Sector', type: 'select' as const, required: true, placeholder: 'Seleccione un sector', description: 'Sector de la figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idVendedor', label: 'Vendedor Asignado', type: 'select' as const, required: true, placeholder: 'Seleccione un vendedor', description: 'Vendedor asignado a esta figura comercial.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idAcuerdoDePago', label: 'Acuerdo de Pago', type: 'select' as const, required: true, placeholder: 'Seleccione acuerdo', description: 'Acuerdo de pago predeterminado.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
+    { name: 'idTipoPersona', label: 'Tipo de Persona', type: 'select' as const, required: true, placeholder: 'Seleccione tipo persona', description: 'Clasificación del tipo de persona.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
     { name: 'activoVentas', label: 'Activo para Ventas', type: 'switch' as const, description: 'Indica si está activo para transacciones de ventas.', required: false },
     { name: 'activoCompras', label: 'Activo para Compras', type: 'switch' as const, description: 'Indica si está activo para transacciones de compras.', required: false },
     { name: 'esCasaMatriz', label: 'Es Casa Matriz', type: 'switch' as const, description: 'Indica si esta figura es la casa matriz.', required: false },
@@ -521,7 +521,7 @@ const DEFAULT_VALUES = {
   },
   ciudad: {
     nombre: '',
-    codigoRegion: 0,
+    idRegion: 0,
     suspendido: false
   },
   region: {
@@ -550,9 +550,9 @@ const DEFAULT_VALUES = {
     telefono: 0,
     esVendedor: false,
     esCobrador: false,
-    codigoRegion: 0,
-    codigoTipoVendedor: 0,
-    codigoListaPrecio: 0,
+    idRegion: 0,
+    idTipoVendedor: 0,
+    idListaPrecio: 0,
     suspendido: false
   },
   moneda: {
@@ -572,19 +572,19 @@ const DEFAULT_VALUES = {
     suspendido: false
   },
   rubro: {
-    codigoListaPrecio: 0,
+    idListaPrecio: 0,
     suspendido: false
   },
   figuracomercial: {
     email: '',
     emailAlterno: '',
-    codigoPais: 0,
-    codigoCiudad: 0,
-    codigoRubro: 0,
-    codigoSector: 0,
-    codigoVendedor: 0,
-    codigoAcuerdoDePago: 0,
-    codigoTipoPersona: 0,
+    idPais: 0,
+    idCiudad: 0,
+    idRubro: 0,
+    idSector: 0,
+    idVendedor: 0,
+    idAcuerdoDePago: 0,
+    idTipoPersona: 0,
     activoVentas: true,
     activoCompras: true,
     esCasaMatriz: false,
@@ -1005,7 +1005,7 @@ const EntVentas: React.FC = () => {
 
     if (selectedCategory === 'ciudad' && regionesData?.data) {
       return fields.map(field => {
-        if (field.name === 'codigoRegion') {
+        if (field.name === 'idRegion') {
           return {
             ...field,
             options: regionesData.data
@@ -1029,7 +1029,7 @@ const EntVentas: React.FC = () => {
 
     if (selectedCategory === 'rubro' && listasDePrecioData?.data) {
       return fields.map(field => {
-        if (field.name === 'codigoListaPrecio') {
+        if (field.name === 'idListaPrecio') {
           return {
             ...field,
             options: listasDePrecioData.data
@@ -1047,7 +1047,7 @@ const EntVentas: React.FC = () => {
         if (field.name === 'codigoRegion' && regionesData?.data) {
           return { ...field, options: regionesData.data };
         }
-        if (field.name === 'codigoListaPrecio' && listasDePrecioData?.data) {
+        if (field.name === 'idListaPrecio' && listasDePrecioData?.data) {
           return { ...field, options: listasDePrecioData.data };
         }
         return field;
@@ -1056,25 +1056,25 @@ const EntVentas: React.FC = () => {
 
     if (selectedCategory === 'figuracomercial') {
       return fields.map(field => {
-        if (field.name === 'codigoPais' && paisesOptionsData?.data) {
+        if (field.name === 'idPais' && paisesOptionsData?.data) {
           return { ...field, options: paisesOptionsData.data };
         }
-        if (field.name === 'codigoCiudad' && ciudadesOptionsData?.data) {
+        if (field.name === 'idCiudad' && ciudadesOptionsData?.data) {
           return { ...field, options: ciudadesOptionsData.data };
         }
-        if (field.name === 'codigoRubro' && rubrosOptionsData?.data) {
+        if (field.name === 'idRubro' && rubrosOptionsData?.data) {
           return { ...field, options: rubrosOptionsData.data };
         }
-        if (field.name === 'codigoSector' && sectoresOptionsData?.data) {
+        if (field.name === 'idSector' && sectoresOptionsData?.data) {
           return { ...field, options: sectoresOptionsData.data };
         }
-        if (field.name === 'codigoVendedor' && vendedoresOptionsData?.data) {
+        if (field.name === 'idVendedor' && vendedoresOptionsData?.data) {
           return { ...field, options: vendedoresOptionsData.data };
         }
-        if (field.name === 'codigoAcuerdoDePago' && acuerdosDePagoOptionsData?.data) {
+        if (field.name === 'idAcuerdoDePago' && acuerdosDePagoOptionsData?.data) {
           return { ...field, options: acuerdosDePagoOptionsData.data };
         }
-        if (field.name === 'codigoTipoPersona' && tiposPersonaOptionsData?.data) {
+        if (field.name === 'idTipoPersona' && tiposPersonaOptionsData?.data) {
           return { ...field, options: tiposPersonaOptionsData.data };
         }
         if (field.name === 'codigoFiguraComercialCasaMatriz' && figurasComercialesOptionsData?.data) {

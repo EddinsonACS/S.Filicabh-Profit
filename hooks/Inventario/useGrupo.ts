@@ -41,10 +41,13 @@ export const useGrupo = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        const data: Omit<Grupo, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
+        if (!formData.idCategoria || formData.idCategoria === 0) {
+          throw new Error('Debe seleccionar una categoría');
+        }
+        const data: Omit<Grupo, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre' | 'categoriaNombre'> = {
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
-          codigoCategoria: formData.codigoCategoria || 0,
+          idCategoria: formData.idCategoria,
           otrosF1: new Date().toISOString(),
           otrosN1: formData.otrosN1 || 0,
           otrosN2: formData.otrosN2 || 0,
@@ -58,7 +61,7 @@ export const useGrupo = () => {
         return apiGrupo.create(endpoints.inventory.grupo.create, data);
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['grupo'] });
       },
       onError: (error) => {
         console.error('Error creating grupo:', error);
@@ -72,11 +75,14 @@ export const useGrupo = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
+        if (!formData.idCategoria || formData.idCategoria === 0) {
+          throw new Error('Debe seleccionar una categoría');
+        }
         const data: Partial<Grupo> = {
           id: id,
           nombre: formData.nombre,
           suspendido: formData.suspendido || false,
-          codigoCategoria: formData.codigoCategoria || 0,
+          idCategoria: formData.idCategoria,
           otrosF1: new Date().toISOString(),
           otrosN1: formData.otrosN1 || 0,
           otrosN2: formData.otrosN2 || 0,
@@ -90,8 +96,7 @@ export const useGrupo = () => {
         return apiGrupo.update(endpoints.inventory.grupo.update(id), data);
       },
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['grupo', 'item', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['grupo'] });
       },
       onError: (error) => {
         console.error('Error updating grupo:', error);
@@ -103,7 +108,7 @@ export const useGrupo = () => {
     return useMutation({
       mutationFn: (id: number) => apiGrupo.delete(endpoints.inventory.grupo.delete(id)),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['grupo'] });
       },
       onError: (error) => {
         console.error('Error deleting grupo:', error);
