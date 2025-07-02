@@ -1,65 +1,46 @@
 export interface Articulo {
-  // Campos de identificación
-  id: number;
-  nombre: string;
-  descripcion: string;
-  codigo: string;
   codigoArticulo: string;
-  codigoModelo: string;
   codigoBarra: string;
-
-  // Referencias a otras entidades
-  idGrupo: number;
-  grupoNombre?: string;
-  idColor: number;
-  colorNombre?: string;
-  idTalla: number;
-  tallaNombre?: string;
-  idTipoArticulo: number;
-  tipoArticuloNombre?: string;
-  idImpuesto: number;
-  impuestoNombre?: string;
-
-  // Medidas y características físicas
-  peso: number;
-  volumen: number;
-  metroCubico: number;
-  pie: number;
-
-  // Configuraciones de manejo
-  manejaLote: boolean;
-  manejaSerial: boolean;
-  poseeGarantia: boolean;
+  codigoModelo: string;
+  colorNombre: string;
+  descripcion: string;
   descripcionGarantia: string;
-  manejaPuntoMinimo: boolean;
-  puntoMinimo: number;
+  fechaModificacion: string;
+  fechaRegistro: string;
+  fotos: any[];
+  grupoNombre: string;
+  id: number;
+  idColor: number;
+  idGrupo: number;
+  idImpuesto: number;
+  idTalla: number;
+  idTipoArticulo: number;
+  manejaLote: boolean;
   manejaPuntoMaximo: boolean;
-  puntoMaximo: number;
-  suspendido: boolean;
-
-  // Presentaciones
-  presentaciones: number[] | number;
-
-  // Campos de auditoría
-  fechaRegistro?: string;
-  usuarioRegistroNombre?: string;
-  fechaModificacion?: string;
-  usuarioModificacionNombre?: string;
-  usuario: number;
-  equipo: string;
-
-  // Campos adicionales
+  manejaPuntoMinimo: boolean;
+  manejaSerial: boolean;
+  metroCubico: number;
+  nombre: string;
+  otrosC1: string;
+  otrosC2: string;
+  otrosC3: string;
+  otrosC4: string;
   otrosF1: string;
   otrosN1: number;
   otrosN2: number;
-  otrosC1: string | null;
-  otrosC2: string | null;
-  otrosC3: string | null;
-  otrosC4: string | null;
-  otrosT1: string | null;
-
-  // Campos opcionales
-  imagen?: string;
-  precio?: number;
-  stock?: number;
+  otrosT1: string;
+  peso: number;
+  pie: number;
+  poseeGarantia: boolean;
+  presentaciones: any[];
+  puntoMaximo: number;
+  puntoMinimo: number;
+  suspendido: boolean;
+  tallaNombre: string;
+  tipoArticuloNombre: string;
+  tipoDeImpuestoNombre: string;
+  usuarioModificacionNombre: string;
+  usuarioRegistroNombre: string;
+  volumen: number;
+  equipo: string;
 }

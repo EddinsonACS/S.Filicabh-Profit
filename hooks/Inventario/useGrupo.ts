@@ -61,7 +61,7 @@ export const useGrupo = () => {
         return apiGrupo.create(endpoints.inventory.grupo.create, data);
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['grupo'] });
+        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
       },
       onError: (error) => {
         console.error('Error creating grupo:', error);
@@ -96,7 +96,7 @@ export const useGrupo = () => {
         return apiGrupo.update(endpoints.inventory.grupo.update(id), data);
       },
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['grupo'] });
+        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
       },
       onError: (error) => {
         console.error('Error updating grupo:', error);
@@ -108,7 +108,7 @@ export const useGrupo = () => {
     return useMutation({
       mutationFn: (id: number) => apiGrupo.delete(endpoints.inventory.grupo.delete(id)),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['grupo'] });
+        queryClient.invalidateQueries({ queryKey: ['grupo', 'list'] });
       },
       onError: (error) => {
         console.error('Error deleting grupo:', error);

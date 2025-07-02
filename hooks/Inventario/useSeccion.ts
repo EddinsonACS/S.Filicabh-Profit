@@ -60,7 +60,7 @@ export const useSeccion = () => {
         return apiSeccion.create(endpoints.inventory.seccion.create, data);
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['seccion'] });
+        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
       },
       onError: (error) => {
         console.error('Error creating seccion:', error);
@@ -95,7 +95,7 @@ export const useSeccion = () => {
         return apiSeccion.update(endpoints.inventory.seccion.update(id), data);
       },
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['seccion'] });
+        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
       },
       onError: (error) => {
         console.error('Error updating seccion:', error);
@@ -107,7 +107,7 @@ export const useSeccion = () => {
     return useMutation({
       mutationFn: (id: number) => apiSeccion.delete(endpoints.inventory.seccion.delete(id)),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['seccion'] });
+        queryClient.invalidateQueries({ queryKey: ['seccion', 'list'] });
       },
       onError: (error) => {
         console.error('Error deleting seccion:', error);

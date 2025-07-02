@@ -217,6 +217,7 @@ const EntInventario: React.FC = () => {
   const updateArticuloMutation = useUpdateArticulo();
   const deleteArticuloMutation = useDeleteArticulo();
   const { data: articuloData, isLoading: isLoadingArticulo } = useGetArticuloList(currentPage, PAGE_SIZE);
+  console.log("articuloData", articuloData)
   // Listas para selects de articulo
   const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
   const { data: coloresDataArticulo } = useGetColorList(1, 1000);
@@ -730,7 +731,7 @@ const EntInventario: React.FC = () => {
     ];
 
     const additionalFields = Object.entries(item)
-      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
+      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1','idColor','idGrupo','idImpuesto','idTalla','idTipoArticulo','idTipoImpuesto','presentaciones','fotos',''].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
         value: value === null || value === undefined ? 'N/A' : typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value)

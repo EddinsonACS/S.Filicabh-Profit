@@ -238,6 +238,7 @@ const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
 };
 
 const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void; dataGrupo: Grupo[]; dataTalla: Talla[]; dataTipoArticulo: TipoDeArticulo[]; dataTipoImpuesto: TipoDeImpuesto[] }> = ({ item, onPress, dataGrupo, dataTalla, dataTipoArticulo, dataTipoImpuesto }) => {
+  console.log(item.fotos)
   return (
     <View className="bg-white rounded-lg mt-2 shadow-sm border border-gray-200 overflow-hidden">
       <TouchableOpacity
@@ -262,9 +263,9 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
 
         {/* Imagen del artículo */}
         <View className="w-32 p-2">
-          {item.imagen ? (
+          {item?.fotos?.length > 0 ? (
             <Image
-              source={{ uri: item.imagen }}
+              source={{ uri: item.fotos[0] }}
               style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
             />
@@ -281,11 +282,6 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
             {/* Nombre */}
             <Text className="text-base font-bold text-gray-800 flex-1 mr-2 mb-1" numberOfLines={1}>
               {item.nombre}
-            </Text>
-
-            {/* Código */}
-            <Text className="text-xs text-gray-500">
-              Código: {item.codigo}
             </Text>
 
             {/* Precio y Stock en la misma línea */}

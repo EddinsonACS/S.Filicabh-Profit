@@ -39,7 +39,6 @@ export const useArticulo = () => {
         if (!formData.nombre) {
           throw new Error('El nombre es requerido');
         }
-        console.log('🔵 Datos del formulario recibidos:', formData);
         
         // Verificar que tenemos los campos requeridos
         if (!formData.nombre || !formData.descripcion) {
@@ -65,7 +64,6 @@ export const useArticulo = () => {
         const data = {
           nombre: formData.nombre,
           descripcion: formData.descripcion,
-          codigo: formData.codigo || '',
           codigoArticulo: formData.codigoArticulo || '',
           codigoModelo: formData.codigoModelo || '',
           codigoBarra: formData.codigoBarra || '',
@@ -100,7 +98,6 @@ export const useArticulo = () => {
           equipo: 'equipo'
         };
         
-        console.log('🔵 Datos que se enviarán al servidor:', JSON.stringify(data, null, 2));
         return apiArticulo.create(endpoints.inventory.articulo.create, data);
       },
       onSuccess: () => {
@@ -148,7 +145,6 @@ export const useArticulo = () => {
             ? formData.presentaciones.map(p => Number(p))
             : formData.presentaciones ? [Number(formData.presentaciones)] : [],
           // Campos de texto
-          codigo: formData.codigo || '',
           codigoArticulo: formData.codigoArticulo || '',
           codigoModelo: formData.codigoModelo || '',
           codigoBarra: formData.codigoBarra || '',
