@@ -265,7 +265,7 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
         <View className="w-32 p-2">
           {item?.fotos?.length > 0 ? (
             <Image
-              source={{ uri: item.fotos[0] }}
+              source={{ uri: item.fotos[0].urlFoto }}
               style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
             />
