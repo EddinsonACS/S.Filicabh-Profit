@@ -928,7 +928,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 className="text-xl text-center font-bold"
                 style={{ color: headerTextColor }}
               >
-                {isEditing ? 'Editar' : 'Nuevo'} {categoryTitles[selectedCategory] || 'Registro'}
+                {isEditing ? 'Editar' : 'Nuevo'}
               </Text>
             </View>
 

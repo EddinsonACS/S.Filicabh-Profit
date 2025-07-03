@@ -464,7 +464,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
             <Text style={{ color: headerTextColor }} className="text-xl text-center font-bold mt-4">
-              {isEditing ? 'Editar' : 'Nuevo'} {categoryTitles[selectedCategory]}
+              {isEditing ? 'Editar' : 'Nuevo'}
             </Text>
           </View>
 
