@@ -217,7 +217,6 @@ const EntInventario: React.FC = () => {
   const updateArticuloMutation = useUpdateArticulo();
   const deleteArticuloMutation = useDeleteArticulo();
   const { data: articuloData, isLoading: isLoadingArticulo } = useGetArticuloList(currentPage, PAGE_SIZE);
-  console.log("articuloData", articuloData)
   // Listas para selects de articulo
   const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
   const { data: coloresDataArticulo } = useGetColorList(1, 1000);

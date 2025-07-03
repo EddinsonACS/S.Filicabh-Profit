@@ -36,7 +36,7 @@ export const useArticuloListaDePrecio = () => {
   const useCreateArticuloListaDePrecio = () => {
     return useMutation({
       mutationFn: (formData: Partial<ArticuloListaPrecio>) => {
-        if (!formData.codigoArticulo || !formData.codigoListasdePrecio || !formData.codigoMoneda || formData.monto === undefined) {
+        if (!formData.idArticulo || !formData.idListasdePrecio || !formData.idMoneda || formData.monto === undefined) {
           throw new Error('Los campos código de artículo, lista de precios, moneda y monto son requeridos');
         }
         const data: Omit<ArticuloListaPrecio, 'id'> = {
@@ -54,7 +54,7 @@ export const useArticuloListaDePrecio = () => {
           otrosC4: formData.otrosC4 || '',
           otrosT1: formData.otrosT1 || '',
         } as Omit<ArticuloListaPrecio, 'id'>;
-        
+        console.log("DATAAAAAAAAAAAAAAAAA",data);
         return apiArticuloListaPrecio.create(endpoints.inventory.articulolistaprecio.create, data);
       },
       onSuccess: () => {
@@ -69,7 +69,7 @@ export const useArticuloListaDePrecio = () => {
   const useUpdateArticuloListaDePrecio = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<ArticuloListaPrecio> }) => {
-        if (!formData.codigoArticulo || !formData.codigoListasdePrecio || !formData.codigoMoneda || formData.monto === undefined) {
+        if (!formData.idArticulo || !formData.idListasdePrecio || !formData.idMoneda || formData.monto === undefined) {
           throw new Error('Los campos código de artículo, lista de precios, moneda y monto son requeridos');
         }
         const data: Partial<ArticuloListaPrecio> = {

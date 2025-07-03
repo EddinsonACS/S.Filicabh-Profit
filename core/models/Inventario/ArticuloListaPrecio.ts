@@ -1,7 +1,7 @@
 export interface ArticuloListaPrecio {
-    codigoArticulo: number
-    codigoListasdePrecio: number
-    codigoMoneda: number
+    idArticulo: number
+    idListasdePrecio: number
+    idMoneda: number
     equipo: string
     fechaDesde: string
     monto: number

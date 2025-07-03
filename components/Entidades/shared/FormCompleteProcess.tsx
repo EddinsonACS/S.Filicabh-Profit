@@ -17,8 +17,8 @@ import { z } from 'zod';
 
 interface ListaPrecioItem {
   id: number;
-  codigoListasdePrecio: string;
-  codigoMoneda: string;
+  idListasdePrecio: string;
+  idMoneda: string;
   monto: string | number;
   fechaDesde: string;
   fechaHasta: string;
@@ -363,8 +363,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     if (precioInputs.monto && precioInputs.fechaDesde && selectedListaPrecio && selectedMoneda) {
       const newPrice: ListaPrecioItem = {
         id: Date.now(),
-        codigoListasdePrecio: selectedListaPrecio,
-        codigoMoneda: selectedMoneda,
+        idListasdePrecio: selectedListaPrecio,
+        idMoneda: selectedMoneda,
         monto: Number(precioInputs.monto) || 0,
         fechaDesde: precioInputs.fechaDesde,
         fechaHasta: precioInputs.fechaHasta || '',
@@ -494,7 +494,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   useEffect(() => {
     if (isEditing && currentItem) {
-      console.log('Reseteando formulario con datos actuales:', currentItem);
       reset(currentItem);
       
       // Inicializar presentaciones si existen
@@ -567,7 +566,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   // Función para seleccionar imagen desde la galería
   const pickImageFromGallery = async () => {
-    console.log('📱 Abriendo galería...');
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
@@ -582,14 +580,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       quality: 1,
     });
 
-    console.log('📱 Resultado de galería:', result.canceled ? 'Cancelado' : 'Imagen seleccionada');
     processSelectedImage(result);
     setShowImagePickerModal(false);
   };
 
   // Función para tomar foto con la cámara
   const takePhotoWithCamera = async () => {
-    console.log('📷 Abriendo cámara...');
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
@@ -604,7 +600,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       quality: 1,
     });
 
-    console.log('📷 Resultado de cámara:', result.canceled ? 'Cancelado' : 'Foto tomada');
     processSelectedImage(result);
     setShowImagePickerModal(false);
   };
@@ -626,17 +621,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   // Función para marcar imagen como favorita
   const setImageAsFavorite = (index: number) => {
-    console.log('🎯 setImageAsFavorite llamado con índice:', index);
-    console.log('🎯 Estado actual de principalImageIndex:', principalImageIndex);
-    console.log('🎯 Total de imágenes:', selectedImages.length);
-    
     if (index >= 0 && index < selectedImages.length) {
       setPrincipalImageIndex(index);
-      console.log(`⭐ Imagen ${index + 1} marcada como favorita`);
-      console.log('🎯 Nuevo principalImageIndex será:', index);
-    } else {
-      console.log('❌ Índice inválido para setImageAsFavorite:', index);
-    }
+    } 
   };
 
   // Función para guardar fotos de forma secuencial
@@ -644,13 +631,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     if (!articleId || selectedImages.length === 0) return true;
 
     try {
-      console.log('📸 Iniciando subida de fotos...');
-      console.log('📸 Total de imágenes a subir:', selectedImages.length);
-      console.log('📸 Índice de imagen favorita:', principalImageIndex);
-      
       // Validar que haya una imagen favorita seleccionada
       if (principalImageIndex < 0 || principalImageIndex >= selectedImages.length) {
-        console.log('⚠️ No hay imagen favorita seleccionada, seleccionando la primera por defecto');
         setPrincipalImageIndex(0);
       }
       
@@ -668,14 +650,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
           type: image.type, // Usar el tipo MIME correcto que ya establecimos
         };
 
-        console.log(`📸 Subiendo imagen ${index + 1}/${selectedImages.length}:`, {
-          nombre: file.name,
-          tipo: file.type,
-          esPrincipal: isPrincipal,
-          orden: index + 1,
-          idArticulo: articleId
-        });
-
         try {
           // Esperar a que cada imagen se suba antes de continuar con la siguiente
           const response = await createFotoMutation.mutateAsync({
@@ -686,7 +660,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             imageFile: file
           });
           
-          console.log(`✅ Imagen ${index + 1} subida exitosamente${isPrincipal ? ' (FAVORITA)' : ''}`, response);
           uploadedCount++;
           
           // Pequeña pausa entre subidas para evitar sobrecargar el servidor
@@ -699,10 +672,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             status: error.response?.status
           });
           
-          // Si es la imagen principal la que falló, necesitamos manejar esto
           if (isPrincipal) {
             console.error('⚠️ La imagen principal falló al subirse');
-            // Si hay más imágenes, podríamos intentar hacer la siguiente imagen como principal
             if (index < selectedImages.length - 1) {
               setPrincipalImageIndex(index + 1);
             }
@@ -712,16 +683,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
       }
       
-      console.log('📊 Resumen de subida de fotos:', {
-        total: selectedImages.length,
-        exitosas: uploadedCount,
-        fallidas: failedCount
-      });
-      
-      // Solo retornamos true si al menos una imagen se subió correctamente
       return uploadedCount > 0;
     } catch (error) {
-      console.error('❌ Error inesperado en saveFotos:', error);
       // Relanzar el error para que sea manejado por el componente padre
       throw error;
     }
@@ -733,11 +696,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       for (const precio of listasPrecios) {
-        if (precio.codigoListasdePrecio && precio.codigoMoneda && Number(precio.monto) > 0) {
+        if (precio.idListasdePrecio && precio.idMoneda && Number(precio.monto) > 0) {
           const precioData = {
-            codigoArticulo: articleId,
-            codigoListasdePrecio: Number(precio.codigoListasdePrecio),
-            codigoMoneda: Number(precio.codigoMoneda),
+            idArticulo: articleId,
+            idListasdePrecio: Number(precio.idListasdePrecio),
+            idMoneda: Number(precio.idMoneda),
             monto: Number(precio.monto),
             fechaDesde: precio.fechaDesde,
             fechaHasta: precio.fechaHasta || '',
@@ -758,9 +721,6 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     if (!articleId || ubicaciones.length === 0) return true;
 
     try {
-      console.log('📍 Iniciando guardado de ubicaciones para artículo:', articleId);
-      console.log('📍 Total de ubicaciones a guardar:', ubicaciones.length);
-      
       for (const ubicacion of ubicaciones) {
         if (ubicacion.codigoAlmacen && ubicacion.ubicacion) {
           const ubicacionData = {
@@ -1449,10 +1409,10 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 <View className="flex-row justify-between items-center">
                                   <View>
                                     <Text className="font-medium">
-                                      {listasPreciosData?.data.find(l => l.id === Number(precio.codigoListasdePrecio))?.nombre || 'Lista de Precio'}
+                                      {listasPreciosData?.data.find(l => l.id === Number(precio.idListasdePrecio))?.nombre || 'Lista de Precio'}
                                     </Text>
                                     <Text className="text-gray-600">
-                                      {monedasData?.data.find(m => m.id === Number(precio.codigoMoneda))?.nombre || 'Moneda'}
+                                      {monedasData?.data.find(m => m.id === Number(precio.idMoneda))?.nombre || 'Moneda'}
                                     </Text>
                                     <Text className="font-bold text-lg">{Number(precio.monto).toFixed(2)}</Text>
                                     <Text className="text-sm text-gray-500">

@@ -1,7 +1,10 @@
-export interface Presentacion {
+export interface Foto {
     id: number;
-    nombre: string;
-    suspendido: boolean;
+    idArticulo: number;
+    articuloNombre: string;
+    urlFoto: string;
+    orden: number;
+    esPrincipal: boolean;
     otrosF1: string;
     otrosN1: number;
     otrosN2: number;
@@ -15,3 +18,4 @@ export interface Presentacion {
     fechaModificacion: string;
     usuarioModificacionNombre: null | string;
 }
+    

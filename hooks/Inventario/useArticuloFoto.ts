@@ -114,25 +114,13 @@ export const useArticuloFoto = () => {
             type: params.imageFile.type || 'image/jpeg',
           };
           
-          console.log('📸 Archivo a subir:', {
-            name: file.name,
-            type: file.type
-          });
-          
           // Agregar archivo al FormData
           formData.append('ImageFile', {
             uri: file.uri,
             name: file.name,
             type: file.type,
           } as any);
-          
-          console.log('📸 FormData preparado con campos:', {
-            IdArticulo: params.idArticulo,
-            EsPrincipal: params.esPrincipal,
-            Orden: params.orden,
-            Equipo: params.equipo,
-            ImageFile: file.name
-          });
+
           
           const response = await apiArticuloFoto.create(
             endpoints.inventory.articulofoto.create, 
@@ -140,7 +128,6 @@ export const useArticuloFoto = () => {
             true
           ) as ArticuloFoto;
           
-          console.log('📸 Respuesta del servidor:', response);
           return response;
           
         } catch (error: any) {
@@ -165,8 +152,8 @@ export const useArticuloFoto = () => {
         console.error('Error:', error);
       },
       onSuccess: (data) => {
-        console.log('Imagen guardada exitosamente:', data);
         queryClient.invalidateQueries({ queryKey: ['articulofoto', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
       },
     });
   };
@@ -174,7 +161,7 @@ export const useArticuloFoto = () => {
   const useUpdateArticuloFoto = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<ArticuloFoto> }) => {
-        if (!formData.CodigoArticulo) {
+        if (!formData.idArticulo) {
           throw new Error('El código de artículo es requerido');
         }
         const data: Partial<ArticuloFoto> = {
@@ -183,7 +170,7 @@ export const useArticuloFoto = () => {
         };
         
         // If there's a file, use FormData
-        if (formData.ImageFile) {
+        if (formData.idArticulo) {
           const formDataToSend = new FormData();
           Object.entries(data).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
@@ -210,6 +197,7 @@ export const useArticuloFoto = () => {
       mutationFn: (id: number) => apiArticuloFoto.delete(endpoints.inventory.articulofoto.delete(id)),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['articulofoto', 'list'] });
+        queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
       },
       onError: (error) => {
         console.error('Error deleting articulo foto:', error);

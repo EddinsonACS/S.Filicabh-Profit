@@ -1,3 +1,5 @@
+import { Foto } from "./Foto";
+
 export interface Articulo {
   codigoArticulo: string;
   codigoBarra: string;
@@ -7,7 +9,7 @@ export interface Articulo {
   descripcionGarantia: string;
   fechaModificacion: string;
   fechaRegistro: string;
-  fotos: any[];
+  fotos: Foto[];
   grupoNombre: string;
   id: number;
   idColor: number;
