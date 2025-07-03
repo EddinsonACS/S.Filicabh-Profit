@@ -7,6 +7,7 @@ import React, { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 
 import {
   Animated,
   Dimensions,
+  Image,
   Modal,
   PanResponder,
   ScrollView,
@@ -247,6 +248,23 @@ const DynamicItemModal = forwardRef<DynamicItemModalRef, DynamicItemModalProps>(
                   <Ionicons name="information-circle-outline" size={20} color="#7e22ce" />
                   <Text className="text-lg font-semibold text-gray-800 ml-1">Detalles del Registro</Text>
                 </View>
+                
+                {/* Mostrar imagen para artículos */}
+                {currentItem?.fotos?.length > 0 && (
+                  <View className="items-center my-4">
+                    <Image 
+                      source={{ uri: `https://wise.filicabh.com.ve:5000/${currentItem.fotos[0].urlFoto}` }} 
+                      style={{ 
+                        width: 200, 
+                        height: 200, 
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: '#e5e7eb'
+                      }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
                 {systemFields.map((field, idx) => (
                   <View key={idx} className={`flex-row justify-between py-2 ${idx < systemFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
                     <Text className="text-gray-500">{field.label}</Text>
