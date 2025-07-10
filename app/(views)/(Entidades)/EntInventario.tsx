@@ -642,6 +642,11 @@ const EntInventario: React.FC = () => {
   };
 
   const handleDelete = (id: number) => {
+    // Only handle delete for non-article categories since articles have their own delete handling
+    if (selectedCategory === 'articulo') {
+      return;
+    }
+
     const commonOnSuccess = (entityName: string) => {
       queryClient.invalidateQueries({ queryKey: [selectedCategory] });
       setAccumulatedItems(prev => prev.filter(item => item.id !== id));
@@ -708,11 +713,6 @@ const EntInventario: React.FC = () => {
         onSuccess: () => commonOnSuccess('el origen'),
         onError: commonOnError
       });
-    } else if (selectedCategory === 'articulo') {
-      deleteArticuloMutation.mutate(id, {
-        onSuccess: () => commonOnSuccess('el artículo'),
-        onError: commonOnError
-      });
     } else {
       console.warn('Unhandled category for delete:', selectedCategory);
       showError('Error', `Categoría no manejada para la eliminación: ${selectedCategory}`);
@@ -740,15 +740,23 @@ const EntInventario: React.FC = () => {
   };
 
   const showItemDetails = (item: any) => {
-    setCurrentItem(item);
-    setDetailModalVisible(true);
+    if (selectedCategory === 'articulo') {
+      router.push(`/(views)/(Entidades)/ArticuloDetalle?id=${item.id}`);
+    } else {
+      setCurrentItem(item);
+      setDetailModalVisible(true);
+    }
   };
 
   const openEditModal = (item: any) => {
-    setBackendFormError(null); // Clear backend error when opening for edit
-    setCurrentItem(item);
-    setIsEditing(true);
-    setFormModalVisible(true);
+    if (selectedCategory === 'articulo') {
+      router.push(`/(views)/(Entidades)/ArticuloForm?id=${item.id}&isEditing=true`);
+    } else {
+      setBackendFormError(null); // Clear backend error when opening for edit
+      setCurrentItem(item);
+      setIsEditing(true);
+      setFormModalVisible(true);
+    }
   };
 
   const renderItem = ({ item }: { item: any }) => {
@@ -793,10 +801,14 @@ const EntInventario: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onAddPress={() => {
-          setBackendFormError(null);
-          setCurrentItem(null);
-          setIsEditing(false);
-          setFormModalVisible(true);
+          if (selectedCategory === 'articulo') {
+            router.push('/(views)/(Entidades)/ArticuloForm');
+          } else {
+            setBackendFormError(null);
+            setCurrentItem(null);
+            setIsEditing(false);
+            setFormModalVisible(true);
+          }
         }}
         onFilterPress={() => setFilterModalVisible(true)}
         placeholder="Buscar en inventario..."

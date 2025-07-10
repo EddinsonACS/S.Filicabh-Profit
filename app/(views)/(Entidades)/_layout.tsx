@@ -8,6 +8,24 @@ export default function RootLayout(): JSX.Element {
       <Stack.Screen name="EntInventario" options={{ headerShown: false }} />
       <Stack.Screen name="EntFinanzas" options={{ headerShown: false }} />
       <Stack.Screen name="EntVentas" options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="ArticuloDetalle" 
+        options={{ 
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animationTypeForReplace: 'push',
+          animation: 'slide_from_right'
+        }} 
+      />
+      <Stack.Screen 
+        name="ArticuloForm" 
+        options={{ 
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animationTypeForReplace: 'push',
+          animation: 'slide_from_right'
+        }} 
+      />
     </Stack>
   );
 }
