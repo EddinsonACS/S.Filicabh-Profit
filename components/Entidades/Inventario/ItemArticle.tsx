@@ -1,17 +1,28 @@
-import { Almacen } from '@/core/models/Inventario/Almacen';
-import { Articulo } from '@/core/models/Inventario/Articulo';
-import { Categoria } from '@/core/models/Inventario/Categoria';
-import { Color } from '@/core/models/Inventario/Color';
-import { Grupo } from '@/core/models/Inventario/Grupo';
-import { Seccion } from '@/core/models/Inventario/Seccion';
-import { Talla } from '@/core/models/Inventario/Talla';
-import { TipoDeArticulo } from '@/core/models/Inventario/TipoDeArticulo';
-import { TipoDeImpuesto } from '@/core/models/Inventario/TipoDeImpuesto';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Almacen } from "@/core/models/Inventario/Almacen";
+import { Articulo } from "@/core/models/Inventario/Articulo";
+import { Categoria } from "@/core/models/Inventario/Categoria";
+import { Color } from "@/core/models/Inventario/Color";
+import { Grupo } from "@/core/models/Inventario/Grupo";
+import { Seccion } from "@/core/models/Inventario/Seccion";
+import { Talla } from "@/core/models/Inventario/Talla";
+import { TipoDeArticulo } from "@/core/models/Inventario/TipoDeArticulo";
+import { TipoDeImpuesto } from "@/core/models/Inventario/TipoDeImpuesto";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
-type CategoryId = 'almacen' | 'categoria' | 'articulo' | 'color' | 'grupo' | 'origen' | 'talla' | 'tipodearticulo' | 'tipodeimpuesto' | 'seccion' | 'presentacion';
+type CategoryId =
+  | "almacen"
+  | "categoria"
+  | "articulo"
+  | "color"
+  | "grupo"
+  | "origen"
+  | "talla"
+  | "tipodearticulo"
+  | "tipodeimpuesto"
+  | "seccion"
+  | "presentacion";
 
 interface BaseItem {
   id: number;
@@ -35,27 +46,45 @@ interface ItemProps {
   dataTipoImpuesto: TipoDeImpuesto[];
 }
 
-const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }> = ({ item, onPress }) => {
+const ItemAlmacen: React.FC<{
+  item: Almacen;
+  onPress: (item: Almacen) => void;
+}> = ({ item, onPress }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
         <View className="p-4">
           <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+            <Text
+              className="text-lg font-semibold text-gray-800"
+              numberOfLines={1}
+            >
+              {item.nombre}
+            </Text>
           </View>
 
           {/* Fila final - Ventas, Compras y Estado en la misma fila */}
           <View className="flex-row justify-between items-center mb-2">
             <View className="flex-row space-x-2">
               <View className="flex-row items-center">
-                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                <View
+                  style={{
+                    position: "relative",
+                    width: 14,
+                    height: 14,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   {item.aplicaVentas ? (
                     <>
                       <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                      <Ionicons
+                        name="checkmark"
+                        size={10}
+                        color="black"
+                        style={{ position: "absolute" }}
+                      />
                     </>
                   ) : (
                     <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
@@ -65,11 +94,24 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
               </View>
 
               <View className="flex-row items-center">
-                <View style={{ position: 'relative', width: 14, height: 14, justifyContent: 'center', alignItems: 'center' }}>
+                <View
+                  style={{
+                    position: "relative",
+                    width: 14,
+                    height: 14,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   {item.aplicaCompras ? (
                     <>
                       <Ionicons name="ellipse" size={14} color="#00FF15FF" />
-                      <Ionicons name="checkmark" size={10} color="black" style={{ position: 'absolute' }} />
+                      <Ionicons
+                        name="checkmark"
+                        size={10}
+                        color="black"
+                        style={{ position: "absolute" }}
+                      />
                     </>
                   ) : (
                     <Ionicons name="close-circle" size={14} color="#7C7D7DFF" />
@@ -80,15 +122,19 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
             </View>
 
             {/* Estado al lado derecho de la misma fila */}
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido
+                  ? "bg-red-100 border border-red-600"
+                  : "bg-green-100 border border-green-600"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {item.suspendido ? "Inactivo" : "Activo"}
               </Text>
             </View>
           </View>
@@ -96,10 +142,14 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -108,39 +158,52 @@ const ItemAlmacen: React.FC<{ item: Almacen; onPress: (item: Almacen) => void }>
   );
 };
 
-const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => void }> = ({ item, onPress }) => {
+const ItemCategoria: React.FC<{
+  item: Categoria;
+  onPress: (item: Categoria) => void;
+}> = ({ item, onPress }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
         <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+            <Text
+              className="text-lg font-semibold text-gray-800"
+              numberOfLines={1}
+            >
+              {item.nombre}
+            </Text>
           </View>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
 
           {/* Estado posicionado en la esquina inferior derecha */}
           <View className="absolute bottom-4 right-4">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido
+                  ? "bg-red-100 border border-red-600"
+                  : "bg-green-100 border border-green-600"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {item.suspendido ? "Inactivo" : "Activo"}
               </Text>
             </View>
           </View>
@@ -150,42 +213,60 @@ const ItemCategoria: React.FC<{ item: Categoria; onPress: (item: Categoria) => v
   );
 };
 
-const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCategory: Categoria[] }> = ({ item, onPress, dataCategory }) => {
+const ItemGrupo: React.FC<{
+  item: Grupo;
+  onPress: (item: Grupo) => void;
+  dataCategory: Categoria[];
+}> = ({ item, onPress, dataCategory }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
         <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+            <Text
+              className="text-lg font-semibold text-gray-800"
+              numberOfLines={1}
+            >
+              {item.nombre}
+            </Text>
           </View>
 
           {/* Información adicional */}
-          <Text className="text-sm text-gray-600 mb-2">Categoria: {dataCategory.find(c => c.id === item.idCategoria)?.nombre || 'No especificado'}</Text>
+          <Text className="text-sm text-gray-600 mb-2">
+            Categoria:{" "}
+            {dataCategory.find((c) => c.id === item.idCategoria)?.nombre ||
+              "No especificado"}
+          </Text>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
 
           {/* Estado posicionado en la esquina inferior derecha */}
           <View className="absolute bottom-4 right-4">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido
+                  ? "bg-red-100 border border-red-600"
+                  : "bg-green-100 border border-green-600"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {item.suspendido ? "Inactivo" : "Activo"}
               </Text>
             </View>
           </View>
@@ -198,36 +279,46 @@ const ItemGrupo: React.FC<{ item: Grupo; onPress: (item: Grupo) => void; dataCat
 const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
         <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+            <Text
+              className="text-lg font-semibold text-gray-800"
+              numberOfLines={1}
+            >
+              {item.nombre}
+            </Text>
           </View>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
 
           {/* Estado posicionado en la esquina inferior derecha */}
           <View className="absolute bottom-4 right-4">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido
+                  ? "bg-red-100 border border-red-600"
+                  : "bg-green-100 border border-green-600"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {item.suspendido ? "Inactivo" : "Activo"}
               </Text>
             </View>
           </View>
@@ -237,8 +328,21 @@ const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
   );
 };
 
-const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void; dataGrupo: Grupo[]; dataTalla: Talla[]; dataTipoArticulo: TipoDeArticulo[]; dataTipoImpuesto: TipoDeImpuesto[] }> = ({ item, onPress, dataGrupo, dataTalla, dataTipoArticulo, dataTipoImpuesto }) => {
-  console.log(item.fotos)
+const ItemArticulo: React.FC<{
+  item: Articulo;
+  onPress: (item: Articulo) => void;
+  dataGrupo: Grupo[];
+  dataTalla: Talla[];
+  dataTipoArticulo: TipoDeArticulo[];
+  dataTipoImpuesto: TipoDeImpuesto[];
+}> = ({
+  item,
+  onPress,
+  dataGrupo,
+  dataTalla,
+  dataTipoArticulo,
+  dataTipoImpuesto,
+}) => {
   return (
     <View className="bg-white rounded-lg mt-2 shadow-sm border border-gray-200 overflow-hidden">
       <TouchableOpacity
@@ -248,15 +352,19 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
       >
         {/* Estado en la esquina superior izquierda */}
         <View className="absolute top-1 left-1 z-10">
-          <View className={`px-2 py-1 rounded-full ${item.suspendido
-            ? 'bg-red-100 border border-red-600'
-            : 'bg-green-100 border border-green-600'
-            }`}>
-            <Text className={`text-xs font-medium ${item.suspendido
-              ? 'text-red-600'
-              : 'text-green-600'
-              }`}>
-              {item.suspendido ? 'Inactivo' : 'Activo'}
+          <View
+            className={`px-2 py-1 rounded-full ${
+              item.suspendido
+                ? "bg-red-100 border border-red-600"
+                : "bg-green-100 border border-green-600"
+            }`}
+          >
+            <Text
+              className={`text-xs font-medium ${
+                item.suspendido ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {item.suspendido ? "Inactivo" : "Activo"}
             </Text>
           </View>
         </View>
@@ -265,8 +373,10 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
         <View className="w-32 p-2">
           {item?.fotos?.length > 0 ? (
             <Image
-              source={{ uri: `https://wise.filicabh.com.ve:5000/${item.fotos[0].urlFoto}` }}
-              style={{ width: '100%', height: '100%' }}
+              source={{
+                uri: `https://wise.filicabh.com.ve:5000/${item.fotos[0].urlFoto}`,
+              }}
+              style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
             />
           ) : (
@@ -280,7 +390,10 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
         <View className="flex-1 px-2 py-1 justify-between">
           <View>
             {/* Nombre */}
-            <Text className="text-base font-bold text-gray-800 flex-1 mr-2 mb-1" numberOfLines={1}>
+            <Text
+              className="text-base font-bold text-gray-800 flex-1 mr-2 mb-1"
+              numberOfLines={1}
+            >
               {item.nombre}
             </Text>
 
@@ -292,15 +405,19 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
               </Text>
               <Text className="text-xs text-gray-500">Stock: </Text>
               <Text className="text-xs font-semibold text-gray-700">
-                {item.stock || 0} un.
+                {item.stockActual || 0}
               </Text>
             </View>
 
             {/* Presentación */}
             <View className="flex-row items-center">
               <Text className="text-xs text-gray-500">Prest: </Text>
-              <Text className="text-xs font-semibold text-gray-700 flex-1" numberOfLines={1}>
-                {dataTipoArticulo.find(g => g.id === item.idTipoArticulo)?.nombre || 'No especificado'}
+              <Text
+                className="text-xs font-semibold text-gray-700 flex-1"
+                numberOfLines={1}
+              >
+                {dataTipoArticulo.find((g) => g.id === item.idTipoArticulo)
+                  ?.nombre || "No especificado"}
               </Text>
             </View>
           </View>
@@ -308,10 +425,14 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5 border-t border-gray-100">
             <Text className="text-[10px] text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-[10px] text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -320,42 +441,60 @@ const ItemArticulo: React.FC<{ item: Articulo; onPress: (item: Articulo) => void
   );
 };
 
-const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; dataGrupo: Grupo[] }> = ({ item, onPress, dataGrupo }) => {
+const ItemSeccion: React.FC<{
+  item: Seccion;
+  onPress: (item: Seccion) => void;
+  dataGrupo: Grupo[];
+}> = ({ item, onPress, dataGrupo }) => {
   return (
     <View className="bg-white rounded-xl mt-2 shadow-sm border border-gray-100 overflow-hidden">
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
         <View className="p-4 relative min-h-[120px]">
           <View className="mb-2">
-            <Text className="text-lg font-semibold text-gray-800" numberOfLines={1}>{item.nombre}</Text>
+            <Text
+              className="text-lg font-semibold text-gray-800"
+              numberOfLines={1}
+            >
+              {item.nombre}
+            </Text>
           </View>
 
           {/* Información adicional */}
-          <Text className="text-sm text-gray-600 mb-2">Grupo: {dataGrupo.find(g => g.id === item.idGrupo)?.nombre || 'No especificado'}</Text>
+          <Text className="text-sm text-gray-600 mb-2">
+            Grupo:{" "}
+            {dataGrupo.find((g) => g.id === item.idGrupo)?.nombre ||
+              "No especificado"}
+          </Text>
 
           {/* Información del sistema */}
           <View className="flex-col justify-start items-start pt-0.5">
             <Text className="text-md text-gray-400">
-              Creado por: {item.usuarioRegistroNombre} • {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
+              Creado por: {item.usuarioRegistroNombre} •{" "}
+              {new Date(item.fechaRegistro ?? new Date()).toLocaleDateString()}
             </Text>
             <Text className="text-md text-gray-400">
-              Últ.Mod: {new Date(item.fechaModificacion ?? new Date()).toLocaleDateString()}
+              Últ.Mod:{" "}
+              {new Date(
+                item.fechaModificacion ?? new Date(),
+              ).toLocaleDateString()}
             </Text>
           </View>
 
           {/* Estado posicionado en la esquina inferior derecha */}
           <View className="absolute bottom-4 right-4">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
+            <View
+              className={`px-2 py-1 rounded-full ${
+                item.suspendido
+                  ? "bg-red-100 border border-red-600"
+                  : "bg-green-100 border border-green-600"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  item.suspendido ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                {item.suspendido ? "Inactivo" : "Activo"}
               </Text>
             </View>
           </View>
@@ -365,19 +504,62 @@ const ItemSeccion: React.FC<{ item: Seccion; onPress: (item: Seccion) => void; d
   );
 };
 
-export const ItemArticle: React.FC<ItemProps> = ({ item, category, onPress, dataCategory, dataGrupo, dataColor, dataTalla, dataTipoArticulo, dataTipoImpuesto }) => {
+export const ItemArticle: React.FC<ItemProps> = ({
+  item,
+  category,
+  onPress,
+  dataCategory,
+  dataGrupo,
+  dataColor,
+  dataTalla,
+  dataTipoArticulo,
+  dataTipoImpuesto,
+}) => {
   switch (category) {
-    case 'almacen':
+    case "almacen":
       return <ItemAlmacen item={item as Almacen} onPress={onPress} />;
-    case 'categoria':
+    case "categoria":
       return <ItemCategoria item={item as Categoria} onPress={onPress} />;
-    case 'grupo':
-      return <ItemGrupo item={item as Grupo} onPress={onPress} dataCategory={dataCategory} />;
-    case 'seccion':
-      return <ItemSeccion item={item as Seccion} onPress={onPress} dataGrupo={dataGrupo} />;
-    case 'articulo':
-      return <ItemArticulo item={item as Articulo} onPress={onPress} dataGrupo={dataGrupo} dataTalla={dataTalla} dataTipoArticulo={dataTipoArticulo} dataTipoImpuesto={dataTipoImpuesto} />;
+    case "grupo":
+      return (
+        <ItemGrupo
+          item={item as Grupo}
+          onPress={onPress}
+          dataCategory={dataCategory}
+        />
+      );
+    case "seccion":
+      return (
+        <ItemSeccion
+          item={item as Seccion}
+          onPress={onPress}
+          dataGrupo={dataGrupo}
+        />
+      );
+    case "articulo":
+      return (
+        <ItemArticulo
+          item={item as Articulo}
+          onPress={onPress}
+          dataGrupo={dataGrupo}
+          dataTalla={dataTalla}
+          dataTipoArticulo={dataTipoArticulo}
+          dataTipoImpuesto={dataTipoImpuesto}
+        />
+      );
     default:
-      return <ItemDefault item={item} category={category} onPress={onPress} dataCategory={dataCategory} dataGrupo={dataGrupo} dataColor={dataColor} dataTalla={dataTalla} dataTipoArticulo={dataTipoArticulo} dataTipoImpuesto={dataTipoImpuesto} />;
+      return (
+        <ItemDefault
+          item={item}
+          category={category}
+          onPress={onPress}
+          dataCategory={dataCategory}
+          dataGrupo={dataGrupo}
+          dataColor={dataColor}
+          dataTalla={dataTalla}
+          dataTipoArticulo={dataTipoArticulo}
+          dataTipoImpuesto={dataTipoImpuesto}
+        />
+      );
   }
 };

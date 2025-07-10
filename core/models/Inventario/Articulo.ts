@@ -45,4 +45,6 @@ export interface Articulo {
   usuarioRegistroNombre: string;
   volumen: number;
   equipo: string;
+  precio: number;
+  stockActual: number;
 }

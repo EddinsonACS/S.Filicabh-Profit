@@ -40,7 +40,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'descripcion',
       label: 'Descripción',
       type: 'text' as const,
-      required: true,
+      required: false,
       placeholder: 'Descripción del artículo',
       description: 'Ingrese una descripción detallada del artículo'
     },
@@ -48,7 +48,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'codigoArticulo',
       label: 'Código de Artículo',
       type: 'text' as const,
-      required: true,
+      required: false,
       placeholder: 'Código del artículo',
       description: 'Ingrese el código del artículo'
     },
@@ -56,7 +56,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'codigoModelo',
       label: 'Código de Modelo',
       type: 'text' as const,
-      required: true,
+      required: false,
       placeholder: 'Código del modelo',
       description: 'Ingrese el código del modelo'
     },
@@ -64,7 +64,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'codigoBarra',
       label: 'Código de Barra',
       type: 'text' as const,
-      required: true,
+      required: false,
       placeholder: 'Código de barra',
       description: 'Ingrese el código de barra'
     },
@@ -83,7 +83,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'idColor',
       label: 'Color',
       type: 'select' as const,
-      required: true,
+      required: false,
       placeholder: 'Seleccione el color',
       description: 'Seleccione el color del artículo',
       options: [],
@@ -94,7 +94,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'idTalla',
       label: 'Talla',
       type: 'select' as const,
-      required: true,
+      required: false,
       placeholder: 'Seleccione la talla',
       description: 'Seleccione la talla del artículo',
       options: [],
@@ -127,7 +127,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'peso',
       label: 'Peso',
       type: 'number' as const,
-      required: true,
+      required: false,
       placeholder: 'Peso del artículo',
       description: 'Ingrese el peso del artículo'
     },
@@ -135,7 +135,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'volumen',
       label: 'Volumen',
       type: 'number' as const,
-      required: true,
+      required: false,
       placeholder: 'Volumen del artículo',
       description: 'Ingrese el volumen del artículo'
     },
@@ -143,15 +143,32 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'metroCubico',
       label: 'Metro Cúbico',
       type: 'number' as const,
-      required: true,
+      required: false,
       placeholder: 'Metros cúbicos',
       description: 'Ingrese los metros cúbicos del artículo'
     },
     {
+      name: 'precio',
+      label: 'Precio',
+      type: 'number' as const,
+      required: true,
+      placeholder: 'Precio del articulo',
+      description: 'Ingrese los metros cúbicos del artículo'
+    },
+    {
+      name: 'stockActual',
+      label: 'Stock',
+      type: 'number' as const,
+      required: true,
+      placeholder: 'stock disponible',
+      description: 'Ingrese los metros cúbicos del artículo'
+    },
+
+    {
       name: 'pie',
       label: 'Pie',
       type: 'number' as const,
-      required: true,
+      required: false,
       placeholder: 'Pies',
       description: 'Ingrese los pies del artículo'
     },
@@ -180,7 +197,7 @@ export const FORM_FIELDS_INVENTORY = {
       name: 'descripcionGarantia',
       label: 'Descripción de Garantía',
       type: 'text' as const,
-      required: true,
+      required: false,
       placeholder: 'Descripción de la garantía',
       description: 'Ingrese la descripción de la garantía'
     },

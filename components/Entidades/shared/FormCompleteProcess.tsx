@@ -1,19 +1,33 @@
-import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
-import { useArticuloFoto } from '@/hooks/Inventario/useArticuloFoto';
-import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
-import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
-import { useListaDePrecio } from '@/hooks/Ventas/useListaDePrecio';
-import { useMoneda } from '@/hooks/Ventas/useMoneda';
-import { Ionicons } from '@expo/vector-icons';
-import { zodResolver } from '@hookform/resolvers/zod';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Alert, Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { z } from 'zod';
+import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
+import { useArticuloFoto } from "@/hooks/Inventario/useArticuloFoto";
+import { useArticuloListaDePrecio } from "@/hooks/Inventario/useArticuloListaDePrecio";
+import { useArticuloUbicacion } from "@/hooks/Inventario/useArticuloUbicacion";
+import { useListaDePrecio } from "@/hooks/Ventas/useListaDePrecio";
+import { useMoneda } from "@/hooks/Ventas/useMoneda";
+import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Modal,
+  PanResponder,
+  Platform,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { z } from "zod";
 
 interface ListaPrecioItem {
   id: number;
@@ -34,7 +48,7 @@ interface PrecioInputs {
 interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'switch' | 'select' | 'date';
+  type: "text" | "number" | "switch" | "select" | "date";
   placeholder?: string;
   required?: boolean;
   description?: string;
@@ -74,39 +88,31 @@ interface FormCompleteProcessProps {
   listasPrecio?: any[];
 }
 
-const { height } = Dimensions.get('window');
+const { height } = Dimensions.get("window");
 
 // Function to convert form field values to their appropriate types for submission
-const convertValueForSubmission = (fieldName: string, fieldType: string, value: string | number): string | number => {
-  // If it's undefined, null or empty string, return 0 for numeric fields
-  if (fieldType === 'number' && (value === undefined || value === null || value === '')) {
-    return 0;
-  }
-
-  if (typeof value === 'string' && fieldType === 'number') {
-    // Clean the string: remove spaces and replace comma with dot
-    const cleanedValue = value.trim().replace(',', '.');
-
-    // Special case for 'cantidad' field - force integer
-    if (fieldName === 'cantidad') {
-      const numericValue = parseInt(cleanedValue, 10);
+// This function is now simplified since getFormattedValueByType handles the conversion
+const convertValueForSubmission = (
+  fieldName: string,
+  fieldType: string,
+  value: string | number,
+): string | number => {
+  // For number fields, ensure we return a number
+  if (fieldType === "number") {
+    if (typeof value === "string") {
+      const cleanedValue = value.trim().replace(",", ".");
+      const numericValue = parseFloat(cleanedValue);
       return isNaN(numericValue) ? 0 : numericValue;
     }
-
-    // All other numeric fields allow decimals
-    const numericValue = parseFloat(cleanedValue);
-    return isNaN(numericValue) ? 0 : numericValue;
+    return typeof value === "number" ? value : 0;
   }
 
   return value;
 };
 
-
 // Formatting functions (copied from DynamicFormModal)
 const formatName = (text: string): string => {
-  return text
-    .split(' ')
-    .join(' ');
+  return text.split(" ").join(" ");
 };
 
 const formatEmail = (text: string): string => {
@@ -119,13 +125,13 @@ const formatCode = (text: string): string => {
 
 const formatRIF = (text: string): string => {
   // Formato RIF: J-12345678-9
-  let cleaned = text.replace(/[^A-Za-z0-9]/g, '');
+  let cleaned = text.replace(/[^A-Za-z0-9]/g, "");
   if (cleaned.length > 0) {
     let formatted = cleaned.charAt(0).toUpperCase();
     if (cleaned.length > 1) {
-      formatted += '-' + cleaned.slice(1, 9);
+      formatted += "-" + cleaned.slice(1, 9);
       if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 10);
+        formatted += "-" + cleaned.slice(9, 10);
       }
     }
     return formatted;
@@ -133,30 +139,29 @@ const formatRIF = (text: string): string => {
   return text;
 };
 
-
 const formatDecimalNumber = (text: string): string => {
   // Permite números decimales con coma o punto como separador
-  let cleaned = text.replace(/[^0-9,.-]/g, '');
+  let cleaned = text.replace(/[^0-9,.-]/g, "");
 
   // Permitir coma o punto al final para continuar escribiendo decimales
-  if (cleaned.endsWith('.') || cleaned.endsWith(',')) {
+  if (cleaned.endsWith(".") || cleaned.endsWith(",")) {
     return cleaned;
   }
 
   // Si hay coma, verificar que solo hay una
-  if (cleaned.includes(',')) {
-    const parts = cleaned.split(',');
+  if (cleaned.includes(",")) {
+    const parts = cleaned.split(",");
     if (parts.length > 2) {
-      cleaned = parts[0] + ',' + parts.slice(1).join('');
+      cleaned = parts[0] + "," + parts.slice(1).join("");
     }
     return cleaned;
   }
 
   // Si hay punto, verificar que solo hay uno
-  if (cleaned.includes('.')) {
-    const parts = cleaned.split('.');
+  if (cleaned.includes(".")) {
+    const parts = cleaned.split(".");
     if (parts.length > 2) {
-      cleaned = parts[0] + '.' + parts.slice(1).join('');
+      cleaned = parts[0] + "." + parts.slice(1).join("");
     }
     return cleaned;
   }
@@ -165,38 +170,38 @@ const formatDecimalNumber = (text: string): string => {
 };
 
 const formatInteger = (text: string): string => {
-  return text.replace(/\D/g, ''); // Solo números enteros
+  return text.replace(/\D/g, ""); // Solo números enteros
 };
 
 const formatPercentage = (text: string): string => {
   // Para porcentajes, permitir decimales pero limitar a 100
-  let cleaned = text.replace(/[^0-9,.-]/g, '');
+  let cleaned = text.replace(/[^0-9,.-]/g, "");
 
   // Si termina en punto o coma, permitir continuar escribiendo
-  if (cleaned.endsWith('.') || cleaned.endsWith(',')) {
+  if (cleaned.endsWith(".") || cleaned.endsWith(",")) {
     return cleaned;
   }
 
   // Convertir coma a punto para validación
   let valueForValidation = cleaned;
-  if (valueForValidation.includes(',')) {
-    valueForValidation = valueForValidation.replace(',', '.');
+  if (valueForValidation.includes(",")) {
+    valueForValidation = valueForValidation.replace(",", ".");
   }
 
   // Asegurar que solo hay un punto decimal
-  const parts = valueForValidation.split('.');
+  const parts = valueForValidation.split(".");
   if (parts.length > 2) {
-    valueForValidation = parts[0] + '.' + parts.slice(1).join('');
+    valueForValidation = parts[0] + "." + parts.slice(1).join("");
   }
 
   const numValue = parseFloat(valueForValidation);
   if (!isNaN(numValue) && numValue > 100) {
-    return '100';
+    return "100";
   }
 
   // Devolver el valor original con coma si la tenía
-  if (cleaned.includes(',')) {
-    return cleaned.replace(',', '.');
+  if (cleaned.includes(",")) {
+    return cleaned.replace(",", ".");
   }
 
   return valueForValidation;
@@ -204,14 +209,14 @@ const formatPercentage = (text: string): string => {
 
 const formatDate = (text: string): string => {
   // Permitir solo números y guiones para formato YYYY-MM-DD
-  let cleaned = text.replace(/[^0-9-]/g, '');
+  let cleaned = text.replace(/[^0-9-]/g, "");
 
   // Agregar guiones automáticamente
-  if (cleaned.length >= 4 && cleaned.indexOf('-') === -1) {
-    cleaned = cleaned.substring(0, 4) + '-' + cleaned.substring(4);
+  if (cleaned.length >= 4 && cleaned.indexOf("-") === -1) {
+    cleaned = cleaned.substring(0, 4) + "-" + cleaned.substring(4);
   }
-  if (cleaned.length >= 7 && cleaned.lastIndexOf('-') === 4) {
-    cleaned = cleaned.substring(0, 7) + '-' + cleaned.substring(7);
+  if (cleaned.length >= 7 && cleaned.lastIndexOf("-") === 4) {
+    cleaned = cleaned.substring(0, 7) + "-" + cleaned.substring(7);
   }
 
   // Limitar a 10 caracteres (YYYY-MM-DD)
@@ -224,81 +229,137 @@ const formatDate = (text: string): string => {
 
 const getFormattedValue = (fieldName: string, text: string): string => {
   // Campos que deben formatear nombres (cada palabra con mayúscula)
-  if (['nombre', 'nombreEjecutivo', 'sucursal', 'personaContacto'].includes(fieldName)) {
+  if (
+    ["nombre", "nombreEjecutivo", "sucursal", "personaContacto"].includes(
+      fieldName,
+    )
+  ) {
     return formatName(text);
   }
 
-  // Campos que deben ser solo números enteros
-  if (['nroCuenta', 'telefono', 'dias', 'nit', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
-    return formatInteger(text);
-  }
-
   // Campos de email
-  if (['email', 'emailAlterno'].includes(fieldName)) {
+  if (["email", "emailAlterno"].includes(fieldName)) {
     return formatEmail(text);
   }
 
   // Campos de dirección (primera letra de cada palabra en mayúscula)
-  if (['direccion', 'direccionComercial', 'direccionEntrega', 'descripcionFiguraComercial'].includes(fieldName)) {
+  if (
+    [
+      "direccion",
+      "direccionComercial",
+      "direccionEntrega",
+      "descripcionFiguraComercial",
+    ].includes(fieldName)
+  ) {
     return formatName(text);
   }
 
   // Campos de código (mayúsculas)
-  if (['codigo'].includes(fieldName)) {
+  if (["codigo"].includes(fieldName)) {
     return formatCode(text);
   }
 
   // Campo RIF (formato especial)
-  if (fieldName === 'rif') {
+  if (fieldName === "rif") {
     return formatRIF(text);
   }
 
   // Campo de porcentaje (0-100)
-  if (fieldName === 'porceRetencionIva') {
+  if (fieldName === "porceRetencionIva") {
     return formatPercentage(text);
   }
 
   // Campos de números decimales (tasas, montos, medidas)
-  if (['tasaVenta', 'tasaCompra', 'montolimiteCreditoVentas', 'montolimiteCreditoCompras', 'peso', 'volumen', 'metroCubico', 'pie', 'precio', 'costo', 'margen'].includes(fieldName)) {
+  if (
+    [
+      "tasaVenta",
+      "tasaCompra",
+      "montolimiteCreditoVentas",
+      "montolimiteCreditoCompras",
+      "peso",
+      "volumen",
+      "metroCubico",
+      "pie",
+      "precio",
+      "costo",
+      "margen",
+    ].includes(fieldName)
+  ) {
     return formatDecimalNumber(text);
   }
 
   return text;
 };
 
-const getFormattedValueByType = (fieldName: string, fieldType: string, text: string): string => {
+const getFormattedValueByType = (
+  fieldName: string,
+  fieldType: string,
+  text: string,
+): string | number => {
   // Campo fecha específico - no formatear porque usa date picker
-  if (fieldType === 'date') {
+  if (fieldType === "date") {
     return text;
   }
 
-  // Campo porcentaje específico (tiene límite de 100)
-  if (fieldName === 'porceRetencionIva') {
+  // Si es un campo de tipo número, procesar y retornar number
+  if (fieldType === "number") {
+    // Limpiar el texto: remover espacios y reemplazar coma con punto
+    const cleanedValue = text.trim().replace(",", ".");
+    
+    // Si está vacío, retornar 0
+    if (!cleanedValue || cleanedValue === "") {
+      return 0;
+    }
+
+    // Para campos enteros específicos
+    if (["nroCuenta", "telefono", "dias", "nit", "idRegion", "codigoTipoVendedor", "idListaPrecio", "codigoMoneda", "idPais", "idCiudad", "idRubro", "idSector", "idVendedor", "idAcuerdoDePago", "idTipoPersona", "puntoMinimo", "puntoMaximo", "stockActual", "codigoFiguraComercialCasaMatriz"].includes(fieldName)) {
+      const numericValue = parseInt(cleanedValue, 10);
+      return isNaN(numericValue) ? 0 : numericValue;
+    }
+
+    // Para campos decimales, permitir solo números y un punto decimal
+    const numericValue = parseFloat(cleanedValue);
+    return isNaN(numericValue) ? 0 : numericValue;
+  }
+
+  // Para campos de texto, aplicar formateo específico
+  if (fieldName === "porceRetencionIva") {
     return formatPercentage(text);
   }
 
-  // Si es un campo de tipo número y no está en la lista de enteros, usar formateo decimal
-  if (fieldType === 'number' && !['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
-    return formatDecimalNumber(text);
-  }
-
-  // Para campos enteros específicos
-  if (['nroCuenta', 'telefono', 'dias', 'nit'].includes(fieldName)) {
-    return formatInteger(text);
-  }
-
-  // Usar formateo específico por nombre de campo para otros casos
+  // Usar formateo específico por nombre de campo para otros casos de texto
   return getFormattedValue(fieldName, text);
 };
 
 const getKeyboardType = (fieldName: string, fieldType: string) => {
-  if (fieldType === 'number' || ['nroCuenta', 'telefono', 'dias', 'nit', 'codigo', 'idRegion', 'codigoTipoVendedor', 'idListaPrecio', 'codigoMoneda', 'idPais', 'idCiudad', 'idRubro', 'idSector', 'idVendedor', 'idAcuerdoDePago', 'idTipoPersona', 'codigoFiguraComercialCasaMatriz'].includes(fieldName)) {
-    return 'numeric';
+  if (
+    fieldType === "number" ||
+    [
+      "nroCuenta",
+      "telefono",
+      "dias",
+      "nit",
+      "codigo",
+      "idRegion",
+      "codigoTipoVendedor",
+      "idListaPrecio",
+      "codigoMoneda",
+      "idPais",
+      "idCiudad",
+      "idRubro",
+      "idSector",
+      "idVendedor",
+      "idAcuerdoDePago",
+      "idTipoPersona",
+      "codigoFiguraComercialCasaMatriz",
+    ].includes(fieldName)
+  ) {
+    return "numeric";
   }
-  if (fieldType === 'email') {
-    return 'email-address';
+  if (fieldType === "email") {
+    return "email-address";
   }
-  return 'default';
+  return "default";
 };
 
 interface FormData {
@@ -327,68 +388,79 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   articuloId,
   almacenes = [],
   monedas = [],
-  listasPrecio = []
+  listasPrecio = [],
 }) => {
-  const [activeTab, setActiveTab] = useState('articulo');
+  const [activeTab, setActiveTab] = useState("articulo");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);
-  const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>('');
-  const [selectedMoneda, setSelectedMoneda] = useState<string>('');
+  const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>("");
+  const [selectedMoneda, setSelectedMoneda] = useState<string>("");
   const [showListaPrecioSection, setShowListaPrecioSection] = useState(true);
   const [showUbicacionesSection, setShowUbicacionesSection] = useState(true);
   const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState<{ [key: string]: boolean }>({});
+  const [showDatePicker, setShowDatePicker] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [openSelect, setOpenSelect] = useState<string | null>(null);
-  const [selectedAlmacen, setSelectedAlmacen] = useState<string>('');
-  const [ubicacionInput, setUbicacionInput] = useState<string>('');
+  const [selectedAlmacen, setSelectedAlmacen] = useState<string>("");
+  const [ubicacionInput, setUbicacionInput] = useState<string>("");
   const [precioInputs, setPrecioInputs] = useState<PrecioInputs>({
-    monto: '',
-    fechaDesde: '',
-    fechaHasta: ''
+    monto: "",
+    fechaDesde: "",
+    fechaHasta: "",
   });
 
   // Estados para manejar fotos
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
 
-  const {useGetListaDePrecioList} = useListaDePrecio();
-  const {data: listasPreciosData} = useGetListaDePrecioList(1,100);
-  
+  const { useGetListaDePrecioList } = useListaDePrecio();
+  const { data: listasPreciosData } = useGetListaDePrecioList(1, 100);
+
   const insets = useSafeAreaInsets();
-  
+
   // Function to add a new price to the list
   const addListaPrecio = () => {
-    if (precioInputs.monto && precioInputs.fechaDesde && selectedListaPrecio && selectedMoneda) {
+    if (
+      precioInputs.monto &&
+      precioInputs.fechaDesde &&
+      selectedListaPrecio &&
+      selectedMoneda
+    ) {
       const newPrice: ListaPrecioItem = {
         id: Date.now(),
         idListasdePrecio: selectedListaPrecio,
         idMoneda: selectedMoneda,
         monto: Number(precioInputs.monto) || 0,
         fechaDesde: precioInputs.fechaDesde,
-        fechaHasta: precioInputs.fechaHasta || '',
-        suspendido: false
+        fechaHasta: precioInputs.fechaHasta || "",
+        suspendido: false,
       };
-      
-      setListasPrecios(prev => [...prev, newPrice]);
-      
+
+      setListasPrecios((prev) => [...prev, newPrice]);
+
       // Clear the input fields after adding
       setPrecioInputs((prev: PrecioInputs) => ({
         ...prev,
-        monto: '',
-        fechaHasta: ''
+        monto: "",
+        fechaHasta: "",
       }));
-      setSelectedListaPrecio('');
-      setSelectedMoneda('');
+      setSelectedListaPrecio("");
+      setSelectedMoneda("");
     }
   };
-  
+
   // Function to update a price in the list
-  const updateListaPrecio = (index: number, field: keyof ListaPrecioItem, value: string | boolean | number) => {
-    setListasPrecios(prev => {
+  const updateListaPrecio = (
+    index: number,
+    field: keyof ListaPrecioItem,
+    value: string | boolean | number,
+  ) => {
+    setListasPrecios((prev) => {
       const updated = [...prev];
-      if (field === 'monto' && typeof value === 'string') {
+      if (field === "monto" && typeof value === "string") {
         updated[index] = { ...updated[index], [field]: Number(value) || 0 };
       } else {
         updated[index] = { ...updated[index], [field]: value };
@@ -396,38 +468,50 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       return updated;
     });
   };
-  
+
   // Function to remove a price from the list
   const removeListaPrecio = (id: number) => {
-    setListasPrecios(prev => prev.filter(item => item.id !== id));
+    setListasPrecios((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const {useGetMonedaList} = useMoneda();
-  const {data: monedasData} = useGetMonedaList(1, 100);
-  
+  const { useGetMonedaList } = useMoneda();
+  const { data: monedasData } = useGetMonedaList(1, 100);
+
   // Get Almacen data for Ubicaciones
-  const {useGetAlmacenList} = useAlmacen();
-  const {data: almacenesData} = useGetAlmacenList(1, 100);
-  
+  const { useGetAlmacenList } = useAlmacen();
+  const { data: almacenesData } = useGetAlmacenList(1, 100);
+
   // Merge almacenes from props with data from API
   const allAlmacenes = [
     ...(almacenes || []),
-    ...(almacenesData?.data?.map(almacen => ({
+    ...(almacenesData?.data?.map((almacen) => ({
       id: almacen.id,
-      nombre: almacen.nombre
-    })) || [])
+      nombre: almacen.nombre,
+    })) || []),
   ];
-  
+
   // Estados para expandir/contraer secciones
   const [expandedSections, setExpandedSections] = useState({
     listaPrecio: true,
-    ubicaciones: true
+    ubicaciones: true,
   });
 
   // Hooks para los pasos adicionales
-  const { useCreateArticuloFoto, useUpdateArticuloFoto, useDeleteArticuloFoto } = useArticuloFoto();
-  const { useCreateArticuloListaDePrecio, useUpdateArticuloListaDePrecio, useDeleteArticuloListaDePrecio } = useArticuloListaDePrecio();
-  const { useCreateArticuloUbicacion, useUpdateArticuloUbicacion, useDeleteArticuloUbicacion } = useArticuloUbicacion();
+  const {
+    useCreateArticuloFoto,
+    useUpdateArticuloFoto,
+    useDeleteArticuloFoto,
+  } = useArticuloFoto();
+  const {
+    useCreateArticuloListaDePrecio,
+    useUpdateArticuloListaDePrecio,
+    useDeleteArticuloListaDePrecio,
+  } = useArticuloListaDePrecio();
+  const {
+    useCreateArticuloUbicacion,
+    useUpdateArticuloUbicacion,
+    useDeleteArticuloUbicacion,
+  } = useArticuloUbicacion();
 
   const createFotoMutation = useCreateArticuloFoto();
   const updateFotoMutation = useUpdateArticuloFoto();
@@ -460,24 +544,26 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       },
       // Handle the movement
       onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) { // Only allow downward movement
+        if (gestureState.dy > 0) {
+          // Only allow downward movement
           slideAnim.setValue(gestureState.dy);
         }
       },
       // Handle when the user releases the touch
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100) { // If swiped down far enough, close the modal
+        if (gestureState.dy > 100) {
+          // If swiped down far enough, close the modal
           handleClose();
         } else {
           // Otherwise, animate back to the original position
           Animated.spring(slideAnim, {
             toValue: 0,
             friction: 8,
-            useNativeDriver: true
+            useNativeDriver: true,
           }).start();
         }
-      }
-    })
+      },
+    }),
   ).current;
 
   const {
@@ -486,33 +572,47 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     formState: { errors },
     reset,
     setValue,
-    watch
+    watch,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: isEditing ? currentItem : defaultValues
+    defaultValues: isEditing ? currentItem : defaultValues,
   });
 
   useEffect(() => {
     if (isEditing && currentItem) {
       reset(currentItem);
-      
+
       // Inicializar presentaciones si existen
       if (currentItem.presentaciones) {
-        const presentacionesArray = Array.isArray(currentItem.presentaciones) 
-          ? currentItem.presentaciones 
+        const presentacionesArray = Array.isArray(currentItem.presentaciones)
+          ? currentItem.presentaciones
           : [currentItem.presentaciones];
-        setValue('presentaciones', presentacionesArray);
+        setValue("presentaciones", presentacionesArray);
       }
-      
+
       // Inicializar otros campos numéricos
-      ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo'].forEach(field => {
+      [
+        "peso",
+        "volumen",
+        "metroCubico",
+        "pie",
+        "puntoMinimo",
+        "puntoMaximo",
+      ].forEach((field) => {
         if (currentItem[field] !== undefined) {
           setValue(field, Number(currentItem[field]));
         }
       });
-      
+
       // Inicializar campos booleanos
-      ['manejaLote', 'manejaSerial', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'suspendido'].forEach(field => {
+      [
+        "manejaLote",
+        "manejaSerial",
+        "poseeGarantia",
+        "manejaPuntoMinimo",
+        "manejaPuntoMaximo",
+        "suspendido",
+      ].forEach((field) => {
         if (currentItem[field] !== undefined) {
           setValue(field, Boolean(currentItem[field]));
         }
@@ -523,8 +623,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       setPrincipalImageIndex(-1);
       setListasPrecios([]);
       setUbicaciones([]);
-      setSelectedListaPrecio('');
-      setSelectedMoneda('');
+      setSelectedListaPrecio("");
+      setSelectedMoneda("");
       setCreatedArticleId(null);
     }
   }, [isEditing, currentItem, defaultValues, reset, setValue]);
@@ -539,17 +639,17 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const processSelectedImage = (result: any) => {
     if (!result.canceled) {
       const fileName = result.assets[0].fileName || `image_${Date.now()}.jpg`;
-      const fileExtension = fileName.split('.').pop()?.toLowerCase();
-      
-      let mimeType = 'image/jpeg'; // default
-      if (fileExtension === 'png') {
-        mimeType = 'image/png';
-      } else if (fileExtension === 'gif') {
-        mimeType = 'image/gif';
-      } else if (fileExtension === 'webp') {
-        mimeType = 'image/webp';
+      const fileExtension = fileName.split(".").pop()?.toLowerCase();
+
+      let mimeType = "image/jpeg"; // default
+      if (fileExtension === "png") {
+        mimeType = "image/png";
+      } else if (fileExtension === "gif") {
+        mimeType = "image/gif";
+      } else if (fileExtension === "webp") {
+        mimeType = "image/webp";
       }
-      
+
       const newImage = {
         id: Date.now(),
         uri: result.assets[0].uri,
@@ -557,19 +657,23 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         type: mimeType,
         file: {
           ...result.assets[0],
-          type: mimeType
-        }
+          type: mimeType,
+        },
       };
-      setSelectedImages(prev => [...prev, newImage]);
+      setSelectedImages((prev) => [...prev, newImage]);
     }
   };
 
   // Función para seleccionar imagen desde la galería
   const pickImageFromGallery = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      Alert.alert('Permisos requeridos', 'Se necesitan permisos para acceder a la galería');
+      Alert.alert(
+        "Permisos requeridos",
+        "Se necesitan permisos para acceder a la galería",
+      );
       return;
     }
 
@@ -589,7 +693,10 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      Alert.alert('Permisos requeridos', 'Se necesitan permisos para acceder a la cámara');
+      Alert.alert(
+        "Permisos requeridos",
+        "Se necesitan permisos para acceder a la cámara",
+      );
       return;
     }
 
@@ -611,11 +718,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   // Función para eliminar imagen
   const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
     if (principalImageIndex === index) {
       setPrincipalImageIndex(-1);
     } else if (principalImageIndex > index) {
-      setPrincipalImageIndex(prev => prev - 1);
+      setPrincipalImageIndex((prev) => prev - 1);
     }
   };
 
@@ -623,7 +730,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const setImageAsFavorite = (index: number) => {
     if (index >= 0 && index < selectedImages.length) {
       setPrincipalImageIndex(index);
-    } 
+    }
   };
 
   // Función para guardar fotos de forma secuencial
@@ -632,21 +739,27 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       // Validar que haya una imagen favorita seleccionada
-      if (principalImageIndex < 0 || principalImageIndex >= selectedImages.length) {
+      if (
+        principalImageIndex < 0 ||
+        principalImageIndex >= selectedImages.length
+      ) {
         setPrincipalImageIndex(0);
       }
-      
+
       let uploadedCount = 0;
       let failedCount = 0;
-      
+
       // Subir las imágenes de forma secuencial
       for (let index = 0; index < selectedImages.length; index++) {
         const image = selectedImages[index];
         const isPrincipal = index === principalImageIndex;
-        
+
         const file = {
           uri: image.file.uri,
-          name: image.file.fileName || image.name || `image_${Date.now()}_${index}.jpg`,
+          name:
+            image.file.fileName ||
+            image.name ||
+            `image_${Date.now()}_${index}.jpg`,
           type: image.type, // Usar el tipo MIME correcto que ya establecimos
         };
 
@@ -656,33 +769,33 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             idArticulo: Number(articleId),
             esPrincipal: isPrincipal,
             orden: index + 1,
-            equipo: 'equipo',
-            imageFile: file
+            equipo: "equipo",
+            imageFile: file,
           });
-          
+
           uploadedCount++;
-          
+
           // Pequeña pausa entre subidas para evitar sobrecargar el servidor
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error: any) {
           failedCount++;
           console.error(`❌ Error al subir la imagen ${index + 1}:`, {
             error: error.message,
             response: error.response?.data,
-            status: error.response?.status
+            status: error.response?.status,
           });
-          
+
           if (isPrincipal) {
-            console.error('⚠️ La imagen principal falló al subirse');
+            console.error("⚠️ La imagen principal falló al subirse");
             if (index < selectedImages.length - 1) {
               setPrincipalImageIndex(index + 1);
             }
           }
-          
+
           continue;
         }
       }
-      
+
       return uploadedCount > 0;
     } catch (error) {
       // Relanzar el error para que sea manejado por el componente padre
@@ -696,22 +809,26 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       for (const precio of listasPrecios) {
-        if (precio.idListasdePrecio && precio.idMoneda && Number(precio.monto) > 0) {
+        if (
+          precio.idListasdePrecio &&
+          precio.idMoneda &&
+          Number(precio.monto) > 0
+        ) {
           const precioData = {
             idArticulo: articleId,
             idListasdePrecio: Number(precio.idListasdePrecio),
             idMoneda: Number(precio.idMoneda),
             monto: Number(precio.monto),
             fechaDesde: precio.fechaDesde,
-            fechaHasta: precio.fechaHasta || '',
-            suspendido: Boolean(precio.suspendido)
+            fechaHasta: precio.fechaHasta || "",
+            suspendido: Boolean(precio.suspendido),
           };
           await createPrecioMutation.mutateAsync(precioData);
         }
       }
       return true;
     } catch (error) {
-      console.error('Error saving precios:', error);
+      console.error("Error saving precios:", error);
       return false;
     }
   };
@@ -727,19 +844,19 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             idArticulo: Number(articleId),
             idAlmacen: Number(ubicacion.codigoAlmacen),
             ubicacion: ubicacion.ubicacion,
-            equipo: 'equipo',
-            usuario: 0
+            equipo: "equipo",
+            usuario: 0,
           };
-          
-          console.log('📍 Guardando ubicación:', ubicacionData);
+
+          console.log("📍 Guardando ubicación:", ubicacionData);
           await createUbicacionMutation.mutateAsync(ubicacionData);
-          console.log('✅ Ubicación guardada exitosamente');
+          console.log("✅ Ubicación guardada exitosamente");
         }
       }
-      console.log('🎉 Todas las ubicaciones guardadas exitosamente');
+      console.log("🎉 Todas las ubicaciones guardadas exitosamente");
       return true;
     } catch (error) {
-      console.error('❌ Error saving ubicaciones:', error);
+      console.error("❌ Error saving ubicaciones:", error);
       throw error;
     }
   };
@@ -748,28 +865,31 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const addUbicacion = () => {
     if (!selectedAlmacen || !ubicacionInput) return;
 
-    setUbicaciones(prev => [...prev, {
-      id: Date.now(),
-      codigoAlmacen: selectedAlmacen,
-      ubicacion: ubicacionInput
-    }]);
+    setUbicaciones((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        codigoAlmacen: selectedAlmacen,
+        ubicacion: ubicacionInput,
+      },
+    ]);
 
     // Limpiar los campos después de agregar
-    setSelectedAlmacen('');
-    setUbicacionInput('');
+    setSelectedAlmacen("");
+    setUbicacionInput("");
   };
 
   // Función para eliminar ubicación
   const removeUbicacion = async (index: number) => {
     const ubicacion = ubicaciones[index];
-    if (ubicacion.id && typeof ubicacion.id === 'number') {
+    if (ubicacion.id && typeof ubicacion.id === "number") {
       try {
         await deleteUbicacionMutation.mutateAsync(ubicacion.id);
       } catch (error) {
-        console.error('Error al eliminar ubicación:', error);
+        console.error("Error al eliminar ubicación:", error);
       }
     }
-    setUbicaciones(prev => prev.filter((_, i) => i !== index));
+    setUbicaciones((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Función para actualizar ubicación
@@ -779,7 +899,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     updatedUbicaciones[index] = ubicacion;
     setUbicaciones(updatedUbicaciones);
 
-    if (ubicacion.id && typeof ubicacion.id === 'number') {
+    if (ubicacion.id && typeof ubicacion.id === "number") {
       try {
         await updateUbicacionMutation.mutateAsync({
           id: ubicacion.id,
@@ -787,12 +907,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
             idArticulo: createdArticleId || articuloId,
             idAlmacen: Number(ubicacion.codigoAlmacen),
             ubicacion: ubicacion.ubicacion,
-            equipo: 'equipo',
-            usuario: 0
-          }
+            equipo: "equipo",
+            usuario: 0,
+          },
         });
       } catch (error) {
-        console.error('Error al actualizar ubicación:', error);
+        console.error("Error al actualizar ubicación:", error);
       }
     }
   };
@@ -805,15 +925,18 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       // Step 1: Article
-      if (activeTab === 'articulo') {
+      if (activeTab === "articulo") {
         if (!isEditing) {
           // For new article, save and get the ID
           const result: boolean | ArticleResponse = await handleCreate(data);
-          console.log('Result:', result);
+          console.log("Result:", result);
           // Check if result is an ArticleResponse (has id) or a boolean true
-          if (result === true || (typeof result === 'object' && 'id' in result)) {
+          if (
+            result === true ||
+            (typeof result === "object" && "id" in result)
+          ) {
             // If result is an ArticleResponse, extract the id
-            if (typeof result === 'object' && 'id' in result) {
+            if (typeof result === "object" && "id" in result) {
               setCreatedArticleId(result.id);
             }
             success = true;
@@ -824,14 +947,14 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
 
         if (success) {
-          setActiveTab('adicional');
+          setActiveTab("adicional");
         }
       }
       // Step 2: Additional Info (Precios y Ubicaciones)
-      else if (activeTab === 'adicional') {
+      else if (activeTab === "adicional") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
-          console.error('Article ID is missing');
+          console.error("Article ID is missing");
           return;
         }
 
@@ -841,14 +964,14 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         success = preciosSuccess && ubicacionesSuccess;
 
         if (success) {
-          setActiveTab('detalles');
+          setActiveTab("detalles");
         }
       }
       // Step 3: Photos and final save
-      else if (activeTab === 'detalles') {
+      else if (activeTab === "detalles") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
-          console.error('Article ID is missing');
+          console.error("Article ID is missing");
           return;
         }
 
@@ -860,29 +983,31 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error("Error in form submission:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Separar campos por tipo
-  const textFields = formFields.filter(f => f.type === 'text' || f.type === 'number');
-  const dateFields = formFields.filter(f => f.type === 'date');
-  const switchFields = formFields.filter(f => f.type === 'switch');
-  const selectFields = formFields.filter(f => f.type === 'select');
+  const textFields = formFields.filter(
+    (f) => f.type === "text" || f.type === "number",
+  );
+  const dateFields = formFields.filter((f) => f.type === "date");
+  const switchFields = formFields.filter((f) => f.type === "switch");
+  const selectFields = formFields.filter((f) => f.type === "select");
 
   // Función para alternar sección expandida
-  const toggleSection = (section: 'listaPrecio' | 'ubicaciones') => {
-    setExpandedSections(prev => ({
+  const toggleSection = (section: "listaPrecio" | "ubicaciones") => {
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
   // Debug: Monitorear cambios en principalImageIndex
   useEffect(() => {
-    console.log('🔄 principalImageIndex cambió a:', principalImageIndex);
+    console.log("🔄 principalImageIndex cambió a:", principalImageIndex);
   }, [principalImageIndex]);
 
   if (!visible) return null;
@@ -894,24 +1019,24 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       visible={visible}
       onRequestClose={handleClose}
     >
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <TouchableOpacity
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           activeOpacity={1}
           onPress={handleClose}
         />
         <Animated.View
           style={{
             transform: [{ translateY: slideAnim }],
-            position: 'absolute',
+            position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
             height: height,
-            backgroundColor: 'white',
+            backgroundColor: "white",
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            overflow: 'hidden'
+            overflow: "hidden",
           }}
         >
           {/* Header */}
@@ -928,7 +1053,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 className="text-xl text-center font-bold"
                 style={{ color: headerTextColor }}
               >
-                {isEditing ? 'Editar' : 'Nuevo'}
+                {isEditing ? "Editar" : "Nuevo"}
               </Text>
             </View>
 
@@ -939,17 +1064,25 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 <View className="flex-row items-center justify-between">
                   {/* Paso 1 - Artículo */}
                   <TouchableOpacity
-                    onPress={() => setActiveTab('articulo')}
+                    onPress={() => setActiveTab("articulo")}
                     className="flex-row items-center py-2"
                   >
-                    <View className={`w-3 h-3 rounded-full ${activeTab === 'articulo' || activeTab === 'adicional' || activeTab === 'detalles'
-                      ? 'bg-white'
-                      : 'bg-white/30'
-                      }`} />
-                    <Text className={`ml-2 text-xs ${activeTab === 'articulo'
-                      ? 'text-white font-medium'
-                      : 'text-white/70'
-                      }`}>
+                    <View
+                      className={`w-3 h-3 rounded-full ${
+                        activeTab === "articulo" ||
+                        activeTab === "adicional" ||
+                        activeTab === "detalles"
+                          ? "bg-white"
+                          : "bg-white/30"
+                      }`}
+                    />
+                    <Text
+                      className={`ml-2 text-xs ${
+                        activeTab === "articulo"
+                          ? "text-white font-medium"
+                          : "text-white/70"
+                      }`}
+                    >
                       Artículo
                     </Text>
                   </TouchableOpacity>
@@ -959,17 +1092,23 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                   {/* Paso 2 - Inf. Adicional */}
                   <TouchableOpacity
-                    onPress={() => setActiveTab('adicional')}
+                    onPress={() => setActiveTab("adicional")}
                     className="flex-row items-center py-2"
                   >
-                    <View className={`w-3 h-3 rounded-full ${activeTab === 'adicional' || activeTab === 'detalles'
-                      ? 'bg-white'
-                      : 'bg-white/30'
-                      }`} />
-                    <Text className={`ml-2 text-xs ${activeTab === 'adicional'
-                      ? 'text-white font-medium'
-                      : 'text-white/70'
-                      }`}>
+                    <View
+                      className={`w-3 h-3 rounded-full ${
+                        activeTab === "adicional" || activeTab === "detalles"
+                          ? "bg-white"
+                          : "bg-white/30"
+                      }`}
+                    />
+                    <Text
+                      className={`ml-2 text-xs ${
+                        activeTab === "adicional"
+                          ? "text-white font-medium"
+                          : "text-white/70"
+                      }`}
+                    >
                       Inf. Adicional
                     </Text>
                   </TouchableOpacity>
@@ -979,17 +1118,21 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                   {/* Paso 3 - Foto */}
                   <TouchableOpacity
-                    onPress={() => setActiveTab('detalles')}
+                    onPress={() => setActiveTab("detalles")}
                     className="flex-row items-center py-2"
                   >
-                    <View className={`w-3 h-3 rounded-full ${activeTab === 'detalles'
-                      ? 'bg-white'
-                      : 'bg-white/30'
-                      }`} />
-                    <Text className={`ml-2 text-xs ${activeTab === 'detalles'
-                      ? 'text-white font-medium'
-                      : 'text-white/70'
-                      }`}>
+                    <View
+                      className={`w-3 h-3 rounded-full ${
+                        activeTab === "detalles" ? "bg-white" : "bg-white/30"
+                      }`}
+                    />
+                    <Text
+                      className={`ml-2 text-xs ${
+                        activeTab === "detalles"
+                          ? "text-white font-medium"
+                          : "text-white/70"
+                      }`}
+                    >
                       Foto
                     </Text>
                   </TouchableOpacity>
@@ -1003,11 +1146,19 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   {/* Líneas de progreso activas */}
                   <View className="absolute left-4 right-4 flex-row">
                     {/* Línea 1-2 */}
-                    <View className={`flex-1 h-0.5 ${activeTab === 'adicional' || activeTab === 'detalles' ? 'bg-white' : 'bg-transparent'
-                      }`} />
+                    <View
+                      className={`flex-1 h-0.5 ${
+                        activeTab === "adicional" || activeTab === "detalles"
+                          ? "bg-white"
+                          : "bg-transparent"
+                      }`}
+                    />
                     {/* Línea 2-3 */}
-                    <View className={`flex-1 h-0.5 ${activeTab === 'detalles' ? 'bg-white' : 'bg-transparent'
-                      }`} />
+                    <View
+                      className={`flex-1 h-0.5 ${
+                        activeTab === "detalles" ? "bg-white" : "bg-transparent"
+                      }`}
+                    />
                   </View>
                 </View>
               </View>
@@ -1016,7 +1167,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
           {/* Form Content */}
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
             className="flex-1"
           >
             <ScrollView
@@ -1026,37 +1177,50 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
               showsVerticalScrollIndicator={false}
             >
               <View className="py-6">
-                {activeTab === 'articulo' && (
+                {activeTab === "articulo" && (
                   <>
                     {/* Campos de texto y número */}
                     {textFields.map((field) => (
                       <View key={field.name} className="mb-4">
                         <View className="flex-row mb-1">
-                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                          {field.required && <Text className="text-red-600">*</Text>}
+                          <Text className="text-sm font-medium text-gray-700">
+                            {field.label}
+                          </Text>
+                          {field.required ? (
+                            <Text className="text-red-600">*</Text>
+                          ) : (
+                            <Text className="text-gray-400">
+                              {" (Opcional)"}
+                            </Text>
+                          )}
                         </View>
                         <Controller
                           control={control}
                           name={field.name}
                           render={({ field: { onChange, value } }) => (
                             <TextInput
-                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
-                                }`}
+                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
+                                errors[field.name]
+                                  ? "border-red-500"
+                                  : "border-gray-200"
+                              }`}
                               placeholder={field.placeholder}
-                              value={String(value || '')}
+                              value={String(value || "")}
                               onChangeText={(text) => {
-                                const formattedText = getFormattedValueByType(field.name, field.type, text);
-                                onChange(formattedText);
+                                const formattedValue = getFormattedValueByType(
+                                  field.name,
+                                  field.type,
+                                  text,
+                                );
+                                console.log(
+                                  `🔵 Valor formateado para ${field.name}: ${formattedValue} (${typeof formattedValue})`,
+                                );
+                                onChange(formattedValue);
                               }}
-                              onBlur={() => {
-                                // Convertir a número cuando el usuario termine de escribir
-                                if (field.type === 'number') {
-                                  const currentValue = watch(field.name);
-                                  const convertedValue = convertValueForSubmission(field.name, field.type, currentValue);
-                                  onChange(convertedValue);
-                                }
-                              }}
-                              keyboardType={getKeyboardType(field.name, field.type)}
+                              keyboardType={getKeyboardType(
+                                field.name,
+                                field.type,
+                              )}
                               returnKeyType="next"
                               autoCorrect={false}
                               autoCapitalize="none"
@@ -1066,7 +1230,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           )}
                         />
                         {field.description && (
-                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                          <Text className="text-gray-500 text-xs mt-1">
+                            {field.description}
+                          </Text>
                         )}
                         {errors[field.name] && (
                           <Text className="text-red-500 text-sm mt-1">
@@ -1080,8 +1246,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     {dateFields.map((field) => (
                       <View key={field.name} className="mb-4">
                         <View className="flex-row mb-1">
-                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                          {field.required && <Text className="text-red-600">*</Text>}
+                          <Text className="text-sm font-medium text-gray-700">
+                            {field.label}
+                          </Text>
+                          {field.required && (
+                            <Text className="text-red-600">*</Text>
+                          )}
                         </View>
                         <Controller
                           control={control}
@@ -1089,26 +1259,54 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           render={({ field: { onChange, value } }) => (
                             <View>
                               <TouchableOpacity
-                                onPress={() => setShowDatePicker(prev => ({ ...prev, [field.name]: true }))}
-                                className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
-                                  }`}
+                                onPress={() =>
+                                  setShowDatePicker((prev) => ({
+                                    ...prev,
+                                    [field.name]: true,
+                                  }))
+                                }
+                                className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
+                                  errors[field.name]
+                                    ? "border-red-500"
+                                    : "border-gray-200"
+                                }`}
                               >
                                 <Text className="text-gray-700">
-                                  {value ? new Date(value).toLocaleDateString('es-ES') : field.placeholder}
+                                  {value
+                                    ? new Date(value).toLocaleDateString(
+                                        "es-ES",
+                                      )
+                                    : field.placeholder}
                                 </Text>
-                                <Ionicons name="calendar-outline" size={20} color="#6B7280" />
+                                <Ionicons
+                                  name="calendar-outline"
+                                  size={20}
+                                  color="#6B7280"
+                                />
                               </TouchableOpacity>
 
                               {showDatePicker[field.name] && (
                                 <DateTimePicker
                                   value={value ? new Date(value) : new Date()}
                                   mode="date"
-                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                  onChange={(event: any, selectedDate: Date | undefined) => {
-                                    setShowDatePicker(prev => ({ ...prev, [field.name]: false }));
+                                  display={
+                                    Platform.OS === "ios"
+                                      ? "spinner"
+                                      : "default"
+                                  }
+                                  onChange={(
+                                    event: any,
+                                    selectedDate: Date | undefined,
+                                  ) => {
+                                    setShowDatePicker((prev) => ({
+                                      ...prev,
+                                      [field.name]: false,
+                                    }));
                                     if (selectedDate) {
                                       // Formatear la fecha como YYYY-MM-DD
-                                      const formattedDate = selectedDate.toISOString().split('T')[0];
+                                      const formattedDate = selectedDate
+                                        .toISOString()
+                                        .split("T")[0];
                                       onChange(formattedDate);
                                     }
                                   }}
@@ -1118,7 +1316,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           )}
                         />
                         {field.description && (
-                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                          <Text className="text-gray-500 text-xs mt-1">
+                            {field.description}
+                          </Text>
                         )}
                         {errors[field.name] && (
                           <Text className="text-red-500 text-sm mt-1">
@@ -1132,29 +1332,52 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     {selectFields.map((field) => (
                       <View key={field.name} className="mb-4">
                         <View className="flex-row mb-1">
-                          <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
-                          {field.required && <Text className="text-red-600">*</Text>}
+                          <Text className="text-sm font-medium text-gray-700">
+                            {field.label}
+                          </Text>
+                          {field.required ? (
+                            <Text className="text-red-600">*</Text>
+                          ) : (
+                            <Text className="text-gray-400">
+                              {" (Opcional)"}
+                            </Text>
+                          )}
                         </View>
                         <Controller
                           control={control}
                           name={field.name}
                           render={({ field: { onChange, value } }) => {
                             const selectedOption = field.options?.find(
-                              opt => String(opt[field.optionValue || 'id']) === String(value)
+                              (opt) =>
+                                String(opt[field.optionValue || "id"]) ===
+                                String(value),
                             );
 
                             return (
                               <View>
                                 <TouchableOpacity
                                   onPress={() => handleSelectPress(field.name)}
-                                  className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name] ? 'border-red-500' : 'border-gray-200'
-                                    }`}
+                                  className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
+                                    errors[field.name]
+                                      ? "border-red-500"
+                                      : "border-gray-200"
+                                  }`}
                                 >
                                   <Text className="text-gray-700">
-                                    {selectedOption ? String(selectedOption[field.optionLabel || 'nombre']) : 'Seleccione una opción'}
+                                    {selectedOption
+                                      ? String(
+                                          selectedOption[
+                                            field.optionLabel || "nombre"
+                                          ],
+                                        )
+                                      : "Seleccione una opción"}
                                   </Text>
                                   <Ionicons
-                                    name={openSelect === field.name ? "chevron-up" : "chevron-down"}
+                                    name={
+                                      openSelect === field.name
+                                        ? "chevron-up"
+                                        : "chevron-down"
+                                    }
                                     size={20}
                                     color="#6B7280"
                                   />
@@ -1164,20 +1387,45 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                   <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
                                     <ScrollView
                                       nestedScrollEnabled={true}
-                                      className="max-h-48">
+                                      className="max-h-48"
+                                    >
                                       {field.options?.map((option) => (
                                         <TouchableOpacity
-                                          key={String(option[field.optionValue || 'id'])}
+                                          key={String(
+                                            option[field.optionValue || "id"],
+                                          )}
                                           onPress={() => {
-                                            onChange(option[field.optionValue || 'id']);
+                                            onChange(
+                                              option[field.optionValue || "id"],
+                                            );
                                             setOpenSelect(null);
                                           }}
-                                          className={`px-4 py-3 border-b border-gray-100 ${String(value) === String(option[field.optionValue || 'id']) ? 'bg-blue-50' : ''
-                                            }`}
+                                          className={`px-4 py-3 border-b border-gray-100 ${
+                                            String(value) ===
+                                            String(
+                                              option[field.optionValue || "id"],
+                                            )
+                                              ? "bg-blue-50"
+                                              : ""
+                                          }`}
                                         >
-                                          <Text className={`${String(value) === String(option[field.optionValue || 'id']) ? 'text-blue-600' : 'text-gray-700'
-                                            }`}>
-                                            {option[field.optionLabel || 'nombre']}
+                                          <Text
+                                            className={`${
+                                              String(value) ===
+                                              String(
+                                                option[
+                                                  field.optionValue || "id"
+                                                ],
+                                              )
+                                                ? "text-blue-600"
+                                                : "text-gray-700"
+                                            }`}
+                                          >
+                                            {
+                                              option[
+                                                field.optionLabel || "nombre"
+                                              ]
+                                            }
                                           </Text>
                                         </TouchableOpacity>
                                       ))}
@@ -1189,7 +1437,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           }}
                         />
                         {field.description && (
-                          <Text className="text-gray-500 text-xs mt-1">{field.description}</Text>
+                          <Text className="text-gray-500 text-xs mt-1">
+                            {field.description}
+                          </Text>
                         )}
                         {errors[field.name] && (
                           <Text className="text-red-500 text-sm mt-1">
@@ -1202,13 +1452,22 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     {/* Tarjeta de switches */}
                     {switchFields.length > 0 && (
                       <View className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <Text className="text-gray-800 font-medium mb-3">Configuración general</Text>
+                        <Text className="text-gray-800 font-medium mb-3">
+                          Configuración general
+                        </Text>
                         {switchFields.map((field, idx) => (
-                          <View key={field.name} className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1 ? 'border-b border-gray-300' : ''}`}>
+                          <View
+                            key={field.name}
+                            className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1 ? "border-b border-gray-300" : ""}`}
+                          >
                             <View className="w-3/4">
-                              <Text className="text-gray-700 font-medium">{field.label}</Text>
+                              <Text className="text-gray-700 font-medium">
+                                {field.label}
+                              </Text>
                               {field.description && (
-                                <Text className="text-gray-500 text-xs">{field.description}</Text>
+                                <Text className="text-gray-500 text-xs">
+                                  {field.description}
+                                </Text>
                               )}
                             </View>
                             <Controller
@@ -1218,8 +1477,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 <Switch
                                   value={value}
                                   onValueChange={onChange}
-                                  trackColor={{ false: '#d1d5db', true: '#4b0082' }}
-                                  thumbColor={value ? '#f4f3f4' : '#f4f3f4'}
+                                  trackColor={{
+                                    false: "#d1d5db",
+                                    true: "#4b0082",
+                                  }}
+                                  thumbColor={value ? "#f4f3f4" : "#f4f3f4"}
                                 />
                               )}
                             />
@@ -1231,27 +1493,41 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     {backendError && (
                       <View className="my-3 p-3 bg-red-100 border border-red-300 rounded-lg shadow-sm">
                         <View className="flex-row items-center">
-                          <Ionicons name="alert-circle-outline" size={20} color="#c81e1e" />
-                          <Text className="text-red-700 text-sm ml-2 font-medium">Error de Servidor</Text>
+                          <Ionicons
+                            name="alert-circle-outline"
+                            size={20}
+                            color="#c81e1e"
+                          />
+                          <Text className="text-red-700 text-sm ml-2 font-medium">
+                            Error de Servidor
+                          </Text>
                         </View>
-                        <Text className="text-red-600 text-sm mt-1 ml-1">{backendError}</Text>
+                        <Text className="text-red-600 text-sm mt-1 ml-1">
+                          {backendError}
+                        </Text>
                       </View>
                     )}
                   </>
                 )}
 
-                {activeTab === 'adicional' && (
+                {activeTab === "adicional" && (
                   <>
                     {/* Sección de Lista de Precio */}
                     <View className="mb-4">
                       <TouchableOpacity
-                        onPress={() => toggleSection('listaPrecio')}
+                        onPress={() => toggleSection("listaPrecio")}
                         className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
-                        <Text className="text-md font-semibold text-gray-800">Lista de Precio</Text>
+                        <Text className="text-md font-semibold text-gray-800">
+                          Lista de Precio
+                        </Text>
                         <View className="flex-row items-center">
                           <Ionicons
-                            name={expandedSections.listaPrecio ? "chevron-up" : "chevron-down"}
+                            name={
+                              expandedSections.listaPrecio
+                                ? "chevron-up"
+                                : "chevron-down"
+                            }
                             size={20}
                             color="#6B7280"
                           />
@@ -1266,33 +1542,45 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                             <View className="mb-4">
                               <View className="relative">
                                 <TouchableOpacity
-                                  onPress={() => setOpenSelect('listaPrecio')}
+                                  onPress={() => setOpenSelect("listaPrecio")}
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
                                 >
                                   <Text className="text-gray-700">
-                                    {selectedListaPrecio ?
-                                      listasPreciosData?.data.find(l => l.id === Number(selectedListaPrecio))?.nombre || 'Seleccione' :
-                                      'Seleccione una lista'
-                                    }
+                                    {selectedListaPrecio
+                                      ? listasPreciosData?.data.find(
+                                          (l) =>
+                                            l.id ===
+                                            Number(selectedListaPrecio),
+                                        )?.nombre || "Seleccione"
+                                      : "Seleccione una lista"}
                                   </Text>
-                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                  <Ionicons
+                                    name="chevron-down"
+                                    size={20}
+                                    color="#6B7280"
+                                  />
                                 </TouchableOpacity>
 
-                                {openSelect === 'listaPrecio' && (
+                                {openSelect === "listaPrecio" && (
                                   <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                    <ScrollView 
-                                    nestedScrollEnabled={true}
-                                    className="max-h-48">
+                                    <ScrollView
+                                      nestedScrollEnabled={true}
+                                      className="max-h-48"
+                                    >
                                       {listasPreciosData?.data.map((lista) => (
                                         <TouchableOpacity
                                           key={lista.id}
                                           onPress={() => {
-                                            setSelectedListaPrecio(String(lista.id));
+                                            setSelectedListaPrecio(
+                                              String(lista.id),
+                                            );
                                             setOpenSelect(null);
                                           }}
                                           className="px-4 py-3 border-b border-gray-100"
                                         >
-                                          <Text className="text-gray-700">{lista.nombre}</Text>
+                                          <Text className="text-gray-700">
+                                            {lista.nombre}
+                                          </Text>
                                         </TouchableOpacity>
                                       ))}
                                     </ScrollView>
@@ -1303,36 +1591,49 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                             {/* Moneda */}
                             <View className="mb-4">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Moneda</Text>
+                              <Text className="text-sm font-medium text-gray-700 mb-1">
+                                Moneda
+                              </Text>
                               <View className="relative">
                                 <TouchableOpacity
-                                  onPress={() => setOpenSelect('moneda')}
+                                  onPress={() => setOpenSelect("moneda")}
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
                                 >
                                   <Text className="text-gray-700">
-                                    {selectedMoneda ?
-                                      monedasData?.data.find(m => m.id === Number(selectedMoneda))?.nombre || 'Seleccione' :
-                                      'Seleccione una moneda'
-                                    }
+                                    {selectedMoneda
+                                      ? monedasData?.data.find(
+                                          (m) =>
+                                            m.id === Number(selectedMoneda),
+                                        )?.nombre || "Seleccione"
+                                      : "Seleccione una moneda"}
                                   </Text>
-                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                  <Ionicons
+                                    name="chevron-down"
+                                    size={20}
+                                    color="#6B7280"
+                                  />
                                 </TouchableOpacity>
 
-                                {openSelect === 'moneda' && (
+                                {openSelect === "moneda" && (
                                   <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                    <ScrollView 
-                                    nestedScrollEnabled={true}
-                                    className="max-h-48">
+                                    <ScrollView
+                                      nestedScrollEnabled={true}
+                                      className="max-h-48"
+                                    >
                                       {monedasData?.data.map((moneda) => (
                                         <TouchableOpacity
                                           key={moneda.id}
                                           onPress={() => {
-                                            setSelectedMoneda(String(moneda.id));
+                                            setSelectedMoneda(
+                                              String(moneda.id),
+                                            );
                                             setOpenSelect(null);
                                           }}
                                           className="px-4 py-3 border-b border-gray-100"
                                         >
-                                          <Text className="text-gray-700">{moneda.nombre}</Text>
+                                          <Text className="text-gray-700">
+                                            {moneda.nombre}
+                                          </Text>
                                         </TouchableOpacity>
                                       ))}
                                     </ScrollView>
@@ -1343,12 +1644,19 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                             {/* Monto */}
                             <View className="mb-4">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Monto</Text>
+                              <Text className="text-sm font-medium text-gray-700 mb-1">
+                                Monto
+                              </Text>
                               <TextInput
                                 className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                 placeholder="0.00"
                                 value={precioInputs.monto}
-                                onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, monto: text}))}
+                                onChangeText={(text) =>
+                                  setPrecioInputs((prev: PrecioInputs) => ({
+                                    ...prev,
+                                    monto: text,
+                                  }))
+                                }
                                 keyboardType="numeric"
                               />
                             </View>
@@ -1356,21 +1664,35 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                             {/* Fechas */}
                             <View className="flex-row space-x-3 mb-4">
                               <View className="flex-1">
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Desde</Text>
+                                <Text className="text-sm font-medium text-gray-700 mb-1">
+                                  Fecha Desde
+                                </Text>
                                 <TextInput
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                   placeholder="YYYY-MM-DD"
                                   value={precioInputs.fechaDesde}
-                                  onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, fechaDesde: text}))}
+                                  onChangeText={(text) =>
+                                    setPrecioInputs((prev: PrecioInputs) => ({
+                                      ...prev,
+                                      fechaDesde: text,
+                                    }))
+                                  }
                                 />
                               </View>
                               <View className="flex-1">
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Fecha Hasta (opcional)</Text>
+                                <Text className="text-sm font-medium text-gray-700 mb-1">
+                                  Fecha Hasta (opcional)
+                                </Text>
                                 <TextInput
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                   placeholder="YYYY-MM-DD"
                                   value={precioInputs.fechaHasta}
-                                  onChangeText={(text) => setPrecioInputs((prev: PrecioInputs) => ({...prev, fechaHasta: text}))}
+                                  onChangeText={(text) =>
+                                    setPrecioInputs((prev: PrecioInputs) => ({
+                                      ...prev,
+                                      fechaHasta: text,
+                                    }))
+                                  }
                                 />
                               </View>
                             </View>
@@ -1379,23 +1701,43 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                             <View className="flex-row justify-end items-center mt-4">
                               <TouchableOpacity
                                 onPress={addListaPrecio}
-                                disabled={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda}
+                                disabled={
+                                  !precioInputs.monto ||
+                                  !precioInputs.fechaDesde ||
+                                  !selectedListaPrecio ||
+                                  !selectedMoneda
+                                }
                                 className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
-                                  !precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda
-                                    ? 'bg-gray-100'
-                                    : 'bg-blue-500'
+                                  !precioInputs.monto ||
+                                  !precioInputs.fechaDesde ||
+                                  !selectedListaPrecio ||
+                                  !selectedMoneda
+                                    ? "bg-gray-100"
+                                    : "bg-blue-500"
                                 }`}
                               >
-                                <Ionicons 
-                                  name="add-circle" 
-                                  size={20} 
-                                  color={!precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda ? "#9CA3AF" : "#FFFFFF"} 
+                                <Ionicons
+                                  name="add-circle"
+                                  size={20}
+                                  color={
+                                    !precioInputs.monto ||
+                                    !precioInputs.fechaDesde ||
+                                    !selectedListaPrecio ||
+                                    !selectedMoneda
+                                      ? "#9CA3AF"
+                                      : "#FFFFFF"
+                                  }
                                 />
-                                <Text className={`text-sm font-medium ${
-                                  !precioInputs.monto || !precioInputs.fechaDesde || !selectedListaPrecio || !selectedMoneda
-                                    ? 'text-gray-400'
-                                    : 'text-white'
-                                }`}>
+                                <Text
+                                  className={`text-sm font-medium ${
+                                    !precioInputs.monto ||
+                                    !precioInputs.fechaDesde ||
+                                    !selectedListaPrecio ||
+                                    !selectedMoneda
+                                      ? "text-gray-400"
+                                      : "text-white"
+                                  }`}
+                                >
                                   Agregar Precio
                                 </Text>
                               </TouchableOpacity>
@@ -1404,33 +1746,66 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                           {/* List of Added Prices */}
                           {listasPrecios.map((precio, index) => (
-                            <View key={precio.id || `precio-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                            <View
+                              key={precio.id || `precio-${index}`}
+                              className="bg-white border border-gray-200 rounded-lg p-3 mb-2"
+                            >
                               <View className="space-y-3">
                                 <View className="flex-row justify-between items-center">
                                   <View>
                                     <Text className="font-medium">
-                                      {listasPreciosData?.data.find(l => l.id === Number(precio.idListasdePrecio))?.nombre || 'Lista de Precio'}
+                                      {listasPreciosData?.data.find(
+                                        (l) =>
+                                          l.id ===
+                                          Number(precio.idListasdePrecio),
+                                      )?.nombre || "Lista de Precio"}
                                     </Text>
                                     <Text className="text-gray-600">
-                                      {monedasData?.data.find(m => m.id === Number(precio.idMoneda))?.nombre || 'Moneda'}
+                                      {monedasData?.data.find(
+                                        (m) => m.id === Number(precio.idMoneda),
+                                      )?.nombre || "Moneda"}
                                     </Text>
-                                    <Text className="font-bold text-lg">{Number(precio.monto).toFixed(2)}</Text>
+                                    <Text className="font-bold text-lg">
+                                      {Number(precio.monto).toFixed(2)}
+                                    </Text>
                                     <Text className="text-sm text-gray-500">
-                                      {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ''}
+                                      {precio.fechaDesde}{" "}
+                                      {precio.fechaHasta
+                                        ? `- ${precio.fechaHasta}`
+                                        : ""}
                                     </Text>
                                   </View>
                                   <View className="flex-row items-center space-x-2">
                                     <Switch
                                       value={precio.suspendido}
-                                      onValueChange={(value) => updateListaPrecio(index, 'suspendido', value)}
-                                      trackColor={{ false: '#d1d5db', true: '#d1d5db' }}
-                                      thumbColor={precio.suspendido ? '#f4f3f4' : '#f4f3f4'}
+                                      onValueChange={(value) =>
+                                        updateListaPrecio(
+                                          index,
+                                          "suspendido",
+                                          value,
+                                        )
+                                      }
+                                      trackColor={{
+                                        false: "#d1d5db",
+                                        true: "#d1d5db",
+                                      }}
+                                      thumbColor={
+                                        precio.suspendido
+                                          ? "#f4f3f4"
+                                          : "#f4f3f4"
+                                      }
                                     />
                                     <TouchableOpacity
-                                      onPress={() => removeListaPrecio(precio.id)}
+                                      onPress={() =>
+                                        removeListaPrecio(precio.id)
+                                      }
                                       className="p-2"
                                     >
-                                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                                      <Ionicons
+                                        name="trash-outline"
+                                        size={20}
+                                        color="#EF4444"
+                                      />
                                     </TouchableOpacity>
                                   </View>
                                 </View>
@@ -1444,12 +1819,18 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     {/* Sección de Ubicacion */}
                     <View className="mb-2">
                       <TouchableOpacity
-                        onPress={() => toggleSection('ubicaciones')}
+                        onPress={() => toggleSection("ubicaciones")}
                         className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
-                        <Text className="text-md font-semibold text-gray-800">Ubicación</Text>
+                        <Text className="text-md font-semibold text-gray-800">
+                          Ubicación
+                        </Text>
                         <Ionicons
-                          name={expandedSections.ubicaciones ? "chevron-up" : "chevron-down"}
+                          name={
+                            expandedSections.ubicaciones
+                              ? "chevron-up"
+                              : "chevron-down"
+                          }
                           size={20}
                           color="#6B7280"
                         />
@@ -1461,21 +1842,32 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                           <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
                             {/* Almacén */}
                             <View className="mb-4">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Almacén</Text>
+                              <Text className="text-sm font-medium text-gray-700 mb-1">
+                                Almacén
+                              </Text>
                               <View className="relative">
                                 <TouchableOpacity
-                                  onPress={() => setOpenSelect('almacen')}
+                                  onPress={() => setOpenSelect("almacen")}
                                   className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 flex-row justify-between items-center"
                                 >
                                   <Text className="text-gray-700">
-                                    {selectedAlmacen ? allAlmacenes.find(a => a.id === Number(selectedAlmacen))?.nombre : 'Seleccione un almacén'}
+                                    {selectedAlmacen
+                                      ? allAlmacenes.find(
+                                          (a) =>
+                                            a.id === Number(selectedAlmacen),
+                                        )?.nombre
+                                      : "Seleccione un almacén"}
                                   </Text>
-                                  <Ionicons name="chevron-down" size={20} color="#6B7280" />
+                                  <Ionicons
+                                    name="chevron-down"
+                                    size={20}
+                                    color="#6B7280"
+                                  />
                                 </TouchableOpacity>
 
-                                {openSelect === 'almacen' && (
+                                {openSelect === "almacen" && (
                                   <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-32">
-                                    <ScrollView 
+                                    <ScrollView
                                       nestedScrollEnabled={true}
                                       className="max-h-32"
                                     >
@@ -1483,12 +1875,16 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                         <TouchableOpacity
                                           key={almacen.id}
                                           onPress={() => {
-                                            setSelectedAlmacen(String(almacen.id));
+                                            setSelectedAlmacen(
+                                              String(almacen.id),
+                                            );
                                             setOpenSelect(null);
                                           }}
                                           className="px-4 py-3 border-b border-gray-100"
                                         >
-                                          <Text className="text-gray-700">{almacen.nombre}</Text>
+                                          <Text className="text-gray-700">
+                                            {almacen.nombre}
+                                          </Text>
                                         </TouchableOpacity>
                                       ))}
                                     </ScrollView>
@@ -1499,7 +1895,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                             {/* Ubicación */}
                             <View className="mb-4">
-                              <Text className="text-sm font-medium text-gray-700 mb-1">Ubicación Específica</Text>
+                              <Text className="text-sm font-medium text-gray-700 mb-1">
+                                Ubicación Específica
+                              </Text>
                               <TextInput
                                 className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
                                 placeholder="Ej: Pasillo A, Estante 3, Nivel 2"
@@ -1515,20 +1913,26 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 disabled={!selectedAlmacen || !ubicacionInput}
                                 className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
                                   !selectedAlmacen || !ubicacionInput
-                                    ? 'bg-gray-100'
-                                    : 'bg-blue-500'
+                                    ? "bg-gray-100"
+                                    : "bg-blue-500"
                                 }`}
                               >
-                                <Ionicons 
-                                  name="add-circle" 
-                                  size={20} 
-                                  color={!selectedAlmacen || !ubicacionInput ? "#9CA3AF" : "#FFFFFF"} 
+                                <Ionicons
+                                  name="add-circle"
+                                  size={20}
+                                  color={
+                                    !selectedAlmacen || !ubicacionInput
+                                      ? "#9CA3AF"
+                                      : "#FFFFFF"
+                                  }
                                 />
-                                <Text className={`text-sm font-medium ${
-                                  !selectedAlmacen || !ubicacionInput
-                                    ? 'text-gray-400'
-                                    : 'text-white'
-                                }`}>
+                                <Text
+                                  className={`text-sm font-medium ${
+                                    !selectedAlmacen || !ubicacionInput
+                                      ? "text-gray-400"
+                                      : "text-white"
+                                  }`}
+                                >
                                   Agregar Ubicación
                                 </Text>
                               </TouchableOpacity>
@@ -1537,21 +1941,33 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
                           {/* List of locations */}
                           {ubicaciones.map((ubicacion, index) => (
-                            <View key={ubicacion.id || `ubicacion-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                            <View
+                              key={ubicacion.id || `ubicacion-${index}`}
+                              className="bg-white border border-gray-200 rounded-lg p-3 mb-2"
+                            >
                               <View className="flex-row justify-between items-start">
                                 <View>
                                   <Text className="font-medium">
-                                    {allAlmacenes.find(a => a.id === Number(ubicacion.codigoAlmacen))?.nombre || 'Almacén no seleccionado'}
+                                    {allAlmacenes.find(
+                                      (a) =>
+                                        a.id ===
+                                        Number(ubicacion.codigoAlmacen),
+                                    )?.nombre || "Almacén no seleccionado"}
                                   </Text>
                                   <Text className="text-gray-600 mt-1">
-                                    {ubicacion.ubicacion || 'Sin ubicación específica'}
+                                    {ubicacion.ubicacion ||
+                                      "Sin ubicación específica"}
                                   </Text>
                                 </View>
                                 <TouchableOpacity
                                   onPress={() => removeUbicacion(index)}
                                   className="p-2"
                                 >
-                                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                                  <Ionicons
+                                    name="trash-outline"
+                                    size={20}
+                                    color="#EF4444"
+                                  />
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -1562,7 +1978,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   </>
                 )}
 
-                {activeTab === 'detalles' && (
+                {activeTab === "detalles" && (
                   <>
                     {/* Sección de Fotos */}
                     <View className="mb-6">
@@ -1573,15 +1989,24 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                             onPress={showImagePicker}
                             className="w-full py-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
                           >
-                            <Ionicons name="camera-outline" size={48} color="#6B7280" />
-                            <Text className="text-gray-600 font-medium mt-3">Agregar Foto</Text>
-                            <Text className="text-gray-500 text-sm mt-1">Toca para tomar foto o seleccionar de galería</Text>
+                            <Ionicons
+                              name="camera-outline"
+                              size={48}
+                              color="#6B7280"
+                            />
+                            <Text className="text-gray-600 font-medium mt-3">
+                              Agregar Foto
+                            </Text>
+                            <Text className="text-gray-500 text-sm mt-1">
+                              Toca para tomar foto o seleccionar de galería
+                            </Text>
                           </TouchableOpacity>
 
                           {/* Mensaje cuando no hay imágenes */}
                           <View className="p-4 bg-gray-50 rounded-lg">
                             <Text className="text-gray-500 text-center text-sm">
-                              No hay fotos seleccionadas. Toca el botón superior para agregar la primera imagen.
+                              No hay fotos seleccionadas. Toca el botón superior
+                              para agregar la primera imagen.
                             </Text>
                           </View>
                         </>
@@ -1595,32 +2020,55 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 onPress={showImagePicker}
                                 className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center"
                               >
-                                <Ionicons name="camera-outline" size={24} color="#6B7280" />
-                                <Text className="text-gray-500 text-xs mt-1 text-center">Agregar{'\n'}Foto</Text>
+                                <Ionicons
+                                  name="camera-outline"
+                                  size={24}
+                                  color="#6B7280"
+                                />
+                                <Text className="text-gray-500 text-xs mt-1 text-center">
+                                  Agregar{"\n"}Foto
+                                </Text>
                               </TouchableOpacity>
                             </View>
                             {selectedImages.map((image, index) => (
-                              <View key={image.id || `image-${index}`} className={`w-[32%] mb-4 ${(index + 1) % 3 === 2 ? 'mr-[2%]' : ''}`}>
+                              <View
+                                key={image.id || `image-${index}`}
+                                className={`w-[32%] mb-4 ${(index + 1) % 3 === 2 ? "mr-[2%]" : ""}`}
+                              >
                                 <View className="relative">
                                   {/* Imagen con onPress para marcar como favorita */}
                                   <TouchableOpacity
                                     onPress={() => {
-                                      console.log('🖱️ Imagen tocada, índice:', index);
-                                      console.log('🖱️ principalImageIndex actual:', principalImageIndex);
-                                      
+                                      console.log(
+                                        "🖱️ Imagen tocada, índice:",
+                                        index,
+                                      );
+                                      console.log(
+                                        "🖱️ principalImageIndex actual:",
+                                        principalImageIndex,
+                                      );
+
                                       // Marcar como favorita si no es la actual
                                       if (index !== principalImageIndex) {
-                                        console.log('🖱️ Marcando como favorita...');
+                                        console.log(
+                                          "🖱️ Marcando como favorita...",
+                                        );
                                         setImageAsFavorite(index);
                                       } else {
-                                        console.log('🖱️ Esta imagen ya es favorita, no hacer nada');
+                                        console.log(
+                                          "🖱️ Esta imagen ya es favorita, no hacer nada",
+                                        );
                                       }
                                     }}
                                     activeOpacity={0.9}
                                   >
                                     <Image
                                       source={{ uri: image.uri }}
-                                      style={{ width: '100%', aspectRatio: 1, borderRadius: 8 }}
+                                      style={{
+                                        width: "100%",
+                                        aspectRatio: 1,
+                                        borderRadius: 8,
+                                      }}
                                       contentFit="cover"
                                     />
                                   </TouchableOpacity>
@@ -1630,7 +2078,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                     onPress={() => removeImage(index)}
                                     className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-lg z-10"
                                   >
-                                    <Ionicons name="close" size={16} color="white" />
+                                    <Ionicons
+                                      name="close"
+                                      size={16}
+                                      color="white"
+                                    />
                                   </TouchableOpacity>
 
                                   {/* Botón favorito - solo aparece en la imagen favorita actual */}
@@ -1642,7 +2094,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                       }}
                                       className="absolute top-2 left-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center shadow-lg z-10"
                                     >
-                                      <Ionicons name="star" size={16} color="white" />
+                                      <Ionicons
+                                        name="star"
+                                        size={16}
+                                        color="white"
+                                      />
                                     </TouchableOpacity>
                                   )}
                                 </View>
@@ -1664,54 +2120,67 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 <TouchableOpacity
                   className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
                   onPress={() => {
-                    if (activeTab === 'articulo') {
+                    if (activeTab === "articulo") {
                       handleClose();
-                    } else if (activeTab === 'adicional') {
-                      setActiveTab('articulo');
-                    } else if (activeTab === 'detalles') {
-                      setActiveTab('adicional');
+                    } else if (activeTab === "adicional") {
+                      setActiveTab("articulo");
+                    } else if (activeTab === "detalles") {
+                      setActiveTab("adicional");
                     }
                   }}
                   disabled={isSubmitting}
                 >
                   <Ionicons
-                    name={activeTab === 'articulo' ? "close-outline" : "arrow-back-outline"}
+                    name={
+                      activeTab === "articulo"
+                        ? "close-outline"
+                        : "arrow-back-outline"
+                    }
                     size={18}
                     color="#4b5563"
                   />
                   <Text className="text-gray-800 font-medium ml-2">
-                    {activeTab === 'articulo' ? 'Cancelar' : 'Anterior'}
+                    {activeTab === "articulo" ? "Cancelar" : "Anterior"}
                   </Text>
                 </TouchableOpacity>
 
                 {/* Botón Siguiente/Guardar */}
                 <TouchableOpacity
                   style={{ backgroundColor: buttonColor }}
-                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center ${isSubmitting ? 'opacity-70' : ''}`}
+                  className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center ${isSubmitting ? "opacity-70" : ""}`}
                   onPress={() => {
-                    if (activeTab === 'articulo') {
+                    if (activeTab === "articulo") {
                       handleSubmit(onSubmit)();
-                    } else if (activeTab === 'adicional') {
+                    } else if (activeTab === "adicional") {
                       onSubmit({});
-                    } else if (activeTab === 'detalles') {
+                    } else if (activeTab === "detalles") {
                       onSubmit({});
                     }
                   }}
                   disabled={isSubmitting}
                 >
                   <Ionicons
-                    name={activeTab === 'detalles' ? "save-outline" : "arrow-forward-outline"}
+                    name={
+                      activeTab === "detalles"
+                        ? "save-outline"
+                        : "arrow-forward-outline"
+                    }
                     size={18}
                     color={buttonTextColor}
                   />
-                  <Text style={{ color: buttonTextColor }} className="font-medium ml-2">
-                    {isSubmitting ? 'Procesando...' : (
-                      activeTab === 'articulo' ? (
-                        isEditing && currentItem ? 'Siguiente' : 'Siguiente'
-                      ) :
-                        activeTab === 'adicional' ? 'Siguiente' :
-                          'Finalizar'
-                    )}
+                  <Text
+                    style={{ color: buttonTextColor }}
+                    className="font-medium ml-2"
+                  >
+                    {isSubmitting
+                      ? "Procesando..."
+                      : activeTab === "articulo"
+                        ? isEditing && currentItem
+                          ? "Siguiente"
+                          : "Siguiente"
+                        : activeTab === "adicional"
+                          ? "Siguiente"
+                          : "Finalizar"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1731,7 +2200,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
               <Text className="text-xl font-bold text-center mb-6 text-gray-800">
                 Seleccionar Imagen
               </Text>
-              
+
               {/* Opción: Tomar Foto */}
               <TouchableOpacity
                 onPress={takePhotoWithCamera}
@@ -1741,8 +2210,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   <Ionicons name="camera" size={24} color="white" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-lg font-semibold text-gray-800">Tomar Foto</Text>
-                  <Text className="text-sm text-gray-600">Usar la cámara para tomar una nueva foto</Text>
+                  <Text className="text-lg font-semibold text-gray-800">
+                    Tomar Foto
+                  </Text>
+                  <Text className="text-sm text-gray-600">
+                    Usar la cámara para tomar una nueva foto
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -1755,8 +2228,12 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   <Ionicons name="images" size={24} color="white" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-lg font-semibold text-gray-800">Galería</Text>
-                  <Text className="text-sm text-gray-600">Seleccionar una imagen existente</Text>
+                  <Text className="text-lg font-semibold text-gray-800">
+                    Galería
+                  </Text>
+                  <Text className="text-sm text-gray-600">
+                    Seleccionar una imagen existente
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -1765,7 +2242,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 onPress={() => setShowImagePickerModal(false)}
                 className="bg-gray-200 py-3 rounded-lg"
               >
-                <Text className="text-center text-gray-700 font-medium">Cancelar</Text>
+                <Text className="text-center text-gray-700 font-medium">
+                  Cancelar
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
