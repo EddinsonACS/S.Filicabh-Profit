@@ -126,19 +126,29 @@ const ArticuloForm: React.FC = () => {
 
   // Hooks para pasos adicionales
   const { useCreateArticuloFoto } = useArticuloFoto();
-  const { useCreateArticuloListaDePrecio } = useArticuloListaDePrecio();
-  const { useCreateArticuloUbicacion } = useArticuloUbicacion();
+  const { useCreateArticuloListaDePrecio, useGetArticuloListaDePrecioList } = useArticuloListaDePrecio();
+  const { useCreateArticuloUbicacion,useGetArticuloUbicacionList } = useArticuloUbicacion();
 
   // Data queries
   const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
   const { data: coloresDataArticulo } = useGetColorList(1, 1000);
   const { data: tallasDataArticulo } = useGetTallaList(1, 1000);
+  const { data: listasPreciosDataArticulo } = useGetArticuloListaDePrecioList(1, 100);
+  const { data: ubicacionesDataArticulo } = useGetArticuloUbicacionList(1, 100);
   const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
   const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
   const { data: presentacionesDataArticulo } = useGetPresentacionList(1, 1000);
   const { data: listasPreciosData } = useGetListaDePrecioList(1, 100);
   const { data: monedasData } = useGetMonedaList(1, 100);
   const { data: almacenesData } = useGetAlmacenList(1, 100);
+
+  // Get filtered data for editing mode
+  const preciosArticuloData = isEditing === 'true' && !!id 
+    ? listasPreciosDataArticulo?.data?.filter((precio: any) => precio.idArticulo === Number(id))
+    : [];
+  const ubicacionesArticuloData = isEditing === 'true' && !!id 
+    ? ubicacionesDataArticulo?.data?.filter((ubicacion: any) => ubicacion.idArticulo === Number(id))
+    : [];
 
   const isEditingMode = isEditing === 'true' && !!id;
 
@@ -1707,6 +1717,31 @@ const ArticuloForm: React.FC = () => {
                       </View>
                     </View>
                   ))}
+
+                  {/* Existing Article Prices */}
+                  {isEditingMode && preciosArticuloData && preciosArticuloData.length > 0 && (
+                    <View className="mt-6">
+                      <Text className="text-base font-semibold text-gray-800 mb-2">Precios del Artículo</Text>
+                      <ScrollView className="max-h-48">
+                        {preciosArticuloData.map((precio: any) => (
+                          <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                            <Text className="font-medium">
+                              {precio.nombreListaPrecio || "Lista de Precio"}
+                            </Text>
+                            <Text className="text-gray-600">
+                              {precio.nombreMoneda || "Moneda"}
+                            </Text>
+                            <Text className="font-bold text-lg">
+                              {Number(precio.monto).toFixed(2)}
+                            </Text>
+                            <Text className="text-sm text-gray-500">
+                              {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ""}
+                            </Text>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
                 </View>
               </>
             )}
@@ -1844,6 +1879,25 @@ const ArticuloForm: React.FC = () => {
                       </View>
                     </View>
                   ))}
+
+                  {/* Existing Article Locations */}
+                  {isEditingMode && ubicacionesArticuloData && ubicacionesArticuloData.length > 0 && (
+                    <View className="mt-6">
+                      <Text className="text-base font-semibold text-gray-800 mb-2">Ubicaciones del Artículo</Text>
+                      <ScrollView className="max-h-48">
+                        {ubicacionesArticuloData.map((ubicacion: any) => (
+                          <View key={ubicacion.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+                            <Text className="font-medium">
+                              {ubicacion.nombreAlmacen || "Almacén"}
+                            </Text>
+                            <Text className="text-gray-600">
+                              {ubicacion.ubicacion || "Sin ubicación específica"}
+                            </Text>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
                 </View>
               </>
             )}
