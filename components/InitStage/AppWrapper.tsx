@@ -1,9 +1,7 @@
 import { usePathname } from 'expo-router';
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
-import { getCurrentSectionColor, SECTION_COLORS } from '../../utils/colorManager';
 import { isPublicRoute } from '../navigation';
-import { useAppContext } from './AppContext';
 import NavBar from './NavBar';
 
 interface AppWrapperProps {
@@ -11,23 +9,12 @@ interface AppWrapperProps {
 }
 
 export default function AppWrapper({ children }: AppWrapperProps) {
-  const { currentEntitySection } = useAppContext();
   const pathname = usePathname();
   const isPublic = isPublicRoute(pathname);
 
   if (isPublic) {
     return <>{children}</>;
   }
-
-  // Active section color usando el sistema centralizado
-  const getActiveColor = () => {
-    // Si estamos en entidades y hay una sección específica seleccionada, usar esa
-    if (pathname.includes('/Entidades') && currentEntitySection) {
-      return SECTION_COLORS[currentEntitySection];
-    }
-    // Sino, usar el sistema de detección automática
-    return getCurrentSectionColor(pathname);
-  };
 
   return (
     <View className="flex-1 bg-[#F9F8FD] relative">

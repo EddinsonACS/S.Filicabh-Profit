@@ -7,12 +7,14 @@ export const PUBLIC_ROUTES = [
   'Login',
   'ForgetPassword',
   'MethodAuth',
-  'LoadingScreen'
+  'LoadingScreen',
+  'ArticuloDetalle',
+  'ArticuloForm'
 ];
 
 export const isPublicRoute = (path: string): boolean => {
   if (!path) return false;
-
+  console.log(path);
   // Mejor manejo de rutas
   const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
 
