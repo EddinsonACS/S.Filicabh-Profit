@@ -96,17 +96,6 @@ export const useArticuloFoto = () => {
           formData.append('Orden', params.orden.toString());
           formData.append('Equipo', params.equipo);
           
-          // Campos adicionales
-          formData.append('OtrosF1', new Date().toISOString());
-          formData.append('OtrosN1', '0');
-          formData.append('OtrosN2', '0');
-          formData.append('OtrosC1', '');
-          formData.append('OtrosC2', '');
-          formData.append('OtrosC3', '');
-          formData.append('OtrosC4', '');
-          formData.append('OtrosT1', '');
-          formData.append('Usuario', '0');
-          
           // Preparar archivo
           const file = {
             uri: params.imageFile.uri,

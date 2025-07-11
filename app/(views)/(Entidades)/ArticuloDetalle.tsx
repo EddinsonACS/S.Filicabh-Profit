@@ -47,6 +47,8 @@ const ArticuloDetalle: React.FC = () => {
   };
 
   const handleEdit = () => {
+    console.log('handleEdit');
+    console.log(id);
     router.push(`/(views)/(Entidades)/ArticuloForm?id=${id}&isEditing=true`);
   };
 

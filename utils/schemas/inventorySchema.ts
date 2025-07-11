@@ -41,7 +41,7 @@ export const inventorySchema = {
     idImpuesto: z
       .number({ required_error: "Debe seleccionar un impuesto" })
       .min(1, "Debe seleccionar un impuesto válido"),
-    presentaciones: z.number().optional(),
+    presentaciones: z.array(z.number()).optional(),
     peso: z.number().optional(),
     precio: z
       .number({ required_error: "El precio es requerido" })

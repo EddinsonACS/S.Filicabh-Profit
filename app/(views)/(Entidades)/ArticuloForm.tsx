@@ -37,6 +37,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Articulo } from "@/core/models/Inventario/Articulo";
 
 interface ListaPrecioItem {
   id: number;
@@ -139,6 +140,8 @@ const ArticuloForm: React.FC = () => {
   const { data: monedasData } = useGetMonedaList(1, 100);
   const { data: almacenesData } = useGetAlmacenList(1, 100);
 
+  const isEditingMode = isEditing === 'true' && !!id;
+
   // Get article data if editing
   const { data: currentItem, isLoading: isLoadingArticle } = useGetArticuloItem(
     isEditingMode ? Number(id) : 0
@@ -150,8 +153,6 @@ const ArticuloForm: React.FC = () => {
   const createFotoMutation = useCreateArticuloFoto();
   const createPrecioMutation = useCreateArticuloListaDePrecio();
   const createUbicacionMutation = useCreateArticuloUbicacion();
-
-  const isEditingMode = isEditing === 'true' && !!id;
 
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS_INVENTORY['articulo'];
@@ -184,42 +185,39 @@ const ArticuloForm: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
-  } = useForm({
+  } = useForm<Partial<Articulo>>({
     resolver: zodResolver(inventorySchema['articulo']),
-    defaultValues: isEditingMode ? currentItem : DEFAULT_VALUES_INVENTORY['articulo'],
+    defaultValues: isEditingMode ? (currentItem as Partial<Articulo>) : DEFAULT_VALUES_INVENTORY['articulo'],
   });
 
   useEffect(() => {
     if (isEditingMode && currentItem) {
-      reset(currentItem);
-      
+      reset(currentItem as Partial<Articulo>);
       // Inicializar presentaciones si existen
       if (currentItem.presentaciones) {
         const presentacionesArray = Array.isArray(currentItem.presentaciones)
-          ? currentItem.presentaciones
-          : [currentItem.presentaciones];
-        setValue("presentaciones", presentacionesArray);
+          ? currentItem.presentaciones.map(Number)
+          : [Number(currentItem.presentaciones)];
+        setValue("presentaciones", presentacionesArray as any);
       }
-
       // Inicializar otros campos numéricos
       [
         "peso", "volumen", "metroCubico", "pie", "puntoMinimo", "puntoMaximo",
       ].forEach((field) => {
-        if (currentItem[field] !== undefined) {
-          setValue(field, Number(currentItem[field]));
+        if ((currentItem as any)[field] !== undefined) {
+          setValue(field as keyof Articulo, Number((currentItem as any)[field]) as any);
         }
       });
-
       // Inicializar campos booleanos
       [
         "manejaLote", "manejaSerial", "poseeGarantia", "manejaPuntoMinimo", "manejaPuntoMaximo", "suspendido",
       ].forEach((field) => {
-        if (currentItem[field] !== undefined) {
-          setValue(field, Boolean(currentItem[field]));
+        if ((currentItem as any)[field] !== undefined) {
+          setValue(field as keyof Articulo, Boolean((currentItem as any)[field]) as any);
         }
       });
     } else {
-      reset(DEFAULT_VALUES_INVENTORY['articulo']);
+      reset(DEFAULT_VALUES_INVENTORY['articulo'] as Partial<Articulo>);
       setSelectedImages([]);
       setPrincipalImageIndex(-1);
       setListasPrecios([]);
@@ -511,7 +509,7 @@ const ArticuloForm: React.FC = () => {
       for (const ubicacion of ubicaciones) {
         const ubicacionData = {
           idArticulo: articleId,
-          codigoAlmacen: Number(ubicacion.codigoAlmacen),
+          idAlmacen: Number(ubicacion.codigoAlmacen),
           ubicacion: ubicacion.ubicacion,
         };
 
@@ -611,6 +609,10 @@ const ArticuloForm: React.FC = () => {
         }
       }
       else if (activeTab === "ubicaciones") {
+        console.log('ubicaciones');
+        console.log(isEditingMode);
+        console.log(currentItem);
+        console.log(createdArticleId);
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
         if (!articleId) {
           console.error("Article ID is missing");
@@ -687,7 +689,6 @@ const ArticuloForm: React.FC = () => {
   // Separate fields by type for current tab
   const activeFields = getActiveTabFields();
   const textFields = activeFields.filter((f) => f.type === "text" || f.type === "number");
-  const dateFields = activeFields.filter((f) => f.type === "date");
   const switchFields = activeFields.filter((f) => f.type === "switch");
   const selectFields = activeFields.filter((f) => f.type === "select");
 
@@ -898,11 +899,11 @@ const ArticuloForm: React.FC = () => {
                     </View>
                     <Controller
                       control={control}
-                      name={field.name}
+                      name={field.name as keyof Articulo}
                       render={({ field: { onChange, value } }) => (
                         <TextInput
                           className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                            errors[field.name]
+                            errors[field.name as keyof Articulo]
                               ? "border-red-500"
                               : "border-gray-200"
                           }`}
@@ -934,87 +935,14 @@ const ArticuloForm: React.FC = () => {
                         {field.description}
                       </Text>
                     )}
-                    {errors[field.name] && (
+                    {errors[field.name as keyof Articulo] && (
                       <Text className="text-red-500 text-sm mt-1">
-                        {errors[field.name]?.message as string}
+                        {errors[field.name as keyof Articulo]?.message as string}
                       </Text>
                     )}
                   </View>
                 ))}
 
-                {/* Date Fields */}
-                {dateFields.map((field) => (
-                  <View key={field.name} className="mb-4">
-                    <View className="flex-row mb-1">
-                      <Text className="text-sm font-medium text-gray-700">
-                        {field.label}
-                      </Text>
-                      {field.required && <Text className="text-red-600">*</Text>}
-                    </View>
-                    <Controller
-                      control={control}
-                      name={field.name}
-                      render={({ field: { onChange, value } }) => (
-                        <View>
-                          <TouchableOpacity
-                            onPress={() =>
-                              setShowDatePicker((prev) => ({
-                                ...prev,
-                                [field.name]: true,
-                              }))
-                            }
-                            className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                              errors[field.name]
-                                ? "border-red-500"
-                                : "border-gray-200"
-                            }`}
-                          >
-                            <Text className="text-gray-700">
-                              {value
-                                ? new Date(value).toLocaleDateString("es-ES")
-                                : field.placeholder}
-                            </Text>
-                            <Ionicons
-                              name="calendar-outline"
-                              size={20}
-                              color="#6B7280"
-                            />
-                          </TouchableOpacity>
-
-                          {showDatePicker[field.name] && (
-                            <DateTimePicker
-                              value={value ? new Date(value) : new Date()}
-                              mode="date"
-                              display={Platform.OS === "ios" ? "spinner" : "default"}
-                              onChange={(event: any, selectedDate: Date | undefined) => {
-                                setShowDatePicker((prev) => ({
-                                  ...prev,
-                                  [field.name]: false,
-                                }));
-                                if (selectedDate) {
-                                  const formattedDate = selectedDate
-                                    .toISOString()
-                                    .split("T")[0];
-                                  onChange(formattedDate);
-                                }
-                              }}
-                            />
-                          )}
-                        </View>
-                      )}
-                    />
-                    {field.description && (
-                      <Text className="text-gray-500 text-xs mt-1">
-                        {field.description}
-                      </Text>
-                    )}
-                    {errors[field.name] && (
-                      <Text className="text-red-500 text-sm mt-1">
-                        {errors[field.name]?.message as string}
-                      </Text>
-                    )}
-                  </View>
-                ))}
 
                 {/* Select Fields */}
                 {selectFields.map((field) => (
@@ -1031,10 +959,10 @@ const ArticuloForm: React.FC = () => {
                     </View>
                     <Controller
                       control={control}
-                      name={field.name}
+                      name={field.name as keyof Articulo}
                       render={({ field: { onChange, value } }) => {
                         const selectedOption = field.options?.find(
-                          (opt) =>
+                          (opt: any) =>
                             String(opt[field.optionValue || "id"]) ===
                             String(value),
                         );
@@ -1044,7 +972,7 @@ const ArticuloForm: React.FC = () => {
                             <TouchableOpacity
                               onPress={() => handleSelectPress(field.name)}
                               className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                errors[field.name]
+                                errors[field.name as keyof Articulo]
                                   ? "border-red-500"
                                   : "border-gray-200"
                               }`}
@@ -1052,7 +980,7 @@ const ArticuloForm: React.FC = () => {
                               <Text className="text-gray-700">
                                 {selectedOption
                                   ? String(
-                                      selectedOption[field.optionLabel || "nombre"],
+                                      (selectedOption as any)[field.optionLabel || "nombre"],
                                     )
                                   : "Seleccione una opción"}
                               </Text>
@@ -1075,14 +1003,14 @@ const ArticuloForm: React.FC = () => {
                                 >
                                   {field.options?.map((option) => (
                                     <TouchableOpacity
-                                      key={String(option[field.optionValue || "id"])}
+                                      key={String((option as any)[field.optionValue || "id"])}
                                       onPress={() => {
-                                        onChange(option[field.optionValue || "id"]);
+                                        onChange((option as any)[field.optionValue || "id"]);
                                         setOpenSelect(null);
                                       }}
                                       className={`px-4 py-3 border-b border-gray-100 ${
                                         String(value) ===
-                                        String(option[field.optionValue || "id"])
+                                        String((option as any)[field.optionValue || "id"])
                                           ? "bg-blue-50"
                                           : ""
                                       }`}
@@ -1090,12 +1018,12 @@ const ArticuloForm: React.FC = () => {
                                       <Text
                                         className={`${
                                           String(value) ===
-                                          String(option[field.optionValue || "id"])
+                                          String((option as any)[field.optionValue || "id"])
                                             ? "text-blue-600"
                                             : "text-gray-700"
                                         }`}
                                       >
-                                        {option[field.optionLabel || "nombre"]}
+                                        {(option as any)[field.optionLabel || "nombre"]}
                                       </Text>
                                     </TouchableOpacity>
                                   ))}
@@ -1111,9 +1039,9 @@ const ArticuloForm: React.FC = () => {
                         {field.description}
                       </Text>
                     )}
-                    {errors[field.name] && (
+                    {errors[field.name as keyof Articulo] && (
                       <Text className="text-red-500 text-sm mt-1">
-                        {errors[field.name]?.message as string}
+                        {errors[field.name as keyof Articulo]?.message as string}
                       </Text>
                     )}
                   </View>
@@ -1146,10 +1074,10 @@ const ArticuloForm: React.FC = () => {
                         </View>
                         <Controller
                           control={control}
-                          name={field.name}
+                          name={field.name as keyof Articulo}
                           render={({ field: { onChange, value } }) => (
                             <Switch
-                              value={value}
+                              value={Boolean(value)}
                               onValueChange={onChange}
                               trackColor={{
                                 false: "#d1d5db",
@@ -1205,7 +1133,7 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name}
+                        name={field.name as keyof Articulo}
                         render={({ field: { onChange, value } }) => {
                           const selectedOptions = Array.isArray(value) ? value : (value ? [value] : []);
 
@@ -1214,7 +1142,7 @@ const ArticuloForm: React.FC = () => {
                               <TouchableOpacity
                                 onPress={() => handleSelectPress(field.name)}
                                 className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name]
+                                  errors[field.name as keyof Articulo]
                                     ? "border-red-500"
                                     : "border-gray-200"
                                 }`}
@@ -1242,12 +1170,12 @@ const ArticuloForm: React.FC = () => {
                                     className="max-h-48"
                                   >
                                     {field.options?.map((option) => {
-                                      const isSelected = selectedOptions.includes(option[field.optionValue || "id"]);
+                                      const isSelected = selectedOptions.includes((option as any)[field.optionValue || "id"]);
                                       return (
                                         <TouchableOpacity
-                                          key={String(option[field.optionValue || "id"])}
+                                          key={String((option as any)[field.optionValue || "id"])}
                                           onPress={() => {
-                                            const optionValue = option[field.optionValue || "id"];
+                                            const optionValue = (option as any)[field.optionValue || "id"];
                                             let newValue;
                                             if (isSelected) {
                                               newValue = selectedOptions.filter(v => v !== optionValue);
@@ -1267,7 +1195,7 @@ const ArticuloForm: React.FC = () => {
                                                 : "text-gray-700"
                                             }`}
                                           >
-                                            {option[field.optionLabel || "nombre"]}
+                                            {(option as any)[field.optionLabel || "nombre"]}
                                           </Text>
                                           {isSelected && (
                                             <Ionicons
@@ -1291,9 +1219,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name] && (
+                      {errors[field.name as keyof Articulo] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
+                          {errors[field.name as keyof Articulo]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1339,11 +1267,11 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name}
+                        name={field.name as keyof Articulo}
                         render={({ field: { onChange, value } }) => (
                           <TextInput
                             className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                              errors[field.name]
+                              errors[field.name as keyof Articulo]
                                 ? "border-red-500"
                                 : "border-gray-200"
                             }`}
@@ -1375,9 +1303,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name] && (
+                      {errors[field.name as keyof Articulo] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
+                          {errors[field.name as keyof Articulo]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1398,10 +1326,10 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name}
+                        name={field.name as keyof Articulo}
                         render={({ field: { onChange, value } }) => {
                           const selectedOption = field.options?.find(
-                            (opt) =>
+                            (opt: any) =>
                               String(opt[field.optionValue || "id"]) ===
                               String(value),
                           );
@@ -1411,7 +1339,7 @@ const ArticuloForm: React.FC = () => {
                               <TouchableOpacity
                                 onPress={() => handleSelectPress(field.name)}
                                 className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name]
+                                  errors[field.name as keyof Articulo]
                                     ? "border-red-500"
                                     : "border-gray-200"
                                 }`}
@@ -1419,7 +1347,7 @@ const ArticuloForm: React.FC = () => {
                                 <Text className="text-gray-700">
                                   {selectedOption
                                     ? String(
-                                        selectedOption[field.optionLabel || "nombre"],
+                                        (selectedOption as any)[field.optionLabel || "nombre"],
                                       )
                                     : "Seleccione una opción"}
                                 </Text>
@@ -1442,14 +1370,14 @@ const ArticuloForm: React.FC = () => {
                                   >
                                     {field.options?.map((option) => (
                                       <TouchableOpacity
-                                        key={String(option[field.optionValue || "id"])}
+                                        key={String((option as any)[field.optionValue || "id"])}
                                         onPress={() => {
-                                          onChange(option[field.optionValue || "id"]);
+                                          onChange((option as any)[field.optionValue || "id"]);
                                           setOpenSelect(null);
                                         }}
                                         className={`px-4 py-3 border-b border-gray-100 ${
                                           String(value) ===
-                                          String(option[field.optionValue || "id"])
+                                          String((option as any)[field.optionValue || "id"])
                                             ? "bg-blue-50"
                                             : ""
                                         }`}
@@ -1457,12 +1385,12 @@ const ArticuloForm: React.FC = () => {
                                         <Text
                                           className={`${
                                             String(value) ===
-                                            String(option[field.optionValue || "id"])
+                                            String((option as any)[field.optionValue || "id"])
                                               ? "text-blue-600"
                                               : "text-gray-700"
                                           }`}
                                         >
-                                          {option[field.optionLabel || "nombre"]}
+                                          {(option as any)[field.optionLabel || "nombre"]}
                                         </Text>
                                       </TouchableOpacity>
                                     ))}
@@ -1478,9 +1406,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name] && (
+                      {errors[field.name as keyof Articulo] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name]?.message as string}
+                          {errors[field.name as keyof Articulo]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1513,10 +1441,10 @@ const ArticuloForm: React.FC = () => {
                           </View>
                           <Controller
                             control={control}
-                            name={field.name}
+                            name={field.name as keyof Articulo}
                             render={({ field: { onChange, value } }) => (
                               <Switch
-                                value={value}
+                                value={Boolean(value)}
                                 onValueChange={onChange}
                                 trackColor={{
                                   false: "#d1d5db",

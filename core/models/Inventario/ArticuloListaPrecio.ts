@@ -1,6 +1,6 @@
 export interface ArticuloListaPrecio {
     idArticulo: number
-    idListasdePrecio: number
+    idListasDePrecio: number
     idMoneda: number
     equipo: string
     fechaDesde: string
