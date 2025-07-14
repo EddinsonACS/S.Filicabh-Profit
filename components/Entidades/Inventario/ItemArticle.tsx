@@ -121,22 +121,14 @@ const ItemAlmacen: React.FC<{
               </View>
             </View>
 
-            {/* Estado al lado derecho de la misma fila */}
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.suspendido
-                  ? "bg-red-100 border border-red-600"
-                  : "bg-green-100 border border-green-600"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.suspendido ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {item.suspendido ? "Inactivo" : "Activo"}
-              </Text>
-            </View>
+            {/* Estado al lado derecho de la misma fila - Solo mostrar cuando esté inactivo */}
+            {item.suspendido && (
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Información del sistema */}
@@ -189,24 +181,16 @@ const ItemCategoria: React.FC<{
             </Text>
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
-          <View className="absolute bottom-4 right-4">
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.suspendido
-                  ? "bg-red-100 border border-red-600"
-                  : "bg-green-100 border border-green-600"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.suspendido ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {item.suspendido ? "Inactivo" : "Activo"}
-              </Text>
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
+          {item.suspendido && (
+            <View className="absolute bottom-4 right-4">
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -252,24 +236,16 @@ const ItemGrupo: React.FC<{
             </Text>
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
-          <View className="absolute bottom-4 right-4">
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.suspendido
-                  ? "bg-red-100 border border-red-600"
-                  : "bg-green-100 border border-green-600"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.suspendido ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {item.suspendido ? "Inactivo" : "Activo"}
-              </Text>
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
+          {item.suspendido && (
+            <View className="absolute bottom-4 right-4">
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -304,24 +280,16 @@ const ItemDefault: React.FC<ItemProps> = ({ item, onPress, dataGrupo }) => {
             </Text>
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
-          <View className="absolute bottom-4 right-4">
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.suspendido
-                  ? "bg-red-100 border border-red-600"
-                  : "bg-green-100 border border-green-600"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.suspendido ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {item.suspendido ? "Inactivo" : "Activo"}
-              </Text>
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
+          {item.suspendido && (
+            <View className="absolute bottom-4 right-4">
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -350,24 +318,16 @@ const ItemArticulo: React.FC<{
         activeOpacity={0.7}
         className="flex-row h-32"
       >
-        {/* Estado en la esquina superior izquierda */}
-        <View className="absolute top-1 left-1 z-10">
-          <View
-            className={`px-2 py-1 rounded-full ${
-              item.suspendido
-                ? "bg-red-100 border border-red-600"
-                : "bg-green-100 border border-green-600"
-            }`}
-          >
-            <Text
-              className={`text-xs font-medium ${
-                item.suspendido ? "text-red-600" : "text-green-600"
-              }`}
-            >
-              {item.suspendido ? "Inactivo" : "Activo"}
-            </Text>
+        {/* Estado en la esquina superior izquierda - Solo mostrar cuando esté inactivo */}
+        {item.suspendido && (
+          <View className="absolute top-1 left-1 z-10">
+            <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+              <Text className="text-xs font-medium text-red-600">
+                Inactivo
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Imagen del artículo */}
         <View className="w-32 p-2">
@@ -480,24 +440,16 @@ const ItemSeccion: React.FC<{
             </Text>
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
-          <View className="absolute bottom-4 right-4">
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.suspendido
-                  ? "bg-red-100 border border-red-600"
-                  : "bg-green-100 border border-green-600"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.suspendido ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {item.suspendido ? "Inactivo" : "Activo"}
-              </Text>
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
+          {item.suspendido && (
+            <View className="absolute bottom-4 right-4">
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>

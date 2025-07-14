@@ -1,31 +1,31 @@
+import { themes } from "@/components/Entidades/shared/theme";
+import { useNotificationContext } from "@/contexts/NotificationContext";
+import { Articulo } from "@/core/models/Inventario/Articulo";
 import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
+import { useArticulo } from "@/hooks/Inventario/useArticulo";
 import { useArticuloFoto } from "@/hooks/Inventario/useArticuloFoto";
 import { useArticuloListaDePrecio } from "@/hooks/Inventario/useArticuloListaDePrecio";
 import { useArticuloUbicacion } from "@/hooks/Inventario/useArticuloUbicacion";
-import { useArticulo } from "@/hooks/Inventario/useArticulo";
 import { useColor } from "@/hooks/Inventario/useColor";
 import { useGrupo } from "@/hooks/Inventario/useGrupo";
+import { usePresentacion } from "@/hooks/Inventario/usePresentacion";
 import { useTalla } from "@/hooks/Inventario/useTalla";
 import { useTipoDeArticulo } from "@/hooks/Inventario/useTipoDeArticulo";
 import { useTipoDeImpuesto } from "@/hooks/Inventario/useTipoDeImpuesto";
-import { usePresentacion } from "@/hooks/Inventario/usePresentacion";
 import { useListaDePrecio } from "@/hooks/Ventas/useListaDePrecio";
 import { useMoneda } from "@/hooks/Ventas/useMoneda";
-import { useNotificationContext } from "@/contexts/NotificationContext";
-import { themes } from "@/components/Entidades/shared/theme";
 import { DEFAULT_VALUES_INVENTORY } from "@/utils/const/defaultValues";
 import { FORM_FIELDS_INVENTORY } from "@/utils/const/formFields";
-import { inventorySchema } from "@/utils/schemas/inventorySchema";
+import { inventorySchema, InventoryFormData } from "@/utils/schemas/inventorySchema";
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -34,10 +34,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Articulo } from "@/core/models/Inventario/Articulo";
 
 interface ListaPrecioItem {
   id: number;
@@ -72,10 +71,24 @@ interface ArticleResponse {
   [key: string]: any;
 }
 
+// Define the form type that matches the schema
+type ArticuloFormData = InventoryFormData['articulo'];
+
 const ArticuloForm: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id, isEditing } = useLocalSearchParams<{ id?: string; isEditing?: string }>();
+  
+  // Helper function for navigation
+  const navigateBack = () => {
+    if (isEditing === 'true' && id) {
+      // Si estamos editando, simplemente volver atrás en el stack
+      router.back();
+    } else {
+      // Si estamos creando, volver a la lista de artículos
+      router.replace('/(views)/(Entidades)/EntInventario?category=articulo');
+    }
+  };
   
   const [activeTab, setActiveTab] = useState("ficha");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,6 +101,7 @@ const ArticuloForm: React.FC = () => {
   const [selectedMoneda, setSelectedMoneda] = useState<string>("");
   const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
   const [showDatePicker, setShowDatePicker] = useState<{[key: string]: boolean}>({});
+  const [showPrecioDatePicker, setShowPrecioDatePicker] = useState<{[key: string]: boolean}>({});
   const [openSelect, setOpenSelect] = useState<string | null>(null);
   const [selectedAlmacen, setSelectedAlmacen] = useState<string>("");
   const [ubicacionInput, setUbicacionInput] = useState<string>("");
@@ -195,14 +209,14 @@ const ArticuloForm: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
-  } = useForm<Partial<Articulo>>({
+  } = useForm<ArticuloFormData>({
     resolver: zodResolver(inventorySchema['articulo']),
-    defaultValues: isEditingMode ? (currentItem as Partial<Articulo>) : DEFAULT_VALUES_INVENTORY['articulo'],
+    defaultValues: isEditingMode ? (currentItem as ArticuloFormData) : DEFAULT_VALUES_INVENTORY['articulo'],
   });
 
   useEffect(() => {
     if (isEditingMode && currentItem) {
-      reset(currentItem as Partial<Articulo>);
+      reset(currentItem as ArticuloFormData);
       // Inicializar presentaciones si existen
       if (currentItem.presentaciones) {
         const presentacionesArray = Array.isArray(currentItem.presentaciones)
@@ -215,7 +229,7 @@ const ArticuloForm: React.FC = () => {
         "peso", "volumen", "metroCubico", "pie", "puntoMinimo", "puntoMaximo",
       ].forEach((field) => {
         if ((currentItem as any)[field] !== undefined) {
-          setValue(field as keyof Articulo, Number((currentItem as any)[field]) as any);
+          setValue(field as keyof ArticuloFormData, Number((currentItem as any)[field]) as any);
         }
       });
       // Inicializar campos booleanos
@@ -223,11 +237,11 @@ const ArticuloForm: React.FC = () => {
         "manejaLote", "manejaSerial", "poseeGarantia", "manejaPuntoMinimo", "manejaPuntoMaximo", "suspendido",
       ].forEach((field) => {
         if ((currentItem as any)[field] !== undefined) {
-          setValue(field as keyof Articulo, Boolean((currentItem as any)[field]) as any);
+          setValue(field as keyof ArticuloFormData, Boolean((currentItem as any)[field]) as any);
         }
       });
     } else {
-      reset(DEFAULT_VALUES_INVENTORY['articulo'] as Partial<Articulo>);
+      reset(DEFAULT_VALUES_INVENTORY['articulo'] as ArticuloFormData);
       setSelectedImages([]);
       setPrincipalImageIndex(-1);
       setListasPrecios([]);
@@ -469,17 +483,21 @@ const ArticuloForm: React.FC = () => {
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
         const order = imageOrder[image.id] || i + 1;
-        const formData = new FormData();
-        formData.append("file", {
-          uri: image.uri,
-          name: image.name,
-          type: image.type,
-        } as any);
-        formData.append("idArticulo", String(articleId));
-        formData.append("esPrincipal", String(order === 1));
-        formData.append("orden", String(order));
+        
+        // Prepare the parameters object instead of FormData
+        const fotoParams = {
+          idArticulo: articleId,
+          esPrincipal: order === 1,
+          orden: order,
+          equipo: "mobile", // Default equipment value
+          imageFile: {
+            uri: image.uri,
+            name: image.name,
+            type: image.type,
+          }
+        };
 
-        await createFotoMutation.mutateAsync(formData);
+        await createFotoMutation.mutateAsync(fotoParams);
       }
       return true;
     } catch (error) {
@@ -644,6 +662,10 @@ const ArticuloForm: React.FC = () => {
         success = await saveFotos(articleId);
         if (success) {
           showUpdateSuccess('las fotos');
+          // Navegar de vuelta a la lista después de completar todas las pestañas
+          setTimeout(() => {
+            navigateBack();
+          }, 1500);
         }
       }
     } catch (error) {
@@ -660,7 +682,7 @@ const ArticuloForm: React.FC = () => {
   // Define fields for each tab with proper required marking
   const getFichaFields = () => {
     const allFields = getFormFields();
-    const fichaFieldNames = ['nombre', 'codigoArticulo', 'codigoModelo', 'codigoBarra', 'descripcion', 'idTipoArticulo', 'idGrupo', 'idImpuesto', 'manejaLote', 'manejaSerial'];
+    const fichaFieldNames = ['nombre', 'codigoArticulo', 'codigoModelo', 'codigoBarra', 'descripcion', 'idTipoArticulo', 'idGrupo', 'idImpuesto', 'manejaLote', 'manejaSerial', 'suspendido'];
     return allFields.filter(field => fichaFieldNames.includes(field.name)).map(field => {
       // Mark required fields as specified
       if (['nombre', 'idTipoArticulo', 'idGrupo', 'idImpuesto'].includes(field.name)) {
@@ -710,7 +732,9 @@ const ArticuloForm: React.FC = () => {
           style={{ backgroundColor: themes.inventory.headerColor }}
         >
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => {
+              navigateBack();
+            }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
             <Ionicons 
@@ -742,12 +766,14 @@ const ArticuloForm: React.FC = () => {
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header */}
       <View 
-        className="px-4 pt-12 pb-6 shadow-sm"
+        className="px-4 pt-12 pb-2 shadow-sm"
         style={{ backgroundColor: themes.inventory.headerColor }}
       >
-        <View className="flex-row items-center mb-6">
+        <View className="flex-row items-center mb-2">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => {
+              navigateBack();
+            }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
             <Ionicons 
@@ -772,110 +798,58 @@ const ArticuloForm: React.FC = () => {
           </View>
         </View>
 
-        {/* Improved Tab Navigation */}
-        <View className="bg-white/10 rounded-2xl p-2">
+        {/* Tab Navigation - Chips Style */}
+        <View className="py-2">
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 8 }}
+            contentContainerStyle={{ paddingLeft: 16, paddingRight: 16, paddingVertical: 8 }}
           >
-            <View className="flex-row space-x-2">
-              {/* FICHA */}
+            {[
+              { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+              { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+              { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+              { id: "precios", name: "Precios", icon: "pricetag-outline" },
+              { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+              { id: "fotos", name: "Fotos", icon: "camera-outline" }
+            ].map((tab, index) => (
               <TouchableOpacity
-                onPress={() => setActiveTab("ficha")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "ficha" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
+                key={tab.id}
+                style={{
+                  marginRight: index < 5 ? 12 : 0, // No margin en el último elemento
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.2)',
+                  borderWidth: 1,
+                  borderColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.3)',
+                  shadowColor: activeTab === tab.id ? '#000' : 'transparent',
+                  shadowOffset: activeTab === tab.id ? { width: 0, height: 2 } : { width: 0, height: 0 },
+                  shadowOpacity: activeTab === tab.id ? 0.1 : 0,
+                  shadowRadius: activeTab === tab.id ? 4 : 0,
+                  elevation: activeTab === tab.id ? 3 : 0
+                }}
+                onPress={() => setActiveTab(tab.id)}
               >
+                <Ionicons
+                  name={tab.icon as any}
+                  size={16}
+                  color={activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)'}
+                  style={{ marginRight: 6 }}
+                />
                 <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "ficha" ? "text-purple-600" : "text-white"
-                  }`}
+                  style={{
+                    color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
+                    fontWeight: activeTab === tab.id ? '600' : 'normal',
+                    fontSize: 14
+                  }}
                 >
-                  FICHA
+                  {tab.name}
                 </Text>
               </TouchableOpacity>
-
-              {/* PRESENTACIÓN */}
-              <TouchableOpacity
-                onPress={() => setActiveTab("presentaciones")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "presentaciones" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "presentaciones" ? "text-purple-600" : "text-white"
-                  }`}
-                >
-                  PRESENTACIÓN
-                </Text>
-              </TouchableOpacity>
-
-              {/* DETALLE */}
-              <TouchableOpacity
-                onPress={() => setActiveTab("detalles")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "detalles" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "detalles" ? "text-purple-600" : "text-white"
-                  }`}
-                >
-                  DETALLE
-                </Text>
-              </TouchableOpacity>
-
-              {/* PRECIOS */}
-              <TouchableOpacity
-                onPress={() => setActiveTab("precios")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "precios" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "precios" ? "text-purple-600" : "text-white"
-                  }`}
-                >
-                  PRECIOS
-                </Text>
-              </TouchableOpacity>
-
-              {/* UBICACIONES */}
-              <TouchableOpacity
-                onPress={() => setActiveTab("ubicaciones")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "ubicaciones" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "ubicaciones" ? "text-purple-600" : "text-white"
-                  }`}
-                >
-                  UBICACIONES
-                </Text>
-              </TouchableOpacity>
-
-              {/* FOTOS */}
-              <TouchableOpacity
-                onPress={() => setActiveTab("fotos")}
-                className={`px-6 py-3 rounded-full ${
-                  activeTab === "fotos" ? "bg-white shadow-sm" : "bg-white/20"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "fotos" ? "text-purple-600" : "text-white"
-                  }`}
-                >
-                  FOTOS
-                </Text>
-              </TouchableOpacity>
-            </View>
+            ))}
           </ScrollView>
         </View>
       </View>
@@ -909,11 +883,11 @@ const ArticuloForm: React.FC = () => {
                     </View>
                     <Controller
                       control={control}
-                      name={field.name as keyof Articulo}
+                      name={field.name as keyof ArticuloFormData}
                       render={({ field: { onChange, value } }) => (
                         <TextInput
                           className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                            errors[field.name as keyof Articulo]
+                            errors[field.name as keyof ArticuloFormData]
                               ? "border-red-500"
                               : "border-gray-200"
                           }`}
@@ -945,9 +919,9 @@ const ArticuloForm: React.FC = () => {
                         {field.description}
                       </Text>
                     )}
-                    {errors[field.name as keyof Articulo] && (
+                    {errors[field.name as keyof ArticuloFormData] && (
                       <Text className="text-red-500 text-sm mt-1">
-                        {errors[field.name as keyof Articulo]?.message as string}
+                        {errors[field.name as keyof ArticuloFormData]?.message as string}
                       </Text>
                     )}
                   </View>
@@ -969,7 +943,7 @@ const ArticuloForm: React.FC = () => {
                     </View>
                     <Controller
                       control={control}
-                      name={field.name as keyof Articulo}
+                      name={field.name as keyof ArticuloFormData}
                       render={({ field: { onChange, value } }) => {
                         const selectedOption = field.options?.find(
                           (opt: any) =>
@@ -982,7 +956,7 @@ const ArticuloForm: React.FC = () => {
                             <TouchableOpacity
                               onPress={() => handleSelectPress(field.name)}
                               className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                errors[field.name as keyof Articulo]
+                                errors[field.name as keyof ArticuloFormData]
                                   ? "border-red-500"
                                   : "border-gray-200"
                               }`}
@@ -1049,9 +1023,9 @@ const ArticuloForm: React.FC = () => {
                         {field.description}
                       </Text>
                     )}
-                    {errors[field.name as keyof Articulo] && (
+                    {errors[field.name as keyof ArticuloFormData] && (
                       <Text className="text-red-500 text-sm mt-1">
-                        {errors[field.name as keyof Articulo]?.message as string}
+                        {errors[field.name as keyof ArticuloFormData]?.message as string}
                       </Text>
                     )}
                   </View>
@@ -1084,7 +1058,7 @@ const ArticuloForm: React.FC = () => {
                         </View>
                         <Controller
                           control={control}
-                          name={field.name as keyof Articulo}
+                          name={field.name as keyof ArticuloFormData}
                           render={({ field: { onChange, value } }) => (
                             <Switch
                               value={Boolean(value)}
@@ -1143,7 +1117,7 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name as keyof Articulo}
+                        name={field.name as keyof ArticuloFormData}
                         render={({ field: { onChange, value } }) => {
                           const selectedOptions = Array.isArray(value) ? value : (value ? [value] : []);
 
@@ -1152,7 +1126,7 @@ const ArticuloForm: React.FC = () => {
                               <TouchableOpacity
                                 onPress={() => handleSelectPress(field.name)}
                                 className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name as keyof Articulo]
+                                  errors[field.name as keyof ArticuloFormData]
                                     ? "border-red-500"
                                     : "border-gray-200"
                                 }`}
@@ -1229,9 +1203,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name as keyof Articulo] && (
+                      {errors[field.name as keyof ArticuloFormData] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name as keyof Articulo]?.message as string}
+                          {errors[field.name as keyof ArticuloFormData]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1277,11 +1251,11 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name as keyof Articulo}
+                        name={field.name as keyof ArticuloFormData}
                         render={({ field: { onChange, value } }) => (
                           <TextInput
                             className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                              errors[field.name as keyof Articulo]
+                              errors[field.name as keyof ArticuloFormData]
                                 ? "border-red-500"
                                 : "border-gray-200"
                             }`}
@@ -1313,9 +1287,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name as keyof Articulo] && (
+                      {errors[field.name as keyof ArticuloFormData] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name as keyof Articulo]?.message as string}
+                          {errors[field.name as keyof ArticuloFormData]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1336,7 +1310,7 @@ const ArticuloForm: React.FC = () => {
                       </View>
                       <Controller
                         control={control}
-                        name={field.name as keyof Articulo}
+                        name={field.name as keyof ArticuloFormData}
                         render={({ field: { onChange, value } }) => {
                           const selectedOption = field.options?.find(
                             (opt: any) =>
@@ -1349,7 +1323,7 @@ const ArticuloForm: React.FC = () => {
                               <TouchableOpacity
                                 onPress={() => handleSelectPress(field.name)}
                                 className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name as keyof Articulo]
+                                  errors[field.name as keyof ArticuloFormData]
                                     ? "border-red-500"
                                     : "border-gray-200"
                                 }`}
@@ -1416,9 +1390,9 @@ const ArticuloForm: React.FC = () => {
                           {field.description}
                         </Text>
                       )}
-                      {errors[field.name as keyof Articulo] && (
+                      {errors[field.name as keyof ArticuloFormData] && (
                         <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name as keyof Articulo]?.message as string}
+                          {errors[field.name as keyof ArticuloFormData]?.message as string}
                         </Text>
                       )}
                     </View>
@@ -1451,7 +1425,7 @@ const ArticuloForm: React.FC = () => {
                           </View>
                           <Controller
                             control={control}
-                            name={field.name as keyof Articulo}
+                            name={field.name as keyof ArticuloFormData}
                             render={({ field: { onChange, value } }) => (
                               <Switch
                                 value={Boolean(value)}
@@ -1596,38 +1570,195 @@ const ArticuloForm: React.FC = () => {
                     </View>
 
                     {/* Fechas */}
-                    <View className="flex-row space-x-2">
-                      <View className="flex-1">
+                    <View className="space-y-4">
+                      {/* Fecha Desde */}
+                      <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">
                           Fecha Desde
                         </Text>
-                        <TextInput
-                          className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                          placeholder="YYYY-MM-DD"
-                          value={precioInputs.fechaDesde}
-                          onChangeText={(text) =>
-                            setPrecioInputs((prev: PrecioInputs) => ({
-                              ...prev,
-                              fechaDesde: text,
-                            }))
-                          }
-                        />
+                        <View className="flex-row items-center space-x-2">
+                          <TextInput
+                            className="flex-1 px-4 py-3 bg-white rounded-lg border border-gray-200"
+                            placeholder="DD/MM/YYYY"
+                            value={precioInputs.fechaDesde}
+                            onChangeText={(text) => {
+                              // Solo permite números y barras
+                              const numericText = text.replace(/[^0-9]/g, '');
+                              let formattedText = '';
+                              
+                              // Auto-formateo con barras
+                              if (numericText.length <= 2) {
+                                formattedText = numericText;
+                              } else if (numericText.length <= 4) {
+                                formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2);
+                              } else if (numericText.length <= 8) {
+                                formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2, 4) + '/' + numericText.slice(4, 8);
+                              }
+                              
+                              if (formattedText.length <= 10) {
+                                setPrecioInputs((prev: PrecioInputs) => ({
+                                  ...prev,
+                                  fechaDesde: formattedText,
+                                }));
+                              }
+                            }}
+                            keyboardType="numeric"
+                            maxLength={10}
+                          />
+                          <TouchableOpacity
+                            onPress={() =>
+                              setShowPrecioDatePicker((prev) => ({
+                                ...prev,
+                                fechaDesde: true,
+                              }))
+                            }
+                            className="p-2"
+                          >
+                            <Ionicons
+                              name="calendar-outline"
+                              size={24}
+                              color={themes.inventory.buttonColor}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                        {showPrecioDatePicker.fechaDesde && (
+                          <DateTimePicker
+                            value={(() => {
+                              if (precioInputs.fechaDesde) {
+                                const [day, month, year] = precioInputs.fechaDesde.split('/');
+                                if (day && month && year && year.length === 4) {
+                                  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                }
+                              }
+                              return new Date();
+                            })()}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "compact" : "default"}
+                            onChange={(event: any, selectedDate: Date | undefined) => {
+                              if (event.type === 'dismissed') {
+                                setShowPrecioDatePicker((prev) => ({
+                                  ...prev,
+                                  fechaDesde: false,
+                                }));
+                                return;
+                              }
+                              
+                              if (selectedDate) {
+                                const day = selectedDate.getDate().toString().padStart(2, '0');
+                                const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                                const year = selectedDate.getFullYear().toString();
+                                const formattedDate = `${day}/${month}/${year}`;
+                                
+                                setPrecioInputs((prev: PrecioInputs) => ({
+                                  ...prev,
+                                  fechaDesde: formattedDate,
+                                }));
+                                
+                                if (Platform.OS === 'android') {
+                                  setShowPrecioDatePicker((prev) => ({
+                                    ...prev,
+                                    fechaDesde: false,
+                                  }));
+                                }
+                              }
+                            }}
+                          />
+                        )}
                       </View>
-                      <View className="flex-1">
+                      
+                      {/* Fecha Hasta */}
+                      <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">
                           Fecha Hasta (Opcional)
                         </Text>
-                        <TextInput
-                          className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                          placeholder="YYYY-MM-DD"
-                          value={precioInputs.fechaHasta}
-                          onChangeText={(text) =>
-                            setPrecioInputs((prev: PrecioInputs) => ({
-                              ...prev,
-                              fechaHasta: text,
-                            }))
-                          }
-                        />
+                        <View className="flex-row items-center space-x-2">
+                          <TextInput
+                            className="flex-1 px-4 py-3 bg-white rounded-lg border border-gray-200"
+                            placeholder="DD/MM/YYYY"
+                            value={precioInputs.fechaHasta}
+                            onChangeText={(text) => {
+                              // Solo permite números y barras
+                              const numericText = text.replace(/[^0-9]/g, '');
+                              let formattedText = '';
+                              
+                              // Auto-formateo con barras
+                              if (numericText.length <= 2) {
+                                formattedText = numericText;
+                              } else if (numericText.length <= 4) {
+                                formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2);
+                              } else if (numericText.length <= 8) {
+                                formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2, 4) + '/' + numericText.slice(4, 8);
+                              }
+                              
+                              if (formattedText.length <= 10) {
+                                setPrecioInputs((prev: PrecioInputs) => ({
+                                  ...prev,
+                                  fechaHasta: formattedText,
+                                }));
+                              }
+                            }}
+                            keyboardType="numeric"
+                            maxLength={10}
+                          />
+                          <TouchableOpacity
+                            onPress={() =>
+                              setShowPrecioDatePicker((prev) => ({
+                                ...prev,
+                                fechaHasta: true,
+                              }))
+                            }
+                            className="p-2"
+                          >
+                            <Ionicons
+                              name="calendar-outline"
+                              size={24}
+                              color={themes.inventory.buttonColor}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                        {showPrecioDatePicker.fechaHasta && (
+                          <DateTimePicker
+                            value={(() => {
+                              if (precioInputs.fechaHasta) {
+                                const [day, month, year] = precioInputs.fechaHasta.split('/');
+                                if (day && month && year && year.length === 4) {
+                                  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                }
+                              }
+                              return new Date();
+                            })()}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "compact" : "default"}
+                            onChange={(event: any, selectedDate: Date | undefined) => {
+                              if (event.type === 'dismissed') {
+                                setShowPrecioDatePicker((prev) => ({
+                                  ...prev,
+                                  fechaHasta: false,
+                                }));
+                                return;
+                              }
+                              
+                              if (selectedDate) {
+                                const day = selectedDate.getDate().toString().padStart(2, '0');
+                                const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                                const year = selectedDate.getFullYear().toString();
+                                const formattedDate = `${day}/${month}/${year}`;
+                                
+                                setPrecioInputs((prev: PrecioInputs) => ({
+                                  ...prev,
+                                  fechaHasta: formattedDate,
+                                }));
+                                
+                                if (Platform.OS === 'android') {
+                                  setShowPrecioDatePicker((prev) => ({
+                                    ...prev,
+                                    fechaHasta: false,
+                                  }));
+                                }
+                              }
+                            }}
+                          />
+                        )}
                       </View>
                     </View>
 
@@ -2044,12 +2175,14 @@ const ArticuloForm: React.FC = () => {
         </ScrollView>
 
         {/* Footer Buttons - Changed to Cancel/Save */}
-        <View className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg">
+        <View className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg mb-2">
           <View className="flex-row space-x-4">
             {/* Cancel Button */}
             <TouchableOpacity
               className="flex-1 bg-gray-100 py-4 rounded-xl flex-row justify-center items-center"
-              onPress={() => router.back()}
+              onPress={() => {
+              navigateBack();
+            }}
               disabled={isSubmitting}
             >
               <Ionicons
@@ -2127,7 +2260,7 @@ const ArticuloForm: React.FC = () => {
               <TouchableOpacity
                 onPress={() => {
                   setShowSuccessModal(false);
-                  router.back();
+                  navigateBack();
                 }}
                 className="flex-1 bg-gray-100 py-3 rounded-lg"
               >

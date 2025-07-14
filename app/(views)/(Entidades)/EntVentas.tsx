@@ -37,17 +37,17 @@ import { BackHandler, View } from 'react-native';
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
 import DynamicErrorState from '@/components/Entidades/shared/DynamicErrorState';
+import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import { themes } from '@/components/Entidades/shared/theme';
-import { applyFilters } from '@/utils/helpers/filterUtils';
 import ItemArticle from '@/components/Entidades/Ventas/ItemArticle';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { applyFilters } from '@/utils/helpers/filterUtils';
 import { ventasSchema } from '@/utils/schemas/ventasSchema';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -497,8 +497,8 @@ const FORM_FIELDS = {
     { name: 'idTipoPersona', label: 'Tipo de Persona', type: 'select' as const, required: true, placeholder: 'Seleccione tipo persona', description: 'Clasificación del tipo de persona.', optionsData: [], optionLabel: 'nombre', optionValue: 'id' },
     { name: 'activoVentas', label: 'Activo para Ventas', type: 'switch' as const, description: 'Indica si está activo para transacciones de ventas.', required: false },
     { name: 'activoCompras', label: 'Activo para Compras', type: 'switch' as const, description: 'Indica si está activo para transacciones de compras.', required: false },
-    { name: 'esCasaMatriz', label: 'Es Casa Matriz', type: 'switch' as const, description: 'Indica si esta figura es la casa matriz.', required: false },
-    { name: 'codigoFiguraComercialCasaMatriz', label: 'Casa Matriz (Si aplica)', type: 'select' as const, placeholder: 'Seleccione casa matriz', description: 'Figura comercial que es la casa matriz (si esta es una sucursal).', optionsData: [], optionLabel: 'nombre', optionValue: 'id', required: true },
+    { name: 'esCasaMatriz', label: 'Es Sucursal', type: 'switch' as const, description: 'Indica si esta figura es una sucursal (si no, es una casa matriz).', required: false },
+    { name: 'codigoFiguraComercialCasaMatriz', label: 'Casa Matriz (Si aplica)', type: 'select' as const, placeholder: 'Seleccione casa matriz', description: 'Figura comercial que es la casa matriz (si esta es una sucursal).', optionsData: [], optionLabel: 'nombre', optionValue: 'id', required: false },
     { name: 'direccionComercial', label: 'Dirección Comercial', type: 'text' as const, placeholder: 'Dirección comercial completa', description: 'Dirección fiscal o comercial.', required: true },
     { name: 'direccionEntrega', label: 'Dirección de Entrega', type: 'text' as const, placeholder: 'Dirección para entregas', description: 'Dirección predeterminada para envío de mercancía.', required: true },
     { name: 'codigoMonedaLimiteCreditoVentas', label: 'Moneda Límite Crédito (Ventas)', type: 'select' as const, required: true, placeholder: 'Seleccione moneda', description: 'Moneda para el límite de crédito en ventas.', optionsData: [], optionLabel: 'codigo', optionValue: 'codigo' },

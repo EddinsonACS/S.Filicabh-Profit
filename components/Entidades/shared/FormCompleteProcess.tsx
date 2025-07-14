@@ -392,6 +392,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("articulo");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState<'chips' | 'dropdown'>('chips');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
@@ -402,6 +404,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const [showUbicacionesSection, setShowUbicacionesSection] = useState(true);
   const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
   const [showDatePicker, setShowDatePicker] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [showPrecioDatePicker, setShowPrecioDatePicker] = useState<{
     [key: string]: boolean;
   }>({});
   const [openSelect, setOpenSelect] = useState<string | null>(null);
@@ -925,7 +930,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       // Step 1: Article
-      if (activeTab === "articulo") {
+      if (activeTab === "ficha") {
         if (!isEditing) {
           // For new article, save and get the ID
           const result: boolean | ArticleResponse = await handleCreate(data);
@@ -951,7 +956,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
       }
       // Step 2: Additional Info (Precios y Ubicaciones)
-      else if (activeTab === "adicional") {
+      else if (activeTab === "presentacion") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
           console.error("Article ID is missing");
@@ -968,7 +973,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
       }
       // Step 3: Photos and final save
-      else if (activeTab === "detalles") {
+      else if (activeTab === "fotos") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
           console.error("Article ID is missing");
@@ -1057,111 +1062,193 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
               </Text>
             </View>
 
-            {/* Progress Stepper */}
+            {/* View Toggle */}
             <View className="px-6 mb-2">
-              <View className="relative">
-                {/* Puntos y textos horizontales */}
-                <View className="flex-row items-center justify-between">
-                  {/* Paso 1 - Artículo */}
-                  <TouchableOpacity
-                    onPress={() => setActiveTab("articulo")}
-                    className="flex-row items-center py-2"
-                  >
-                    <View
-                      className={`w-3 h-3 rounded-full ${
-                        activeTab === "articulo" ||
-                        activeTab === "adicional" ||
-                        activeTab === "detalles"
-                          ? "bg-white"
-                          : "bg-white/30"
-                      }`}
-                    />
-                    <Text
-                      className={`ml-2 text-xs ${
-                        activeTab === "articulo"
-                          ? "text-white font-medium"
-                          : "text-white/70"
-                      }`}
-                    >
-                      Artículo
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Separador invisible para espaciado */}
-                  <View className="flex-1" />
-
-                  {/* Paso 2 - Inf. Adicional */}
-                  <TouchableOpacity
-                    onPress={() => setActiveTab("adicional")}
-                    className="flex-row items-center py-2"
-                  >
-                    <View
-                      className={`w-3 h-3 rounded-full ${
-                        activeTab === "adicional" || activeTab === "detalles"
-                          ? "bg-white"
-                          : "bg-white/30"
-                      }`}
-                    />
-                    <Text
-                      className={`ml-2 text-xs ${
-                        activeTab === "adicional"
-                          ? "text-white font-medium"
-                          : "text-white/70"
-                      }`}
-                    >
-                      Inf. Adicional
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Separador invisible para espaciado */}
-                  <View className="flex-1" />
-
-                  {/* Paso 3 - Foto */}
-                  <TouchableOpacity
-                    onPress={() => setActiveTab("detalles")}
-                    className="flex-row items-center py-2"
-                  >
-                    <View
-                      className={`w-3 h-3 rounded-full ${
-                        activeTab === "detalles" ? "bg-white" : "bg-white/30"
-                      }`}
-                    />
-                    <Text
-                      className={`ml-2 text-xs ${
-                        activeTab === "detalles"
-                          ? "text-white font-medium"
-                          : "text-white/70"
-                      }`}
-                    >
-                      Foto
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Líneas de progreso por debajo */}
-                <View className="absolute bottom-0 left-0 right-0 flex-row items-center">
-                  {/* Línea de fondo completa */}
-                  <View className="flex-1 h-0.5 bg-white/20 mx-4" />
-
-                  {/* Líneas de progreso activas */}
-                  <View className="absolute left-4 right-4 flex-row">
-                    {/* Línea 1-2 */}
-                    <View
-                      className={`flex-1 h-0.5 ${
-                        activeTab === "adicional" || activeTab === "detalles"
-                          ? "bg-white"
-                          : "bg-transparent"
-                      }`}
-                    />
-                    {/* Línea 2-3 */}
-                    <View
-                      className={`flex-1 h-0.5 ${
-                        activeTab === "detalles" ? "bg-white" : "bg-transparent"
-                      }`}
-                    />
-                  </View>
-                </View>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-white/70 text-sm font-medium">Navegación</Text>
+                <TouchableOpacity
+                  className="bg-white rounded-2xl p-2 flex-row items-center"
+                  onPress={() => setViewMode(viewMode === 'chips' ? 'dropdown' : 'chips')}
+                >
+                  <Ionicons
+                    name={viewMode === 'chips' ? 'list-outline' : 'grid-outline'}
+                    size={18}
+                    color={headerColor}
+                  />
+                  <Text style={{ color: headerColor }} className="ml-1 text-xs">
+                    {viewMode === 'chips' ? 'Ver lista' : 'Ver chips'}
+                  </Text>
+                </TouchableOpacity>
               </View>
+            </View>
+
+            {/* Navigation Tabs/List */}
+            <View className="px-6 mb-2">
+              {viewMode === 'chips' ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 8 }}
+                >
+                  {[
+                    { id: "articulo", name: "Ficha", icon: "document-text-outline" },
+                    { id: "adicional", name: "Presentación", icon: "layers-outline" },
+                    { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                    { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                    { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                    { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.id}
+                      style={{
+                        marginRight: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                        borderWidth: 1,
+                        borderColor: activeTab === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'
+                      }}
+                      onPress={() => setActiveTab(tab.id)}
+                    >
+                      <Ionicons
+                        name={tab.icon as any}
+                        size={16}
+                        color={activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)'}
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text
+                        style={{
+                          color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)',
+                          fontWeight: activeTab === tab.id ? '500' : 'normal'
+                        }}
+                      >
+                        {tab.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255,255,255,0.2)',
+                      padding: 12,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons
+                        name={[
+                          { id: "articulo", name: "Ficha", icon: "document-text-outline" },
+                          { id: "adicional", name: "Presentación", icon: "layers-outline" },
+                          { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                          { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                          { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                          { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                        ].find(tab => tab.id === activeTab)?.icon as any || 'grid-outline'}
+                        size={18}
+                        color="white"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={{ color: 'white' }}>
+                        {[
+                          { id: "articulo", name: "Ficha", icon: "document-text-outline" },
+                          { id: "adicional", name: "Presentación", icon: "layers-outline" },
+                          { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                          { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                          { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                          { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                        ].find(tab => tab.id === activeTab)?.name || 'Seleccionar sección'}
+                      </Text>
+                    </View>
+                    <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="white" />
+                  </TouchableOpacity>
+
+                  {isDropdownOpen && (
+                    <View
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderBottomLeftRadius: 8,
+                        borderBottomRightRadius: 8,
+                        borderLeftWidth: 1,
+                        borderRightWidth: 1,
+                        borderBottomWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        marginTop: 4,
+                        maxHeight: 300
+                      }}
+                    >
+                      {[
+                        { id: "articulo", name: "Ficha", icon: "document-text-outline" },
+                        { id: "adicional", name: "Presentación", icon: "layers-outline" },
+                        { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                        { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                      ].map((tab) => (
+                        <TouchableOpacity
+                          key={tab.id}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 12,
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(255,255,255,0.1)',
+                            backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.1)' : 'transparent'
+                          }}
+                          onPress={() => {
+                            setActiveTab(tab.id);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 8
+                            }}
+                          >
+                            <Ionicons
+                              name={tab.icon as any}
+                              size={16}
+                              color={activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)'}
+                            />
+                          </View>
+                          <Text
+                            style={{
+                              color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)',
+                              fontWeight: activeTab === tab.id ? '500' : 'normal'
+                            }}
+                          >
+                            {tab.name}
+                          </Text>
+                          {activeTab === tab.id && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={20}
+                              color="white"
+                              style={{ marginLeft: 'auto' }}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           </View>
 
@@ -1177,7 +1264,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
               showsVerticalScrollIndicator={false}
             >
               <View className="py-6">
-                {activeTab === "articulo" && (
+                {activeTab === "ficha" && (
                   <>
                     {/* Campos de texto y número */}
                     {textFields.map((field) => (
@@ -1510,7 +1597,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   </>
                 )}
 
-                {activeTab === "adicional" && (
+                {activeTab === "presentacion" && (
                   <>
                     {/* Sección de Lista de Precio */}
                     <View className="mb-4">
@@ -1667,33 +1754,119 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                                 <Text className="text-sm font-medium text-gray-700 mb-1">
                                   Fecha Desde
                                 </Text>
-                                <TextInput
-                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                  placeholder="YYYY-MM-DD"
-                                  value={precioInputs.fechaDesde}
-                                  onChangeText={(text) =>
-                                    setPrecioInputs((prev: PrecioInputs) => ({
-                                      ...prev,
-                                      fechaDesde: text,
-                                    }))
-                                  }
-                                />
+                                <View className="flex-row items-center space-x-2">
+                                  <TextInput
+                                    className="flex-1 px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                    placeholder="YYYY-MM-DD"
+                                    value={precioInputs.fechaDesde}
+                                    onChangeText={(text) => {
+                                      // Solo permite números, guiones y limita la longitud
+                                      const numericText = text.replace(/[^0-9-]/g, '');
+                                      if (numericText.length <= 10) {
+                                        setPrecioInputs((prev: PrecioInputs) => ({
+                                          ...prev,
+                                          fechaDesde: numericText,
+                                        }));
+                                      }
+                                    }}
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                  />
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      setShowPrecioDatePicker((prev) => ({
+                                        ...prev,
+                                        fechaDesde: true,
+                                      }))
+                                    }
+                                    className="p-3 bg-blue-500 rounded-lg"
+                                  >
+                                    <Ionicons
+                                      name="calendar-outline"
+                                      size={20}
+                                      color="white"
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+                                {showPrecioDatePicker.fechaDesde && (
+                                  <DateTimePicker
+                                    value={precioInputs.fechaDesde ? new Date(precioInputs.fechaDesde) : new Date()}
+                                    mode="date"
+                                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                                    onChange={(event: any, selectedDate: Date | undefined) => {
+                                      setShowPrecioDatePicker((prev) => ({
+                                        ...prev,
+                                        fechaDesde: false,
+                                      }));
+                                      if (selectedDate) {
+                                        const formattedDate = selectedDate.toISOString().split('T')[0];
+                                        setPrecioInputs((prev: PrecioInputs) => ({
+                                          ...prev,
+                                          fechaDesde: formattedDate,
+                                        }));
+                                      }
+                                    }}
+                                  />
+                                )}
                               </View>
                               <View className="flex-1">
                                 <Text className="text-sm font-medium text-gray-700 mb-1">
                                   Fecha Hasta (opcional)
                                 </Text>
-                                <TextInput
-                                  className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200"
-                                  placeholder="YYYY-MM-DD"
-                                  value={precioInputs.fechaHasta}
-                                  onChangeText={(text) =>
-                                    setPrecioInputs((prev: PrecioInputs) => ({
-                                      ...prev,
-                                      fechaHasta: text,
-                                    }))
-                                  }
-                                />
+                                <View className="flex-row items-center space-x-2">
+                                  <TextInput
+                                    className="flex-1 px-4 py-3 bg-white rounded-lg border border-gray-200"
+                                    placeholder="YYYY-MM-DD"
+                                    value={precioInputs.fechaHasta}
+                                    onChangeText={(text) => {
+                                      // Solo permite números, guiones y limita la longitud
+                                      const numericText = text.replace(/[^0-9-]/g, '');
+                                      if (numericText.length <= 10) {
+                                        setPrecioInputs((prev: PrecioInputs) => ({
+                                          ...prev,
+                                          fechaHasta: numericText,
+                                        }));
+                                      }
+                                    }}
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                  />
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      setShowPrecioDatePicker((prev) => ({
+                                        ...prev,
+                                        fechaHasta: true,
+                                      }))
+                                    }
+                                    className="p-3 bg-blue-500 rounded-lg"
+                                  >
+                                    <Ionicons
+                                      name="calendar-outline"
+                                      size={20}
+                                      color="white"
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+                                {showPrecioDatePicker.fechaHasta && (
+                                  <DateTimePicker
+                                    value={precioInputs.fechaHasta ? new Date(precioInputs.fechaHasta) : new Date()}
+                                    mode="date"
+                                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                                    onChange={(event: any, selectedDate: Date | undefined) => {
+                                      setShowPrecioDatePicker((prev) => ({
+                                        ...prev,
+                                        fechaHasta: false,
+                                      }));
+                                      if (selectedDate) {
+                                        const formattedDate = selectedDate.toISOString().split('T')[0];
+                                        setPrecioInputs((prev: PrecioInputs) => ({
+                                          ...prev,
+                                          fechaHasta: formattedDate,
+                                        }));
+                                      }
+                                    }}
+                                  />
+                                )}
                               </View>
                             </View>
 
@@ -1978,7 +2151,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   </>
                 )}
 
-                {activeTab === "detalles" && (
+                {activeTab === "detalle" && (
                   <>
                     {/* Sección de Fotos */}
                     <View className="mb-6">
@@ -2120,19 +2293,25 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 <TouchableOpacity
                   className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
                   onPress={() => {
-                    if (activeTab === "articulo") {
+                    if (activeTab === "ficha") {
                       handleClose();
-                    } else if (activeTab === "adicional") {
-                      setActiveTab("articulo");
-                    } else if (activeTab === "detalles") {
-                      setActiveTab("adicional");
+                    } else if (activeTab === "presentacion") {
+                      setActiveTab("ficha");
+                    } else if (activeTab === "detalle") {
+                      setActiveTab("presentacion");
+                    } else if (activeTab === "precios") {
+                      setActiveTab("detalle");
+                    } else if (activeTab === "ubicaciones") {
+                      setActiveTab("precios");
+                    } else if (activeTab === "fotos") {
+                      setActiveTab("ubicaciones");
                     }
                   }}
                   disabled={isSubmitting}
                 >
                   <Ionicons
                     name={
-                      activeTab === "articulo"
+                      activeTab === "ficha"
                         ? "close-outline"
                         : "arrow-back-outline"
                     }
@@ -2140,7 +2319,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     color="#4b5563"
                   />
                   <Text className="text-gray-800 font-medium ml-2">
-                    {activeTab === "articulo" ? "Cancelar" : "Anterior"}
+                    {activeTab === "ficha" ? "Cancelar" : "Anterior"}
                   </Text>
                 </TouchableOpacity>
 
@@ -2149,19 +2328,29 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   style={{ backgroundColor: buttonColor }}
                   className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center ${isSubmitting ? "opacity-70" : ""}`}
                   onPress={() => {
-                    if (activeTab === "articulo") {
+                    if (activeTab === "ficha") {
                       handleSubmit(onSubmit)();
-                    } else if (activeTab === "adicional") {
-                      onSubmit({});
-                    } else if (activeTab === "detalles") {
-                      onSubmit({});
+                    } else {
+                      // Para otros tabs, solo navegar al siguiente
+                      if (activeTab === "presentacion") {
+                        setActiveTab("detalle");
+                      } else if (activeTab === "detalle") {
+                        setActiveTab("precios");
+                      } else if (activeTab === "precios") {
+                        setActiveTab("ubicaciones");
+                      } else if (activeTab === "ubicaciones") {
+                        setActiveTab("fotos");
+                      } else {
+                        // Para el último tab, cerrar
+                        handleClose();
+                      }
                     }
                   }}
                   disabled={isSubmitting}
                 >
                   <Ionicons
                     name={
-                      activeTab === "detalles"
+                      activeTab === "fotos"
                         ? "save-outline"
                         : "arrow-forward-outline"
                     }
@@ -2174,13 +2363,11 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   >
                     {isSubmitting
                       ? "Procesando..."
-                      : activeTab === "articulo"
-                        ? isEditing && currentItem
-                          ? "Siguiente"
-                          : "Siguiente"
-                        : activeTab === "adicional"
-                          ? "Siguiente"
-                          : "Finalizar"}
+                      : activeTab === "ficha"
+                        ? "Siguiente"
+                        : activeTab === "fotos"
+                          ? "Finalizar"
+                          : "Siguiente"}
                   </Text>
                 </TouchableOpacity>
               </View>

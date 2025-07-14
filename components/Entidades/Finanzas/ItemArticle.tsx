@@ -57,20 +57,16 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, category, onPress, data
             </Text>
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
-          <View className="absolute bottom-4 right-4">
-            <View className={`px-2 py-1 rounded-full ${item.suspendido
-              ? 'bg-red-100 border border-red-600'
-              : 'bg-green-100 border border-green-600'
-              }`}>
-              <Text className={`text-xs font-medium ${item.suspendido
-                ? 'text-red-600'
-                : 'text-green-600'
-                }`}>
-                {item.suspendido ? 'Inactivo' : 'Activo'}
-              </Text>
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
+          {item.suspendido && (
+            <View className="absolute bottom-4 right-4">
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>

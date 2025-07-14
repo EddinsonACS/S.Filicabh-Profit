@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
@@ -306,6 +306,13 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     defaultValues: isEditing && currentItem ? currentItem : defaultValues
   });
 
+  // Watch para observar el valor de esCasaMatriz
+  const esSucursal = useWatch({
+    control,
+    name: 'esCasaMatriz',
+    defaultValue: false
+  });
+
   // Estado para controlar el selector abierto
   const [openSelect, setOpenSelect] = useState<string | null>(null);
   
@@ -586,7 +593,15 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
               ))}
 
               {/* Campos de selección */}
-              {selectFields.map((field) => (
+              {selectFields.map((field) => {
+                // Ocultar el campo casa matriz si no es una sucursal (solo para figuracomercial)
+                if (field.name === 'codigoFiguraComercialCasaMatriz' && selectedCategory === 'figuracomercial') {
+                  if (!esSucursal) {
+                    return null; // No mostrar el campo si no es sucursal
+                  }
+                }
+                
+                return (
                 <View key={field.name} className="mb-4">
                   <View className="flex-row mb-1">
                     <Text className="text-sm font-medium text-gray-700">{field.label}</Text>
@@ -657,7 +672,8 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
                     </Text>
                   )}
                 </View>
-              ))}
+                );
+              })}
 
               {/* Display Backend Error */}
               {backendError && (

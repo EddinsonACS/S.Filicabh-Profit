@@ -126,24 +126,12 @@ const ItemArticle: React.FC<ItemArticleProps> = ({ item, selectedCategory, onPre
             )}
           </View>
 
-          {/* Estado posicionado en la esquina inferior derecha */}
+          {/* Estado posicionado en la esquina inferior derecha - Solo mostrar cuando esté inactivo */}
           <View className="absolute bottom-4 right-4">
-            {selectedCategory !== 'tasadecambio' ? (
-              <View className={`px-2 py-1 rounded-full ${isSuspended
-                ? 'bg-red-100 border border-red-600'
-                : 'bg-green-100 border border-green-600'
-                }`}>
-                <Text className={`text-xs font-medium ${isSuspended
-                  ? 'text-red-600'
-                  : 'text-green-600'
-                  }`}>
-                  {isSuspended ? 'Inactivo' : 'Activo'}
-                </Text>
-              </View>
-            ) : (
-              <View className="px-2 py-1 rounded-full bg-blue-100 border border-blue-600">
-                <Text className="text-xs font-medium text-blue-600">
-                  {new Date((item as TasaDeCambio).fecha).toLocaleDateString()}
+            {selectedCategory !== 'tasadecambio' && isSuspended && (
+              <View className="px-2 py-1 rounded-full bg-red-100 border border-red-600">
+                <Text className="text-xs font-medium text-red-600">
+                  Inactivo
                 </Text>
               </View>
             )}

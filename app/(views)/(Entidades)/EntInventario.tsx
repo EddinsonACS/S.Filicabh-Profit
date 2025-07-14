@@ -28,7 +28,7 @@ import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
@@ -69,6 +69,7 @@ const EntInventario: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { category } = useLocalSearchParams<{ category?: string }>();
   const { 
     showCreateSuccess, 
     showUpdateSuccess, 
@@ -323,6 +324,16 @@ const EntInventario: React.FC = () => {
     setHasMore(true);
     setAccumulatedItems([]);
   }, [selectedCategory]);
+
+  // Update selected category when URL parameter changes
+  useEffect(() => {
+    if (category && category !== selectedCategory) {
+      setSelectedCategory(category as CategoryId);
+    } else if (!category && selectedCategory !== 'almacen') {
+      // Reset to default if no category parameter
+      setSelectedCategory('almacen');
+    }
+  }, [category]); // Remove selectedCategory from dependencies to avoid infinite loop
 
   useEffect(() => {
     const processData = (data: any) => {
