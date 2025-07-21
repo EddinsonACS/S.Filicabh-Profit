@@ -1,6 +1,5 @@
 import { themes } from "@/components/Entidades/shared/theme";
 import { useNotificationContext } from "@/contexts/NotificationContext";
-import { Articulo } from "@/core/models/Inventario/Articulo";
 import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
 import { useArticulo } from "@/hooks/Inventario/useArticulo";
 import { useArticuloFoto } from "@/hooks/Inventario/useArticuloFoto";
@@ -516,8 +515,8 @@ const ArticuloForm: React.FC = () => {
           idListasDePrecio: Number(precio.idListasdePrecio),
           idMoneda: Number(precio.idMoneda),
           monto: Number(precio.monto),
-          fechaDesde: precio.fechaDesde,
-          fechaHasta: precio.fechaHasta,
+          fechaDesde: precio.fechaDesde.replaceAll("/", "-"),
+          fechaHasta: precio.fechaHasta.replaceAll("/", "-"),
           suspendido: precio.suspendido,
         };
 
@@ -564,14 +563,25 @@ const ArticuloForm: React.FC = () => {
   };
 
   const handleUpdate = async (formData: any): Promise<boolean> => {
-    if (!currentItem) {
+    let articleId = null;
+    console.log('SE LLAMO EL HANDLE UPDATE');
+    if(isEditingMode && currentItem){
+      console.log('SE LLAMO EL HANDLE UPDATE EN EDIT MODE');
+      console.log(currentItem);
+      articleId = currentItem.id;
+    }else if(createdArticleId){
+      articleId = createdArticleId;
+    }
+    if (!articleId) {
+      console.log('NO HAY UN ITEM SELECCIONADO PARA ACTUALIZAR');
       setBackendFormError("Error: No hay un ítem seleccionado para actualizar.");
       return false;
     }
     setBackendFormError(null);
 
     try {
-      await updateArticuloMutation.mutateAsync({ id: currentItem.id, formData });
+      await updateArticuloMutation.mutateAsync({ id: articleId, formData });
+      console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
       showUpdateSuccess('el artículo');
       return true;
     } catch (error: any) {
@@ -592,8 +602,11 @@ const ArticuloForm: React.FC = () => {
       if (activeTab === "ficha") {
         if (!isEditingMode) {
           const result: boolean | ArticleResponse = await handleCreate(data);
+
           if (result === true || (typeof result === "object" && "id" in result)) {
             if (typeof result === "object" && "id" in result) {
+              console.log('SE SETEO EL ID DEL ARTICULO');
+              console.log(result.id);
               setCreatedArticleId(result.id);
             }
             success = true;
@@ -607,12 +620,16 @@ const ArticuloForm: React.FC = () => {
         }
       }
       else if (activeTab === "presentaciones") {
+        console.log('EN presentaciones');
         // Handle presentation logic here - save presentations
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
         if (articleId) {
           // Save presentation data here if needed
-          success = true;
-          showUpdateSuccess('las presentaciones');
+          console.log("Data en el update de presentaciones", data);
+          success = await handleUpdate(data);
+          if (success) {
+            setShowSuccessModal(true);
+          }
         }
       }
       else if (activeTab === "detalles") {
@@ -620,8 +637,10 @@ const ArticuloForm: React.FC = () => {
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
         if (articleId) {
           // Save details data here if needed
-          success = true;
-          showUpdateSuccess('los detalles');
+          success = await handleUpdate(data);
+          if (success) {
+            setShowSuccessModal(true);
+          }
         }
       }
       else if (activeTab === "precios") {
@@ -634,6 +653,7 @@ const ArticuloForm: React.FC = () => {
         success = await saveListasPrecios(articleId);
         if (success) {
           showUpdateSuccess('los precios');
+          setShowSuccessModal(true);
         }
       }
       else if (activeTab === "ubicaciones") {
@@ -650,9 +670,11 @@ const ArticuloForm: React.FC = () => {
         success = await saveUbicaciones(articleId);
         if (success) {
           showUpdateSuccess('las ubicaciones');
+          setShowSuccessModal(true);
         }
       }
       else if (activeTab === "fotos") {
+        console.log('Estamos en fotos')
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
         if (!articleId) {
           console.error("Article ID is missing");
@@ -1647,7 +1669,7 @@ const ArticuloForm: React.FC = () => {
                                 const day = selectedDate.getDate().toString().padStart(2, '0');
                                 const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
                                 const year = selectedDate.getFullYear().toString();
-                                const formattedDate = `${day}/${month}/${year}`;
+                                const formattedDate = `${year}/${month}/${day}`;
                                 
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
@@ -1742,7 +1764,7 @@ const ArticuloForm: React.FC = () => {
                                 const day = selectedDate.getDate().toString().padStart(2, '0');
                                 const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
                                 const year = selectedDate.getFullYear().toString();
-                                const formattedDate = `${day}/${month}/${year}`;
+                                const formattedDate = `${year}/${month}/${day}`;
                                 
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
@@ -2202,9 +2224,9 @@ const ArticuloForm: React.FC = () => {
                 isSubmitting ? "opacity-70" : ""
               }`}
               onPress={() => {
-                if (activeTab === "ficha") {
+                if(["ficha", "presentaciones", "detalles"].includes(activeTab)){
                   handleSubmit(onSubmit)();
-                } else {
+                }else{
                   onSubmit({});
                 }
               }}

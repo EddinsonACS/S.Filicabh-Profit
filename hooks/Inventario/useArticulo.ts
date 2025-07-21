@@ -93,43 +93,20 @@ export const useArticulo = () => {
         id: number;
         formData: Partial<Articulo>;
       }) => {
-        if (!formData.nombre) {
-          throw new Error("El nombre es requerido");
-        }
+        console.log('DATA PARA EL UPDATE:', formData, id);
 
         // Asegurar que los campos numéricos sean números
         const data: Partial<Articulo> = {
           ...formData,
           id,
-          idGrupo: Number(formData.idGrupo),
-          idColor: Number(formData.idColor) || 1,
-          idTalla: Number(formData.idTalla) || 1,
-          idTipoArticulo: Number(formData.idTipoArticulo),
-          idImpuesto: Number(formData.idImpuesto),
-          peso: Number(formData.peso) || 0,
-          volumen: Number(formData.volumen) || 0,
-          metroCubico: Number(formData.metroCubico) || 0,
-          pie: Number(formData.pie) || 0,
-          puntoMinimo: Number(formData.puntoMinimo) || 0,
-          puntoMaximo: Number(formData.puntoMaximo) || 0,
-          // Asegurar que los campos booleanos sean booleanos
-          manejaLote: Boolean(formData.manejaLote),
-          manejaSerial: Boolean(formData.manejaSerial),
-          poseeGarantia: Boolean(formData.poseeGarantia),
-          manejaPuntoMinimo: Boolean(formData.manejaPuntoMinimo),
-          manejaPuntoMaximo: Boolean(formData.manejaPuntoMaximo),
-          suspendido: Boolean(formData.suspendido),
-          // Asegurar que presentaciones sea un array de números
-          presentaciones: Array.isArray(formData.presentaciones)
-            ? formData.presentaciones.map((p) => Number(p))
-            : formData.presentaciones
-              ? [Number(formData.presentaciones)]
-              : [],
-          // Campos de texto
-          codigoArticulo: formData.codigoArticulo || "",
-          codigoModelo: formData.codigoModelo || "",
-          codigoBarra: formData.codigoBarra || "",
-          descripcionGarantia: formData.descripcionGarantia || "",
+          otrosF1: new Date().toISOString(),
+          otrosN1: Number(formData.otrosN1) || 0,
+          otrosN2: Number(formData.otrosN2) || 0,
+          otrosC1: formData.otrosC1 || "",
+          otrosC2: formData.otrosC2 || "",
+          otrosC3: formData.otrosC3 || "",
+          otrosC4: formData.otrosC4 || "",
+          otrosT1: formData.otrosT1 || "",
           equipo: "equipo",
         };
 
