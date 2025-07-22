@@ -1,6 +1,8 @@
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
+import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
+import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -13,11 +15,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ArticuloDetalle: React.FC = () => {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [refreshing, setRefreshing] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState("ficha");
@@ -31,9 +31,19 @@ const ArticuloDetalle: React.FC = () => {
     useGetArticuloItem,
     useDeleteArticulo
   } = useArticulo();
-  
+
+  const {
+    useGetArticuloListaDePrecioList,
+  } = useArticuloListaDePrecio();
+
+  const {
+    useGetArticuloUbicacionList,
+  } = useArticuloUbicacion();
+
   const { data: articulo, isLoading, refetch } = useGetArticuloItem(Number(id));
   const deleteArticuloMutation = useDeleteArticulo();
+  const { data: articuloListaDePrecio } = useGetArticuloListaDePrecioList(1, 100);
+  const { data: articuloUbicacion } = useGetArticuloUbicacionList(1, 100);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -174,27 +184,38 @@ const ArticuloDetalle: React.FC = () => {
     }
   };
 
-  // Función para obtener campos de precios
+  // Función para obtener campos de precios (lista filtrada por idArticulo)
   const getPreciosFields = () => {
-    if (!articulo) return [];
+    if (!articulo || !articuloListaDePrecio || !Array.isArray(articuloListaDePrecio.data)) return [];
     try {
-      return [
-        { label: 'Precio', value: `$${articulo?.precio || 0}` },
-        { label: 'Stock Actual', value: String(articulo?.stockActual || 0) },
-      ];
+      const preciosFiltrados = articuloListaDePrecio.data.filter((item: any) => item.idArticulo === articulo.id);
+      if (preciosFiltrados.length === 0) {
+        return [{ label: 'No hay listas para este articulo', value: '' }];
+      }
+      // Muestra cada precio como un item de la lista
+      return preciosFiltrados.map((item: any, idx: number) => ({
+        label: `Precio #${idx + 1}`,
+        value: `${item.monto} ${item.monedaNombre || ''}`.trim()
+      }));
     } catch (error) {
       console.error('Error getting precios fields:', error);
       return [];
     }
   };
 
-  // Función para obtener campos de ubicaciones (vacío por ahora, se puede expandir)
+  // Función para obtener campos de ubicaciones (lista filtrada por idArticulo)
   const getUbicacionesFields = () => {
-    if (!articulo) return [];
+    if (!articulo || !articuloUbicacion || !Array.isArray(articuloUbicacion.data)) return [];
     try {
-      return [
-        { label: 'Ubicaciones', value: 'Consultar sección de ubicaciones específicas' },
-      ];
+      const ubicacionesFiltradas = articuloUbicacion.data.filter((item: any) => item.idArticulo === articulo.id);
+      if (ubicacionesFiltradas.length === 0) {
+        return [{ label: 'No hay listas para este articulo', value: '' }];
+      }
+      // Muestra cada ubicación como un item de la lista
+      return ubicacionesFiltradas.map((item: any, idx: number) => ({
+        label: `Ubicación #${idx + 1}`,
+        value: `${item.almacenNombre || ''} (${item.ubicacion || ''})`.trim()
+      }));
     } catch (error) {
       console.error('Error getting ubicaciones fields:', error);
       return [];

@@ -3,6 +3,7 @@ export interface ArticuloUbicacion {
     idArticulo: number
     equipo: string
     ubicacion: string
+    ubicacionNombre?: string
     otrosF1: string
     otrosN1: number
     otrosN2: number

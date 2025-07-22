@@ -9,6 +9,7 @@ export interface ArticuloListaPrecio {
     usuario: number
     id: number
     fechaHasta: string
+    monedaNombre?: string
     otrosF1: string,
     otrosN1: number,
     otrosN2: number,
