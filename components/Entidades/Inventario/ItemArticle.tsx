@@ -1,5 +1,6 @@
 import { Almacen } from "@/core/models/Inventario/Almacen";
 import { Articulo } from "@/core/models/Inventario/Articulo";
+import { ArticuloListaPrecio } from "@/core/models/Inventario/ArticuloListaPrecio";
 import { Categoria } from "@/core/models/Inventario/Categoria";
 import { Color } from "@/core/models/Inventario/Color";
 import { Grupo } from "@/core/models/Inventario/Grupo";
@@ -7,6 +8,7 @@ import { Seccion } from "@/core/models/Inventario/Seccion";
 import { Talla } from "@/core/models/Inventario/Talla";
 import { TipoDeArticulo } from "@/core/models/Inventario/TipoDeArticulo";
 import { TipoDeImpuesto } from "@/core/models/Inventario/TipoDeImpuesto";
+import { useArticuloListaDePrecio } from "@/hooks/Inventario/useArticuloListaDePrecio";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -23,6 +25,84 @@ type CategoryId =
   | "tipodeimpuesto"
   | "seccion"
   | "presentacion";
+
+// Función helper para obtener el símbolo de moneda
+const getCurrencySymbol = (monedaNombre: string): string => {
+  if (!monedaNombre) return '$';
+  
+  const nombre = monedaNombre.toLowerCase().trim();
+  
+  // Debug: mostrar el nombre de la moneda para ver qué llega realmente
+  console.log('🪙 Nombre de moneda recibido:', `"${monedaNombre}"`);
+  
+  // Primero verificar si es directamente un símbolo
+  if (nombre === '$' || nombre === 'usd' || nombre === 'us$' || nombre === 'dollar') {
+    return '$';
+  }
+  if (nombre === 'bs' || nombre === 'bs.' || nombre === 'bolivar' || nombre === 'vef' || nombre === 'ves') {
+    return 'Bs';
+  }
+  if (nombre === '€' || nombre === 'eur' || nombre === 'euro') {
+    return '€';
+  }
+  
+  // Luego buscar patrones dentro del texto
+  if (nombre.includes('dólar') || nombre.includes('dolar') || nombre.includes('dollar') || 
+      nombre.includes('usd') || nombre.includes('us') || nombre.includes('estados unidos')) {
+    return '$';
+  } 
+  
+  if (nombre.includes('bolívar') || nombre.includes('bolivar') || 
+      nombre.includes('bs') || nombre.includes('ves') || nombre.includes('vef') ||
+      nombre.includes('venezolano') || nombre.includes('venezuela')) {
+    return 'Bs';
+  } 
+  
+  if (nombre.includes('euro') || nombre.includes('eur') || nombre.includes('europeo')) {
+    return '€';
+  }
+  
+  // Si no se puede identificar, mostrar el nombre tal como viene para debug
+  console.warn('⚠️ No se pudo identificar el símbolo para la moneda:', `"${monedaNombre}"`);
+  return '$'; // Default
+};
+
+// Función helper para obtener el precio más reciente de un artículo
+const getLatestPrice = (articuloListaPrecios: ArticuloListaPrecio[], articuloId: number): { price: number, symbol: string } => {
+  if (!articuloListaPrecios || !Array.isArray(articuloListaPrecios)) {
+    return { price: 0, symbol: '$' };
+  }
+
+  // Filtrar precios para este artículo que no estén suspendidos
+  const preciosDelArticulo = articuloListaPrecios
+    .filter((precio: ArticuloListaPrecio) => 
+      precio.idArticulo === articuloId && 
+      !precio.suspendido
+    );
+  
+  if (preciosDelArticulo.length === 0) {
+    return { price: 0, symbol: '$' };
+  }
+
+  // Ordenar por fecha más reciente (fechaDesde)
+  const precioMasReciente = preciosDelArticulo
+    .sort((a, b) => new Date(b.fechaDesde).getTime() - new Date(a.fechaDesde).getTime())[0];
+
+  // Debug: mostrar los datos del precio más reciente
+  console.log('💰 Precio más reciente para artículo', articuloId, ':', {
+    monto: precioMasReciente.monto,
+    monedaNombre: precioMasReciente.monedaNombre,
+    fechaDesde: precioMasReciente.fechaDesde,
+    completeObject: precioMasReciente
+  });
+
+  const symbol = getCurrencySymbol(precioMasReciente.monedaNombre || '');
+  
+  return {
+    price: precioMasReciente.monto || 0,
+    symbol: symbol
+  };
+};
 
 interface BaseItem {
   id: number;
@@ -44,6 +124,7 @@ interface ItemProps {
   dataTalla: Talla[];
   dataTipoArticulo: TipoDeArticulo[];
   dataTipoImpuesto: TipoDeImpuesto[];
+  articuloListaPrecios?: ArticuloListaPrecio[];
 }
 
 const ItemAlmacen: React.FC<{
@@ -303,6 +384,7 @@ const ItemArticulo: React.FC<{
   dataTalla: Talla[];
   dataTipoArticulo: TipoDeArticulo[];
   dataTipoImpuesto: TipoDeImpuesto[];
+  articuloListaPrecios?: ArticuloListaPrecio[]; // Lista opcional pasada desde el componente padre
 }> = ({
   item,
   onPress,
@@ -310,7 +392,15 @@ const ItemArticulo: React.FC<{
   dataTalla,
   dataTipoArticulo,
   dataTipoImpuesto,
+  articuloListaPrecios = [],
 }) => {
+  // Obtener el precio más reciente del artículo
+  // Si no se pasa la lista desde el padre, usar el hook (menos eficiente)
+  const { useGetArticuloListaDePrecioList } = useArticuloListaDePrecio();
+  const { data: articuloListaPreciosData } = useGetArticuloListaDePrecioList(1, 1000);
+  
+  const preciosData = articuloListaPrecios.length > 0 ? articuloListaPrecios : (articuloListaPreciosData?.data || []);
+  const { price, symbol } = getLatestPrice(preciosData, item.id);
   return (
     <View className="bg-white rounded-lg mt-2 shadow-sm border border-gray-200 overflow-hidden">
       <TouchableOpacity
@@ -361,7 +451,7 @@ const ItemArticulo: React.FC<{
             <View className="flex-row items-center">
               <Text className="text-xs text-gray-500">Precio: </Text>
               <Text className="text-xs font-semibold text-gray-700 mr-3">
-                ${item.precio || 0}
+                {price.toFixed(2)} {symbol}
               </Text>
               <Text className="text-xs text-gray-500">Stock: </Text>
               <Text className="text-xs font-semibold text-gray-700">
@@ -376,8 +466,9 @@ const ItemArticulo: React.FC<{
                 className="text-xs font-semibold text-gray-700 flex-1"
                 numberOfLines={1}
               >
-                {dataTipoArticulo.find((g) => g.id === item.idTipoArticulo)
-                  ?.nombre || "No especificado"}
+                {item.presentaciones && item.presentaciones.length > 0 
+                  ? `${item.presentaciones.length} configurada(s)`
+                  : "Sin presentaciones"}
               </Text>
             </View>
           </View>
@@ -466,6 +557,7 @@ export const ItemArticle: React.FC<ItemProps> = ({
   dataTalla,
   dataTipoArticulo,
   dataTipoImpuesto,
+  articuloListaPrecios = [],
 }) => {
   switch (category) {
     case "almacen":
@@ -497,6 +589,7 @@ export const ItemArticle: React.FC<ItemProps> = ({
           dataTalla={dataTalla}
           dataTipoArticulo={dataTipoArticulo}
           dataTipoImpuesto={dataTipoImpuesto}
+          articuloListaPrecios={articuloListaPrecios}
         />
       );
     default:

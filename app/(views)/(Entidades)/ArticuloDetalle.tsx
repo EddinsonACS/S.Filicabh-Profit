@@ -2,18 +2,22 @@ import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
 import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
+import { useArticuloPresentaciones } from '@/hooks/Inventario/useArticuloPresentaciones';
 import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
+import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Image,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  Image,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const ArticuloDetalle: React.FC = () => {
@@ -21,6 +25,10 @@ const ArticuloDetalle: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [refreshing, setRefreshing] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState("ficha");
+  const [viewMode, setViewMode] = useState<'chips' | 'dropdown'>('chips');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [showImageViewer, setShowImageViewer] = useState(false);
   
   const { 
     showDeleteSuccess,
@@ -40,10 +48,20 @@ const ArticuloDetalle: React.FC = () => {
     useGetArticuloUbicacionList,
   } = useArticuloUbicacion();
 
+  const {
+    useGetArticuloPresentacionesList,
+  } = useArticuloPresentaciones();
+
+  const {
+    useGetPresentacionList,
+  } = usePresentacion();
+
   const { data: articulo, isLoading, refetch } = useGetArticuloItem(Number(id));
   const deleteArticuloMutation = useDeleteArticulo();
   const { data: articuloListaDePrecio } = useGetArticuloListaDePrecioList(1, 100);
   const { data: articuloUbicacion } = useGetArticuloUbicacionList(1, 100);
+  const { data: articuloPresentaciones } = useGetArticuloPresentacionesList(1, 100);
+  const { data: presentacionesData } = useGetPresentacionList(1, 100);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -137,26 +155,70 @@ const ArticuloDetalle: React.FC = () => {
 
   // Función para obtener campos de presentación
   const getPresentacionFields = () => {
-    if (!articulo) return [];
+    // Verificar si tenemos el artículo
+    if (!articulo) {
+      return [{ label: 'Cargando información del artículo...', value: '' }];
+    }
+
+    // Verificar si están cargando los datos de presentaciones
+    if (!articuloPresentaciones || !presentacionesData) {
+      return [{ label: 'Cargando presentaciones...', value: '' }];
+    }
+    
     try {
-      let presentacionesValue = 'N/A';
+      console.log('🎯 Datos de presentaciones del artículo:', articuloPresentaciones);
+      console.log('🎯 Datos maestros de presentaciones:', presentacionesData);
       
-      if (articulo?.presentaciones) {
-        if (Array.isArray(articulo.presentaciones)) {
-          if (articulo.presentaciones.length > 0) {
-            presentacionesValue = articulo.presentaciones.filter(p => p != null).join(', ') || 'N/A';
-          }
-        } else if (typeof articulo.presentaciones === 'string' || typeof articulo.presentaciones === 'number') {
-          presentacionesValue = String(articulo.presentaciones);
-        }
+      // Filtrar presentaciones que pertenecen a este artículo
+      const presentacionesDelArticulo = articuloPresentaciones.data?.filter(
+        (articuloPres: any) => articuloPres.idArticulo === articulo.id
+      ) || [];
+
+      console.log('🎯 Presentaciones filtradas del artículo:', presentacionesDelArticulo);
+
+      if (presentacionesDelArticulo.length === 0) {
+        return [{ label: 'Sin presentaciones', value: 'Este artículo no tiene presentaciones configuradas' }];
       }
-      
-      return [
-        { label: 'Presentaciones', value: presentacionesValue },
+
+      // Crear un resumen general
+      const resumenFields = [
+        { 
+          label: 'Total de presentaciones', 
+          value: `${presentacionesDelArticulo.length} configurada(s)` 
+        }
       ];
+
+      // Mapear cada presentación con su información detallada
+      const presentacionesDetalle = presentacionesDelArticulo.map((articuloPres: any, index: number) => {
+        // Buscar el nombre de la presentación en los datos maestros
+        const presentacionInfo = presentacionesData.data?.find(
+          (pres: any) => pres.id === articuloPres.idPresentacion
+        );
+
+        const presentacionNombre = presentacionInfo?.nombre || `Presentación ID: ${articuloPres.idPresentacion}`;
+        
+        const caracteristicas = [];
+        if (articuloPres.esPrincipal) caracteristicas.push('Principal');
+        if (articuloPres.equivalencia && articuloPres.equivalencia !== 1) {
+          caracteristicas.push(`Equiv: ${articuloPres.equivalencia}`);
+        }
+        if (articuloPres.usarEnVentas) caracteristicas.push('Ventas');
+        if (articuloPres.usarEnCompras) caracteristicas.push('Compras');
+
+        const detalles = caracteristicas.length > 0 
+          ? `${presentacionNombre} (${caracteristicas.join(', ')})`
+          : presentacionNombre;
+
+        return {
+          label: `${index + 1}. ${presentacionNombre}`,
+          value: caracteristicas.length > 0 ? caracteristicas.join(' • ') : 'Configuración estándar'
+        };
+      });
+
+      return [...resumenFields, ...presentacionesDetalle];
     } catch (error) {
       console.error('Error getting presentacion fields:', error);
-      return [{ label: 'Presentaciones', value: 'Error al cargar' }];
+      return [{ label: 'Error al cargar presentaciones', value: 'Verifique la consola para más detalles' }];
     }
   };
 
@@ -354,6 +416,8 @@ const ArticuloDetalle: React.FC = () => {
     );
   }
 
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
   return (
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header optimized */}
@@ -421,17 +485,40 @@ const ArticuloDetalle: React.FC = () => {
           />
         }
       >
-        {/* Hero Section with Image */}
+        {/* Hero Section with Carousel */}
         <View className="bg-white">
           <View className="relative">
             {articulo.fotos && articulo.fotos.length > 0 ? (
-              <Image
-                source={{
-                  uri: `https://wise.filicabh.com.ve:5000/${articulo.fotos[0].urlFoto}`,
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(event) => {
+                  const newIndex = Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width);
+                  setCurrentPhotoIndex(newIndex);
                 }}
-                className="w-full h-64"
-                resizeMode="cover"
-              />
+                style={{ height: 256 }}
+              >
+                {articulo.fotos.map((foto, index) => (
+                  <TouchableOpacity
+                    key={foto.id || index}
+                    onPress={() => {
+                      setCurrentPhotoIndex(index);
+                      setShowImageViewer(true);
+                    }}
+                    activeOpacity={0.9}
+                  >
+                    <Image
+                      source={{
+                        uri: `https://wise.filicabh.com.ve:5000/${foto.urlFoto}`,
+                      }}
+                      className="w-full h-64"
+                      style={{ width: require('react-native').Dimensions.get('window').width }}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             ) : (
               <View className="w-full h-64 bg-gray-100 items-center justify-center">
                 <Ionicons name="cube-outline" size={64} color="#9ca3af" />
@@ -444,10 +531,55 @@ const ArticuloDetalle: React.FC = () => {
               <View className="absolute top-4 left-4">
                 <View className="px-3 py-1 rounded-full shadow-sm bg-black/70">
                   <Text className="text-white text-sm font-medium">
-                    1/{articulo.fotos.length}
+                    {currentPhotoIndex + 1}/{articulo.fotos.length}
                   </Text>
                 </View>
               </View>
+            )}
+
+            {/* Navigation Arrows for multiple photos */}
+            {articulo.fotos && articulo.fotos.length > 1 && (
+              <>
+                {currentPhotoIndex > 0 && (
+                  <TouchableOpacity
+                    className="absolute left-4 top-1/2 -translate-y-6"
+                    onPress={() => {
+                      const newIndex = currentPhotoIndex - 1;
+                      setCurrentPhotoIndex(newIndex);
+                    }}
+                    style={{
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      borderRadius: 20,
+                      width: 40,
+                      height: 40,
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Ionicons name="chevron-back" size={24} color="white" />
+                  </TouchableOpacity>
+                )}
+                
+                {currentPhotoIndex < articulo.fotos.length - 1 && (
+                  <TouchableOpacity
+                    className="absolute right-4 top-1/2 -translate-y-6"
+                    onPress={() => {
+                      const newIndex = currentPhotoIndex + 1;
+                      setCurrentPhotoIndex(newIndex);
+                    }}
+                    style={{
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      borderRadius: 20,
+                      width: 40,
+                      height: 40,
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Ionicons name="chevron-forward" size={24} color="white" />
+                  </TouchableOpacity>
+                )}
+              </>
             )}
             
             {/* Status Badge Overlay - Solo mostrar cuando esté inactivo */}
@@ -467,44 +599,9 @@ const ArticuloDetalle: React.FC = () => {
             <Text className="text-2xl font-bold text-gray-900 mb-2">
               {articulo.nombre}
             </Text>
-            
-            {articulo.descripcion && (
-              <Text className="text-gray-600 mb-4 leading-relaxed">
-                {articulo.descripcion}
-              </Text>
-            )}
-            
           </View>
         </View>
 
-        {/* Photos Gallery */}
-        {articulo.fotos && articulo.fotos.length > 1 && (
-          <View className="bg-white mx-4 rounded-xl p-6 mb-4 shadow-sm">
-            <Text className="text-lg font-semibold text-gray-800 mb-4">
-              Galería de Fotos ({articulo.fotos.length})
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row space-x-4">
-                {articulo.fotos.map((foto, index) => (
-                  <View key={foto.id || index} className="relative">
-                    <Image
-                      source={{
-                        uri: `https://wise.filicabh.com.ve:5000/${foto.urlFoto}`,
-                      }}
-                      className="w-24 h-24 rounded-xl"
-                      resizeMode="cover"
-                    />
-                    {foto.esPrincipal && (
-                      <View className="absolute top-2 right-2 w-6 h-6 bg-yellow-500 rounded-full items-center justify-center shadow-sm">
-                        <Ionicons name="star" size={14} color="white" />
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        )}
 
         {/* Detailed Information with Tabs */}
         {articulo && !isLoading && (
@@ -514,59 +611,248 @@ const ArticuloDetalle: React.FC = () => {
               className="px-6 py-4"
               style={{ backgroundColor: themes.inventory.headerColor }}
             >
-              <Text 
-                className="text-lg font-semibold mb-3"
-                style={{ color: themes.inventory.headerTextColor }}
-              >
-                Información Completa
-              </Text>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text 
+                  className="text-lg font-semibold"
+                  style={{ color: themes.inventory.headerTextColor }}
+                >
+                  Información Completa
+                </Text>
+              </View>
               
-              {/* Tab Navigation */}
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 2 }}
-              >
-                {[
-                  { id: "ficha", name: "Ficha", icon: "document-text-outline" },
-                  { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
-                  { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                  { id: "precios", name: "Precios", icon: "pricetag-outline" },
-                  { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
-                ].map((tab, index) => (
+              {/* Tab Navigation - Chips or Dropdown Style */}
+              {viewMode === 'chips' ? (
+                <View className="flex-row items-center justify-between px-4">
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingVertical: 8 }}
+                    style={{ flex: 1 }}
+                  >
+                    {[
+                      { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                      { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                      { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                      { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                      { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+                    ].map((tab, index) => (
+                      <TouchableOpacity
+                        key={tab.id}
+                        style={{
+                          marginRight: index < 4 ? 12 : 0,
+                          paddingHorizontal: 16,
+                          paddingVertical: 8,
+                          borderRadius: 8,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: activeDetailTab === tab.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                          borderWidth: 1,
+                          borderColor: activeDetailTab === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                        }}
+                        onPress={() => setActiveDetailTab(tab.id)}
+                      >
+                        <Ionicons
+                          name={tab.icon as any}
+                          size={16}
+                          color={activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)'}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text
+                          style={{
+                            color: activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)',
+                            fontWeight: activeDetailTab === tab.id ? '600' : 'normal',
+                            fontSize: 14
+                          }}
+                        >
+                          {tab.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                   <TouchableOpacity
-                    key={tab.id}
+                    className="bg-white rounded-2xl p-2 flex-row items-center ml-3"
+                    onPress={() => setViewMode('dropdown')}
                     style={{
-                      marginRight: index < 4 ? 12 : 0,
-                      paddingHorizontal: 16,
-                      paddingVertical: 8,
-                      borderRadius: 8,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: activeDetailTab === tab.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
-                      borderWidth: 1,
-                      borderColor: activeDetailTab === tab.id ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 3
                     }}
-                    onPress={() => setActiveDetailTab(tab.id)}
                   >
                     <Ionicons
-                      name={tab.icon as any}
-                      size={16}
-                      color={activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)'}
-                      style={{ marginRight: 6 }}
+                      name="list-outline"
+                      size={18}
+                      color={themes.inventory.headerColor}
                     />
-                    <Text
-                      style={{
-                        color: activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)',
-                        fontWeight: activeDetailTab === tab.id ? '600' : 'normal',
-                        fontSize: 14
-                      }}
-                    >
-                      {tab.name}
+                    <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
+                      Lista
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                </View>
+              ) : (
+                <View className="px-4 relative">
+                  <View className="flex-row items-center justify-between">
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        padding: 12,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flex: 1,
+                        marginRight: 12
+                      }}
+                      onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons
+                          name={[
+                            { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                            { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                            { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                            { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                            { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+                          ].find(tab => tab.id === activeDetailTab)?.icon as any || 'grid-outline'}
+                          size={18}
+                          color="white"
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>
+                          {[
+                            { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                            { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                            { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                            { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                            { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+                          ].find(tab => tab.id === activeDetailTab)?.name || 'Seleccionar sección'}
+                        </Text>
+                      </View>
+                      <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="bg-white rounded-2xl p-2 flex-row items-center"
+                      onPress={() => setViewMode('chips')}
+                      style={{
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 3
+                      }}
+                    >
+                      <Ionicons
+                        name="grid-outline"
+                        size={18}
+                        color={themes.inventory.headerColor}
+                      />
+                      <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
+                        Chips
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {isDropdownOpen && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        borderBottomLeftRadius: 12,
+                        borderBottomRightRadius: 12,
+                        borderLeftWidth: 1,
+                        borderRightWidth: 1,
+                        borderBottomWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.3)',
+                        marginTop: 4,
+                        maxHeight: 300,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                        elevation: 8,
+                        zIndex: 1000
+                      }}
+                    >
+                      {[
+                        { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                        { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                        { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+                      ].map((tab) => (
+                        <TouchableOpacity
+                          key={tab.id}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 16,
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(0,0,0,0.05)',
+                            backgroundColor: activeDetailTab === tab.id ? 'rgba(88,28,135,0.1)' : 'transparent'
+                          }}
+                          onPress={() => {
+                            setActiveDetailTab(tab.id);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              backgroundColor: activeDetailTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.05)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: 12
+                            }}
+                          >
+                            <Ionicons
+                              name={tab.icon as any}
+                              size={18}
+                              color={activeDetailTab === tab.id ? 'white' : 'rgba(0,0,0,0.6)'}
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={{
+                                color: activeDetailTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.8)',
+                                fontWeight: activeDetailTab === tab.id ? '600' : '500',
+                                fontSize: 16
+                              }}
+                            >
+                              {tab.name}
+                            </Text>
+                          </View>
+                          {activeDetailTab === tab.id && (
+                            <View
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 12,
+                                backgroundColor: themes.inventory.buttonColor,
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color="white"
+                              />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
             
             {/* Tab Content */}
@@ -605,6 +891,156 @@ const ArticuloDetalle: React.FC = () => {
         {/* Bottom spacing */}
         <View className="h-6" />
       </ScrollView>
+
+      {/* Image Viewer Modal with Zoom */}
+      <Modal
+        visible={showImageViewer}
+        transparent={true}
+        statusBarTranslucent={true}
+        onRequestClose={() => setShowImageViewer(false)}
+      >
+        <View style={{ 
+          flex: 1, 
+          backgroundColor: 'rgba(0,0,0,0.9)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={() => setShowImageViewer(false)}
+            style={{
+              position: 'absolute',
+              top: 50,
+              right: 20,
+              zIndex: 1000,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              borderRadius: 20,
+              width: 40,
+              height: 40,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Ionicons name="close" size={24} color="white" />
+          </TouchableOpacity>
+
+          {/* Image Counter */}
+          {articulo?.fotos && articulo.fotos.length > 1 && (
+            <View style={{
+              position: 'absolute',
+              top: 50,
+              left: 20,
+              zIndex: 1000,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              borderRadius: 15,
+              paddingHorizontal: 12,
+              paddingVertical: 6
+            }}>
+              <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}>
+                {currentPhotoIndex + 1} de {articulo.fotos.length}
+              </Text>
+            </View>
+          )}
+
+          {/* Main Image with Zoom */}
+          {articulo?.fotos && articulo.fotos[currentPhotoIndex] && (
+            <ScrollView
+              maximumZoomScale={5}
+              minimumZoomScale={1}
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              centerContent={true}
+              style={{ 
+                flex: 1,
+                width: screenWidth,
+                height: screenHeight * 0.8 
+              }}
+              contentContainerStyle={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: screenHeight * 0.8,
+                minWidth: screenWidth
+              }}
+            >
+              <Image
+                source={{
+                  uri: `https://wise.filicabh.com.ve:5000/${articulo.fotos[currentPhotoIndex].urlFoto}`,
+                }}
+                style={{
+                  width: screenWidth * 0.95,
+                  height: screenHeight * 0.7,
+                }}
+                resizeMode="contain"
+              />
+            </ScrollView>
+          )}
+
+          {/* Navigation for multiple images */}
+          {articulo?.fotos && articulo.fotos.length > 1 && (
+            <>
+              {/* Previous Button */}
+              {currentPhotoIndex > 0 && (
+                <TouchableOpacity
+                  onPress={() => setCurrentPhotoIndex(prev => prev - 1)}
+                  style={{
+                    position: 'absolute',
+                    left: 20,
+                    top: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 25,
+                    width: 50,
+                    height: 50,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Ionicons name="chevron-back" size={30} color="white" />
+                </TouchableOpacity>
+              )}
+
+              {/* Next Button */}
+              {currentPhotoIndex < articulo.fotos.length - 1 && (
+                <TouchableOpacity
+                  onPress={() => setCurrentPhotoIndex(prev => prev + 1)}
+                  style={{
+                    position: 'absolute',
+                    right: 20,
+                    top: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 25,
+                    width: 50,
+                    height: 50,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={30} color="white" />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* Photo info overlay */}
+          {articulo?.fotos && articulo.fotos[currentPhotoIndex]?.esPrincipal && (
+            <View style={{
+              position: 'absolute',
+              bottom: 100,
+              alignSelf: 'center',
+              backgroundColor: 'rgba(255,215,0,0.9)',
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}>
+              <Ionicons name="star" size={16} color="white" style={{ marginRight: 6 }} />
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                Imagen Principal
+              </Text>
+            </View>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 };

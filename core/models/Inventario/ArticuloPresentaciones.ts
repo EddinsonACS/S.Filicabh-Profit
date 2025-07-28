@@ -1,7 +1,7 @@
 export interface ArticuloPresentaciones {
     id: number,
-    codigoArticulo: number,
-    codigoPresentacion: number,
+    idArticulo: number,
+    idPresentacion: number,
     esPrincipal: boolean,
     equivalencia: number,
     usarEnVentas: boolean,
@@ -14,6 +14,8 @@ export interface ArticuloPresentaciones {
     otrosC3: string,
     otrosC4: string,
     otrosT1: string,
+    usuario: number,
+    equipo: string,
     fechaRegistro: string,
     usuarioRegistroNombre: string,
     fechaModificacion: string,

@@ -36,24 +36,28 @@ export const useArticuloPresentaciones = () => {
   const useCreateArticuloPresentaciones = () => {
     return useMutation({
       mutationFn: (formData: Partial<ArticuloPresentaciones>) => {
-        if (!formData.codigoArticulo || !formData.codigoPresentacion) {
-          throw new Error('El código de artículo y presentación son requeridos');
+        if (!formData.idArticulo || !formData.idPresentacion) {
+          throw new Error('El ID de artículo y presentación son requeridos');
         }
-        const data: Omit<ArticuloPresentaciones, 'id'> = {
+        const data: Omit<ArticuloPresentaciones, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           ...formData,
+          idArticulo: formData.idArticulo,
+          idPresentacion: formData.idPresentacion,
           esPrincipal: formData.esPrincipal || false,
           equivalencia: formData.equivalencia || 1,
           usarEnVentas: formData.usarEnVentas || true,
           usarEnCompras: formData.usarEnCompras || true,
           otrosF1: new Date().toISOString(),
-          otrosN1: 0,
-          otrosN2: 0,
-          otrosC1: '',
-          otrosC2: '',
-          otrosC3: '',
-          otrosC4: '',
-          otrosT1: ''
-        } as Omit<ArticuloPresentaciones, 'id'>;
+          otrosN1: formData.otrosN1 || 0,
+          otrosN2: formData.otrosN2 || 0,
+          otrosC1: formData.otrosC1 || '',
+          otrosC2: formData.otrosC2 || '',
+          otrosC3: formData.otrosC3 || '',
+          otrosC4: formData.otrosC4 || '',
+          otrosT1: formData.otrosT1 || '',
+          usuario: formData.usuario || 0,
+          equipo: formData.equipo || 'mobile'
+        };
         return apiArticuloPresentaciones.create(endpoints.inventory.articulopresentacion.create, data);
       },
       onSuccess: () => {
@@ -68,12 +72,14 @@ export const useArticuloPresentaciones = () => {
   const useUpdateArticuloPresentaciones = () => {
     return useMutation({
       mutationFn: ({ id, formData }: { id: number; formData: Partial<ArticuloPresentaciones> }) => {
-        if (!formData.codigoArticulo || !formData.codigoPresentacion) {
-          throw new Error('El código de artículo y presentación son requeridos');
+        if (!formData.idArticulo || !formData.idPresentacion) {
+          throw new Error('El ID de artículo y presentación son requeridos');
         }
         const data: Partial<ArticuloPresentaciones> = {
           ...formData,
           id,
+          usuario: formData.usuario || 0,
+          equipo: formData.equipo || 'mobile'
         };
         return apiArticuloPresentaciones.update(endpoints.inventory.articulopresentacion.update(id), data);
       },

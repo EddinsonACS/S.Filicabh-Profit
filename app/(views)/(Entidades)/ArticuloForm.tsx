@@ -4,6 +4,7 @@ import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
 import { useArticulo } from "@/hooks/Inventario/useArticulo";
 import { useArticuloFoto } from "@/hooks/Inventario/useArticuloFoto";
 import { useArticuloListaDePrecio } from "@/hooks/Inventario/useArticuloListaDePrecio";
+import { useArticuloPresentaciones } from "@/hooks/Inventario/useArticuloPresentaciones";
 import { useArticuloUbicacion } from "@/hooks/Inventario/useArticuloUbicacion";
 import { useColor } from "@/hooks/Inventario/useColor";
 import { useGrupo } from "@/hooks/Inventario/useGrupo";
@@ -15,7 +16,7 @@ import { useListaDePrecio } from "@/hooks/Ventas/useListaDePrecio";
 import { useMoneda } from "@/hooks/Ventas/useMoneda";
 import { DEFAULT_VALUES_INVENTORY } from "@/utils/const/defaultValues";
 import { FORM_FIELDS_INVENTORY } from "@/utils/const/formFields";
-import { inventorySchema, InventoryFormData } from "@/utils/schemas/inventorySchema";
+import { InventoryFormData, inventorySchema } from "@/utils/schemas/inventorySchema";
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -25,15 +26,15 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -51,6 +52,13 @@ interface PrecioInputs {
   monto: string;
   fechaDesde: string;
   fechaHasta: string;
+}
+
+interface PresentacionConfig {
+  equivalencia: number;
+  usarEnVentas: boolean;
+  usarEnCompras: boolean;
+  esPrincipal: boolean;
 }
 
 interface FormField {
@@ -91,6 +99,8 @@ const ArticuloForm: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState("ficha");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState<'chips' | 'dropdown'>('chips');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [imageOrder, setImageOrder] = useState<{[key: number]: number}>({});
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
@@ -109,9 +119,14 @@ const ArticuloForm: React.FC = () => {
     fechaDesde: "",
     fechaHasta: "",
   });
+  
+  // Estados para presentaciones
+  const [presentacionesConfig, setPresentacionesConfig] = useState<Record<number, PresentacionConfig>>({});
+  const [presentacionesSeleccionadas, setPresentacionesSeleccionadas] = useState<Set<number>>(new Set());
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
 
   const { 
     showCreateSuccess, 
@@ -138,9 +153,14 @@ const ArticuloForm: React.FC = () => {
   } = useArticulo();
 
   // Hooks para pasos adicionales
-  const { useCreateArticuloFoto } = useArticuloFoto();
-  const { useCreateArticuloListaDePrecio, useGetArticuloListaDePrecioList } = useArticuloListaDePrecio();
-  const { useCreateArticuloUbicacion,useGetArticuloUbicacionList } = useArticuloUbicacion();
+  const { useCreateArticuloFoto, useUpdateArticuloFoto, useGetArticuloFotoList, useDeleteArticuloFoto } = useArticuloFoto();
+  const { useCreateArticuloListaDePrecio, useGetArticuloListaDePrecioList, useDeleteArticuloListaDePrecio } = useArticuloListaDePrecio();
+  const { useCreateArticuloUbicacion, useGetArticuloUbicacionList, useDeleteArticuloUbicacion } = useArticuloUbicacion();
+  const { 
+    useCreateArticuloPresentaciones, 
+    useGetArticuloPresentacionesList,
+    useDeleteArticuloPresentaciones 
+  } = useArticuloPresentaciones();
 
   // Data queries
   const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
@@ -151,6 +171,8 @@ const ArticuloForm: React.FC = () => {
   const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
   const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
   const { data: presentacionesDataArticulo } = useGetPresentacionList(1, 1000);
+  const { data: articuloPresentacionesData } = useGetArticuloPresentacionesList(1, 1000);
+  const { data: articuloFotosData } = useGetArticuloFotoList(1, 1000);
   const { data: listasPreciosData } = useGetListaDePrecioList(1, 100);
   const { data: monedasData } = useGetMonedaList(1, 100);
   const { data: almacenesData } = useGetAlmacenList(1, 100);
@@ -174,8 +196,14 @@ const ArticuloForm: React.FC = () => {
   const createArticuloMutation = useCreateArticulo();
   const updateArticuloMutation = useUpdateArticulo();
   const createFotoMutation = useCreateArticuloFoto();
+  const updateFotoMutation = useUpdateArticuloFoto();
+  const deleteFotoMutation = useDeleteArticuloFoto();
   const createPrecioMutation = useCreateArticuloListaDePrecio();
+  const deletePrecioMutation = useDeleteArticuloListaDePrecio();
   const createUbicacionMutation = useCreateArticuloUbicacion();
+  const deleteUbicacionMutation = useDeleteArticuloUbicacion();
+  const createPresentacionMutation = useCreateArticuloPresentaciones();
+  const deletePresentacionMutation = useDeleteArticuloPresentaciones();
 
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS_INVENTORY['articulo'];
@@ -202,27 +230,98 @@ const ArticuloForm: React.FC = () => {
     });
   }, [gruposDataArticulo, coloresDataArticulo, tallasDataArticulo, tiposArticuloDataArticulo, impuestosDataArticulo, presentacionesDataArticulo]);
 
+  // Funciones para manejar presentaciones
+  const updatePresentacionConfig = (
+    presentacionId: number,
+    field: keyof PresentacionConfig,
+    value: string | boolean | number,
+  ) => {
+    setPresentacionesConfig((prev) => {
+      const newConfig = { ...prev };
+      
+      // Si no existe la configuración para esta presentación, crearla
+      if (!newConfig[presentacionId]) {
+        newConfig[presentacionId] = {
+          equivalencia: 1,
+          usarEnVentas: true,
+          usarEnCompras: true,
+          esPrincipal: false,
+        };
+      }
+
+      // Si se está marcando como principal, desmarcar todas las demás
+      if (field === 'esPrincipal' && value === true) {
+        Object.keys(newConfig).forEach(id => {
+          if (Number(id) !== presentacionId) {
+            newConfig[Number(id)].esPrincipal = false;
+          }
+        });
+      }
+
+      // Actualizar el campo específico
+      if (field === "equivalencia" && typeof value === "string") {
+        newConfig[presentacionId] = { 
+          ...newConfig[presentacionId], 
+          [field]: Number(value) || 1 
+        };
+      } else {
+        newConfig[presentacionId] = { 
+          ...newConfig[presentacionId], 
+          [field]: value 
+        };
+      }
+
+      return newConfig;
+    });
+  };
+
+  const togglePresentacionSelection = (presentacionId: number) => {
+    setPresentacionesSeleccionadas((prev) => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(presentacionId)) {
+        // Deseleccionar: remover de selección y configuración
+        newSelection.delete(presentacionId);
+        setPresentacionesConfig(current => {
+          const newConfig = { ...current };
+          delete newConfig[presentacionId];
+          return newConfig;
+        });
+      } else {
+        // Seleccionar: agregar a selección y crear configuración por defecto
+        newSelection.add(presentacionId);
+        updatePresentacionConfig(presentacionId, "equivalencia", 1);
+      }
+      return newSelection;
+    });
+  };
+
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
+    getValues,
   } = useForm<ArticuloFormData>({
-    resolver: zodResolver(inventorySchema['articulo']),
+    resolver: zodResolver(
+      isEditingMode 
+        ? inventorySchema['articulo'].partial() // En modo edición, todos los campos son opcionales
+        : inventorySchema['articulo']
+    ),
     defaultValues: isEditingMode ? (currentItem as ArticuloFormData) : DEFAULT_VALUES_INVENTORY['articulo'],
   });
+
+  // Log para debuggear errores de validación
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log('❌ Errores de validación del formulario:', errors);
+    }
+  }, [errors]);
 
   useEffect(() => {
     if (isEditingMode && currentItem) {
       reset(currentItem as ArticuloFormData);
-      // Inicializar presentaciones si existen
-      if (currentItem.presentaciones) {
-        const presentacionesArray = Array.isArray(currentItem.presentaciones)
-          ? currentItem.presentaciones.map(Number)
-          : [Number(currentItem.presentaciones)];
-        setValue("presentaciones", presentacionesArray as any);
-      }
+      // Las presentaciones se cargan en un useEffect separado usando articuloPresentacionesData
       // Inicializar otros campos numéricos
       [
         "peso", "volumen", "metroCubico", "pie", "puntoMinimo", "puntoMaximo",
@@ -251,6 +350,163 @@ const ArticuloForm: React.FC = () => {
       setImageOrder({});
     }
   }, [isEditingMode, currentItem, reset, setValue]);
+
+  // Efecto separado para cargar presentaciones existentes cuando se carga articuloPresentacionesData
+  useEffect(() => {
+    if (isEditingMode && currentItem && articuloPresentacionesData?.data) {
+      console.log('🔄 Cargando presentaciones existentes para edición...');
+      
+      // Filtrar presentaciones que pertenecen a este artículo
+      const presentacionesExistentes = articuloPresentacionesData.data.filter(
+        (articuloPres: any) => articuloPres.idArticulo === currentItem.id
+      );
+      
+      console.log('📋 Presentaciones existentes encontradas:', presentacionesExistentes);
+      
+      if (presentacionesExistentes.length > 0) {
+        // Crear Set de IDs seleccionados
+        const idsSeleccionados = new Set(
+          presentacionesExistentes.map((articuloPres: any) => articuloPres.idPresentacion)
+        );
+        
+        // Crear configuración para cada presentación
+        const config: Record<number, PresentacionConfig> = {};
+        presentacionesExistentes.forEach((articuloPres: any) => {
+          config[articuloPres.idPresentacion] = {
+            equivalencia: articuloPres.equivalencia || 1,
+            usarEnVentas: articuloPres.usarEnVentas ?? true,
+            usarEnCompras: articuloPres.usarEnCompras ?? true,
+            esPrincipal: articuloPres.esPrincipal ?? false
+          };
+        });
+        
+        console.log('🎯 Presentaciones seleccionadas:', Array.from(idsSeleccionados));
+        console.log('⚙️ Configuración de presentaciones:', config);
+        
+        // Actualizar estados
+        setPresentacionesSeleccionadas(idsSeleccionados);
+        setPresentacionesConfig(config);
+      } else {
+        // Si no hay presentaciones, limpiar estados
+        setPresentacionesSeleccionadas(new Set());
+        setPresentacionesConfig({});
+      }
+    }
+  }, [isEditingMode, currentItem, articuloPresentacionesData]);
+
+  // Efecto para cargar precios existentes cuando se carga listasPreciosDataArticulo
+  useEffect(() => {
+    if (isEditingMode && currentItem && listasPreciosDataArticulo?.data) {
+      console.log('🔄 Cargando precios existentes para edición...');
+      
+      // Filtrar precios que pertenecen a este artículo
+      const preciosExistentes = listasPreciosDataArticulo.data.filter(
+        (precio: any) => precio.idArticulo === currentItem.id
+      );
+      
+      console.log('💰 Precios existentes encontrados:', preciosExistentes);
+      
+      if (preciosExistentes.length > 0) {
+        // Mapear precios existentes al formato esperado
+        const preciosFormateados = preciosExistentes.map((precio: any) => ({
+          idListasdePrecio: precio.idListasDePrecio,
+          idMoneda: precio.idMoneda,
+          monto: precio.monto,
+          fechaDesde: precio.fechaDesde?.replace(/-/g, "/") || "",
+          fechaHasta: precio.fechaHasta?.replace(/-/g, "/") || "",
+          suspendido: precio.suspendido ?? false
+        }));
+        
+        console.log('💰 Precios formateados:', preciosFormateados);
+        setListasPrecios(preciosFormateados);
+      } else {
+        // Si no hay precios, limpiar estado
+        setListasPrecios([]);
+      }
+    }
+  }, [isEditingMode, currentItem, listasPreciosDataArticulo]);
+
+  // Efecto para cargar ubicaciones existentes cuando se carga ubicacionesDataArticulo
+  useEffect(() => {
+    if (isEditingMode && currentItem && ubicacionesDataArticulo?.data) {
+      console.log('🔄 Cargando ubicaciones existentes para edición...');
+      
+      // Filtrar ubicaciones que pertenecen a este artículo
+      const ubicacionesExistentes = ubicacionesDataArticulo.data.filter(
+        (ubicacion: any) => ubicacion.idArticulo === currentItem.id
+      );
+      
+      console.log('📍 Ubicaciones existentes encontradas:', ubicacionesExistentes);
+      
+      if (ubicacionesExistentes.length > 0) {
+        // Mapear ubicaciones existentes al formato esperado
+        const ubicacionesFormateadas = ubicacionesExistentes.map((ubicacion: any) => ({
+          codigoAlmacen: ubicacion.idAlmacen, // Mapear idAlmacen a codigoAlmacen para compatibilidad
+          idAlmacen: ubicacion.idAlmacen, // Mantener ambos por compatibilidad
+          ubicacion: ubicacion.ubicacion,
+          suspendido: ubicacion.suspendido ?? false
+        }));
+        
+        console.log('📍 Ubicaciones formateadas:', ubicacionesFormateadas);
+        setUbicaciones(ubicacionesFormateadas);
+      } else {
+        // Si no hay ubicaciones, limpiar estado
+        setUbicaciones([]);
+      }
+    }
+  }, [isEditingMode, currentItem, ubicacionesDataArticulo]);
+
+  // Efecto para cargar fotos existentes cuando se carga articuloFotosData
+  useEffect(() => {
+    if (isEditingMode && currentItem && articuloFotosData?.data) {
+      console.log('🔄 Cargando fotos existentes para edición...');
+      
+      // Filtrar fotos que pertenecen a este artículo
+      const fotosExistentes = articuloFotosData.data.filter(
+        (foto: any) => foto.idArticulo === currentItem.id
+      );
+      
+      console.log('📸 Fotos existentes encontradas:', fotosExistentes);
+      
+      if (fotosExistentes.length > 0) {
+        // Mapear fotos existentes al formato esperado
+        const fotosFormateadas = fotosExistentes.map((foto: any, index: number) => ({
+          id: foto.id,
+          fotoId: foto.id, // ID de la foto para actualizaciones
+          uri: `https://wise.filicabh.com.ve:5000/${foto.urlFoto}`,
+          urlFoto: foto.urlFoto,
+          esPrincipal: foto.esPrincipal ?? false,
+          orden: foto.orden || index + 1,
+          existente: true, // Marcador para saber que es una foto existente
+          name: `existing_image_${foto.id}.jpg`,
+          type: 'image/jpeg'
+        }));
+        
+        // Crear el orden de imágenes
+        const ordenImagenes: {[key: number]: number} = {};
+        fotosFormateadas.forEach((foto, index) => {
+          ordenImagenes[index] = foto.orden;
+        });
+        
+        // Encontrar la imagen principal
+        const principalIndex = fotosFormateadas.findIndex(foto => foto.esPrincipal);
+        
+        console.log('📸 Fotos formateadas:', fotosFormateadas);
+        console.log('📸 Orden de imágenes:', ordenImagenes);
+        console.log('📸 Índice principal:', principalIndex);
+        
+        // Actualizar estados
+        setSelectedImages(fotosFormateadas);
+        setImageOrder(ordenImagenes);
+        setPrincipalImageIndex(principalIndex >= 0 ? principalIndex : -1);
+      } else {
+        // Si no hay fotos, limpiar estados
+        setSelectedImages([]);
+        setImageOrder({});
+        setPrincipalImageIndex(-1);
+      }
+    }
+  }, [isEditingMode, currentItem, articuloFotosData]);
 
   // Helper functions for form fields formatting
   const getFormattedValueByType = (
@@ -293,8 +549,22 @@ const ArticuloForm: React.FC = () => {
 
   // Image handling functions
   const processSelectedImage = (result: any) => {
-    if (!result.canceled) {
-      const fileName = result.assets[0].fileName || `image_${Date.now()}.jpg`;
+    try {
+      console.log('📷 Processing selected image:', result);
+      
+      if (!result || result.cancelled || result.canceled) {
+        console.log('📷 Image selection was cancelled');
+        return;
+      }
+
+      if (!result.assets || !result.assets[0]) {
+        console.error('📷 No assets found in result');
+        alert('Error: No se pudo obtener la imagen seleccionada');
+        return;
+      }
+
+      const asset = result.assets[0];
+      const fileName = asset.fileName || `image_${Date.now()}.jpg`;
       const fileExtension = fileName.split(".").pop()?.toLowerCase();
 
       let mimeType = "image/jpeg";
@@ -308,14 +578,16 @@ const ArticuloForm: React.FC = () => {
 
       const newImage = {
         id: Date.now(),
-        uri: result.assets[0].uri,
+        uri: asset.uri,
         name: fileName,
         type: mimeType,
         file: {
-          ...result.assets[0],
+          ...asset,
           type: mimeType,
         },
       };
+
+      console.log('📷 Adding new image:', newImage);
       setSelectedImages((prev) => [...prev, newImage]);
       
       // Auto-assign next available order
@@ -324,28 +596,85 @@ const ArticuloForm: React.FC = () => {
         ...prev,
         [newImage.id]: nextOrder
       }));
+      
+      console.log('📷 Image processed successfully');
+    } catch (error) {
+      console.error('📷 Error processing selected image:', error);
+      alert('Error al procesar la imagen seleccionada');
     }
   };
 
   const pickImageFromGallery = async () => {
     setShowImagePickerModal(false);
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    processSelectedImage(result);
+    
+    try {
+      // Primero verificar el estado actual de los permisos
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      let finalStatus = status;
+      
+      if (status !== 'granted') {
+        // Si no tiene permisos, solicitarlos
+        const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        finalStatus = newStatus;
+      }
+      
+      if (finalStatus !== 'granted') {
+        alert("Se necesitan permisos para acceder a la galería. Por favor, habilítalos en configuración.");
+        return;
+      }
+      
+      console.log('📸 Abriendo galería con permisos:', finalStatus);
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
+      
+      console.log('📸 Resultado de galería:', result);
+      processSelectedImage(result);
+    } catch (error) {
+      console.error('❌ Error al abrir galería:', error);
+      alert("Error al acceder a la galería. Inténtalo de nuevo.");
+    }
   };
 
   const takePhotoWithCamera = async () => {
     setShowImagePickerModal(false);
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    processSelectedImage(result);
+    
+    try {
+      // Primero verificar el estado actual de los permisos de cámara
+      const { status } = await ImagePicker.getCameraPermissionsAsync();
+      let finalStatus = status;
+      
+      if (status !== 'granted') {
+        // Si no tiene permisos, solicitarlos
+        const { status: newStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        finalStatus = newStatus;
+      }
+      
+      if (finalStatus !== 'granted') {
+        alert("Se necesitan permisos para acceder a la cámara. Por favor, habilítalos en configuración.");
+        return;
+      }
+      
+      console.log('📸 Abriendo cámara con permisos:', finalStatus);
+      
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      console.log('📸 Resultado de cámara:', result);
+      processSelectedImage(result);
+    } catch (error) {
+      console.error('❌ Error al abrir cámara:', error);
+      alert("Error al acceder a la cámara. Inténtalo de nuevo.");
+    }
   };
 
   const removeImage = (index: number) => {
@@ -476,39 +805,102 @@ const ArticuloForm: React.FC = () => {
 
   // Submission functions
   const saveFotos = async (articleId: number): Promise<boolean> => {
-    if (selectedImages.length === 0) return true;
-
     try {
+      // Solo procesar si hay fotos que agregar
+      if (selectedImages.length === 0) {
+        console.log('📸 No hay fotos para procesar');
+        return true;
+      }
+
+      console.log(`📸 Procesando ${selectedImages.length} fotos...`);
+      
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
-        const order = imageOrder[image.id] || i + 1;
+        const order = imageOrder[i] || i + 1;
+        const esPrincipal = i === principalImageIndex;
         
-        // Prepare the parameters object instead of FormData
+        console.log(`📸 Procesando foto ${i + 1}:`, {
+          orden: order,
+          esPrincipal,
+          existente: image.existente || false,
+          fotoId: image.fotoId,
+          uri: image.uri
+        });
+        
+        // Prepare the parameters object
         const fotoParams = {
           idArticulo: articleId,
-          esPrincipal: order === 1,
+          esPrincipal,
           orden: order,
-          equipo: "mobile", // Default equipment value
+          equipo: "mobile",
           imageFile: {
             uri: image.uri,
-            name: image.name,
-            type: image.type,
+            name: image.name || `image_${i + 1}.jpg`,
+            type: image.type || 'image/jpeg',
           }
         };
 
-        await createFotoMutation.mutateAsync(fotoParams);
+        try {
+          if (image.existente && image.fotoId) {
+            // Actualizar foto existente usando PUT /api/articulofoto/{id}
+            console.log(`🔄 Actualizando foto existente ID: ${image.fotoId}`);
+            await updateFotoMutation.mutateAsync({ 
+              id: image.fotoId, 
+              params: fotoParams 
+            });
+            console.log(`✅ Foto ${i + 1} actualizada exitosamente`);
+          } else {
+            // Crear nueva foto usando POST /api/articulofoto
+            console.log(`🆕 Creando nueva foto`);
+            await createFotoMutation.mutateAsync(fotoParams);
+            console.log(`✅ Foto ${i + 1} creada exitosamente`);
+          }
+        } catch (error) {
+          console.error(`❌ Error procesando foto ${i + 1}:`, error);
+          // Continuar con las demás fotos
+        }
       }
+      
       return true;
     } catch (error) {
-      console.error("Error al subir fotos:", error);
+      console.error("Error general al guardar fotos:", error);
       return false;
     }
   };
 
   const saveListasPrecios = async (articleId: number): Promise<boolean> => {
-    if (listasPrecios.length === 0) return true;
-
     try {
+      // Solo procesar si hay precios nuevos que agregar
+      if (listasPrecios.length === 0) {
+        console.log('💰 No hay precios nuevos para procesar');
+        return true;
+      }
+
+      // En modo edición, eliminar precios existentes solo si hay precios nuevos
+      if (isEditingMode && listasPreciosDataArticulo?.data && listasPrecios.length > 0) {
+        console.log('🗑️ Eliminando precios existentes en modo edición...');
+        
+        const preciosExistentes = listasPreciosDataArticulo.data.filter(
+          (precio: any) => precio.idArticulo === articleId
+        );
+        
+        console.log(`💰 ${preciosExistentes.length} precios existentes encontrados`);
+        
+        for (const precioExistente of preciosExistentes) {
+          try {
+            console.log(`🗑️ Eliminando precio ID: ${precioExistente.id}`);
+            await deletePrecioMutation.mutateAsync(precioExistente.id);
+            console.log(`✅ Precio ${precioExistente.id} eliminado`);
+          } catch (error) {
+            console.error(`❌ Error eliminando precio ${precioExistente.id}:`, error);
+            // Continuar con las demás eliminaciones
+          }
+        }
+      }
+
+      // Crear nuevos precios
+      console.log(`💰 Creando ${listasPrecios.length} nuevos precios...`);
+      
       for (const precio of listasPrecios) {
         const precioData = {
           idArticulo: articleId,
@@ -522,6 +914,7 @@ const ArticuloForm: React.FC = () => {
 
         await createPrecioMutation.mutateAsync(precioData);
       }
+      
       return true;
     } catch (error) {
       console.error("Error al guardar precios:", error);
@@ -530,18 +923,49 @@ const ArticuloForm: React.FC = () => {
   };
 
   const saveUbicaciones = async (articleId: number): Promise<boolean> => {
-    if (ubicaciones.length === 0) return true;
-
     try {
+      // Solo procesar si hay ubicaciones nuevas que agregar
+      if (ubicaciones.length === 0) {
+        console.log('📍 No hay ubicaciones nuevas para procesar');
+        return true;
+      }
+
+      // En modo edición, eliminar ubicaciones existentes solo si hay ubicaciones nuevas
+      if (isEditingMode && ubicacionesDataArticulo?.data && ubicaciones.length > 0) {
+        console.log('🗑️ Eliminando ubicaciones existentes en modo edición...');
+        
+        const ubicacionesExistentes = ubicacionesDataArticulo.data.filter(
+          (ubicacion: any) => ubicacion.idArticulo === articleId
+        );
+        
+        console.log(`📍 ${ubicacionesExistentes.length} ubicaciones existentes encontradas`);
+        
+        for (const ubicacionExistente of ubicacionesExistentes) {
+          try {
+            console.log(`🗑️ Eliminando ubicación ID: ${ubicacionExistente.id}`);
+            await deleteUbicacionMutation.mutateAsync(ubicacionExistente.id);
+            console.log(`✅ Ubicación ${ubicacionExistente.id} eliminada`);
+          } catch (error) {
+            console.error(`❌ Error eliminando ubicación ${ubicacionExistente.id}:`, error);
+            // Continuar con las demás eliminaciones
+          }
+        }
+      }
+
+      // Crear nuevas ubicaciones
+      console.log(`📍 Creando ${ubicaciones.length} nuevas ubicaciones...`);
+      
       for (const ubicacion of ubicaciones) {
         const ubicacionData = {
           idArticulo: articleId,
-          idAlmacen: Number(ubicacion.codigoAlmacen),
+          idAlmacen: Number(ubicacion.codigoAlmacen || ubicacion.idAlmacen),
           ubicacion: ubicacion.ubicacion,
+          suspendido: ubicacion.suspendido ?? false,
         };
 
         await createUbicacionMutation.mutateAsync(ubicacionData);
       }
+      
       return true;
     } catch (error) {
       console.error("Error al guardar ubicaciones:", error);
@@ -549,10 +973,113 @@ const ArticuloForm: React.FC = () => {
     }
   };
 
+  // Función para limpiar datos del artículo (remover presentaciones)
+  const cleanArticuloData = (formData: any) => {
+    // Remover presentaciones y cualquier campo que no sea parte del esquema del artículo
+    const { presentaciones, ...cleanData } = formData;
+    
+    // Asegurar que los campos numéricos sean números
+    const numericFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo'];
+    numericFields.forEach(field => {
+      if (cleanData[field] !== undefined && cleanData[field] !== null) {
+        cleanData[field] = Number(cleanData[field]);
+      }
+    });
+    
+    // Asegurar que los campos booleanos sean booleanos
+    const booleanFields = ['manejaLote', 'manejaSerial', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'suspendido'];
+    booleanFields.forEach(field => {
+      if (cleanData[field] !== undefined && cleanData[field] !== null) {
+        cleanData[field] = Boolean(cleanData[field]);
+      }
+    });
+    
+    console.log('🧹 Datos limpiados para artículo (sin presentaciones):', cleanData);
+    return cleanData;
+  };
+
+  // Función para manejar presentaciones
+  const handlePresentaciones = async (articleId: number): Promise<boolean> => {
+    if (!articleId || presentacionesSeleccionadas.size === 0) {
+      console.log('❌ No hay articleId o presentaciones seleccionadas para procesar');
+      return true; // No es error si no hay presentaciones seleccionadas
+    }
+
+    try {
+      console.log(`💾 Procesando presentaciones para artículo ${articleId}...`);
+      console.log(`📋 Presentaciones seleccionadas:`, Array.from(presentacionesSeleccionadas));
+      
+      // En modo edición, primero eliminar presentaciones existentes
+      if (isEditingMode && articuloPresentacionesData?.data) {
+        console.log('🗑️ Eliminando presentaciones existentes en modo edición...');
+        
+        const presentacionesExistentes = articuloPresentacionesData.data.filter(
+          (articuloPres: any) => articuloPres.idArticulo === articleId
+        );
+        
+        console.log(`📋 ${presentacionesExistentes.length} presentaciones existentes encontradas`);
+        
+        for (const presentacionExistente of presentacionesExistentes) {
+          try {
+            console.log(`🗑️ Eliminando presentación ID: ${presentacionExistente.id}`);
+            await deletePresentacionMutation.mutateAsync(presentacionExistente.id);
+            console.log(`✅ Presentación ${presentacionExistente.id} eliminada`);
+          } catch (error) {
+            console.error(`❌ Error eliminando presentación ${presentacionExistente.id}:`, error);
+            // Continuar con las demás eliminaciones
+          }
+        }
+      }
+
+      // Crear nuevas presentaciones con su configuración específica
+      console.log(`📦 Creando ${presentacionesSeleccionadas.size} nuevas presentaciones...`);
+      
+      let i = 0;
+      for (const presentacionId of presentacionesSeleccionadas) {
+        const config = presentacionesConfig[presentacionId];
+        if (!config) continue; // Skip si no tiene configuración
+        
+        const presentacionData = {
+          idArticulo: articleId,
+          idPresentacion: presentacionId,
+          esPrincipal: Boolean(config.esPrincipal),
+          equivalencia: Number(config.equivalencia) || 1,
+          usarEnVentas: Boolean(config.usarEnVentas),
+          usarEnCompras: Boolean(config.usarEnCompras),
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: '',
+          otrosC2: '',
+          otrosC3: '',
+          otrosC4: '',
+          otrosT1: '',
+          usuario: 0,
+          equipo: 'mobile'
+        };
+
+        console.log(`📦 Creando presentación ${i + 1}:`, presentacionData);
+        
+        await createPresentacionMutation.mutateAsync(presentacionData);
+        
+        console.log(`✅ Presentación ${i + 1} creada exitosamente`);
+        i++;
+      }
+
+      console.log('🎉 Presentaciones procesadas exitosamente');
+      return true;
+    } catch (error) {
+      console.error('❌ Error procesando presentaciones:', error);
+      throw error;
+    }
+  };
+
   const handleCreate = async (formData: any): Promise<boolean | ArticleResponse> => {
     setBackendFormError(null);
     try {
-      const result = await createArticuloMutation.mutateAsync(formData);
+      // Limpiar datos para remover presentaciones del payload del artículo
+      const cleanData = cleanArticuloData(formData);
+      const result = await createArticuloMutation.mutateAsync(cleanData);
       showCreateSuccess('el artículo');
       return result;
     } catch (error: any) {
@@ -563,6 +1090,7 @@ const ArticuloForm: React.FC = () => {
   };
 
   const handleUpdate = async (formData: any): Promise<boolean> => {
+    console.log('🔄 handleUpdate ejecutándose...');
     let articleId = null;
     console.log('SE LLAMO EL HANDLE UPDATE');
     if(isEditingMode && currentItem){
@@ -580,9 +1108,32 @@ const ArticuloForm: React.FC = () => {
     setBackendFormError(null);
 
     try {
-      await updateArticuloMutation.mutateAsync({ id: articleId, formData });
-      console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
-      showUpdateSuccess('el artículo');
+      // Actualizar el artículo principal
+      console.log('📝 Datos del formulario recibidos:', formData);
+      console.log('📝 Cantidad de claves:', Object.keys(formData).length);
+      
+      // En modo edición, siempre actualizar incluso si no hay cambios
+      if (isEditingMode) {
+        console.log('📝 Actualizando datos del artículo principal...');
+        // Limpiar datos para remover presentaciones del payload del artículo
+        const cleanData = cleanArticuloData(formData);
+        console.log('📝 Datos limpiados para envío:', cleanData);
+        
+        await updateArticuloMutation.mutateAsync({ id: articleId, formData: cleanData });
+        console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
+        showUpdateSuccess('el artículo');
+      } else if (Object.keys(formData).length > 0) {
+        // En modo creación, solo actualizar si hay datos
+        console.log('📝 Actualizando datos del artículo principal...');
+        const cleanData = cleanArticuloData(formData);
+        console.log('📝 Datos limpiados para envío:', cleanData);
+        
+        await updateArticuloMutation.mutateAsync({ id: articleId, formData: cleanData });
+        console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
+        showUpdateSuccess('el artículo');
+      } else {
+        console.log('ℹ️ No hay datos del formulario para actualizar');
+      }
       return true;
     } catch (error: any) {
       const errorMessage = error.response?.data?.mensaje || error.message || 'Error al actualizar artículo';
@@ -592,7 +1143,14 @@ const ArticuloForm: React.FC = () => {
   };
 
   const onSubmit = async (data: any) => {
-    if (isSubmitting) return;
+    console.log('🚀 onSubmit ejecutándose. ActiveTab:', activeTab, 'isEditingMode:', isEditingMode);
+    console.log('📊 Datos recibidos:', data);
+    console.log('📊 Errores del formulario:', errors);
+    
+    if (isSubmitting) {
+      console.log('⚠️ Ya está enviando, retornando...');
+      return;
+    }
 
     setIsSubmitting(true);
     let success = false;
@@ -612,35 +1170,114 @@ const ArticuloForm: React.FC = () => {
             success = true;
           }
         } else {
-          success = await handleUpdate(data);
+          console.log('🔄 Actualizando artículo en modo edición...');
+          // En modo edición, siempre usar getValues para obtener todos los datos del formulario
+          const formData = getValues();
+          console.log('📝 Datos para actualización:', formData);
+          console.log('📝 Campo presentaciones:', formData.presentaciones);
+          console.log('📝 Tipo de presentaciones:', typeof formData.presentaciones);
+          
+          // Asegurar que el campo presentaciones sea un array de números
+          if (formData.presentaciones && typeof formData.presentaciones === 'object' && !Array.isArray(formData.presentaciones)) {
+            console.log('⚠️ Campo presentaciones es un objeto, convirtiendo a array...');
+            formData.presentaciones = Array.from(presentacionesSeleccionadas);
+          }
+          
+          success = await handleUpdate(formData);
+          console.log('✅ Resultado de actualización:', success);
         }
 
         if (success) {
-          setShowSuccessModal(true);
+          console.log('✅ Ficha procesada exitosamente. isEditingMode:', isEditingMode);
+          if (isEditingMode) {
+            // En modo edición, mostrar notificación de éxito
+            console.log('🎉 Mostrando notificación de actualización exitosa...');
+            showUpdateSuccess('el artículo');
+            // Opcional: navegar a la siguiente pestaña después de un breve delay
+            setTimeout(() => {
+              setActiveTab("presentaciones");
+            }, 1500);
+          } else {
+            // En modo creación, mostrar modal de éxito
+            console.log('🎉 Mostrando modal de éxito para creación...');
+            setShowSuccessModal(true);
+          }
         }
       }
       else if (activeTab === "presentaciones") {
-        console.log('EN presentaciones');
-        // Handle presentation logic here - save presentations
+        console.log('🎯 Procesando presentaciones...');
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
-        if (articleId) {
-          // Save presentation data here if needed
-          console.log("Data en el update de presentaciones", data);
-          success = await handleUpdate(data);
-          if (success) {
-            setShowSuccessModal(true);
+        
+        if (articleId && presentacionesSeleccionadas.size > 0) {
+          console.log("📋 Presentaciones seleccionadas:", Array.from(presentacionesSeleccionadas));
+          
+          try {
+            // Usar la nueva función para manejar presentaciones
+            success = await handlePresentaciones(articleId);
+            
+            if (success) {
+              console.log('✅ Presentaciones procesadas exitosamente. isEditingMode:', isEditingMode);
+              if (isEditingMode) {
+                // En modo edición, mostrar notificación de éxito
+                console.log('🎉 Mostrando notificación de actualización de presentaciones...');
+                showUpdateSuccess('las presentaciones');
+                // Opcional: navegar a la siguiente pestaña después de un breve delay
+                setTimeout(() => {
+                  setActiveTab("detalles");
+                }, 1500);
+              } else {
+                console.log('🎉 Mostrando mensaje de creación de presentaciones...');
+                showCreateSuccess('las presentaciones');
+                setShowSuccessModal(true);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error procesando presentaciones:', error);
+            const errorMessage = error.response?.data?.mensaje || error.message || 'Error al procesar presentaciones';
+            setBackendFormError(errorMessage);
+            success = false;
           }
+        } else {
+          console.log('⚠️ No hay artículo ID o presentaciones para procesar');
+          success = false;
         }
       }
       else if (activeTab === "detalles") {
-        // Handle details logic here - save details
+        console.log('🔧 Procesando detalles del artículo...');
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
+        
         if (articleId) {
-          // Save details data here if needed
-          success = await handleUpdate(data);
-          if (success) {
-            setShowSuccessModal(true);
+          // En modo edición, siempre usar getValues para obtener todos los datos del formulario
+          const formData = getValues();
+          console.log('📝 Datos para actualización de detalles:', formData);
+          console.log('📝 Campo presentaciones en detalles:', formData.presentaciones);
+          console.log('📝 Tipo de presentaciones en detalles:', typeof formData.presentaciones);
+          
+          // Asegurar que el campo presentaciones sea un array de números
+          if (formData.presentaciones && typeof formData.presentaciones === 'object' && !Array.isArray(formData.presentaciones)) {
+            console.log('⚠️ Campo presentaciones es un objeto, convirtiendo a array...');
+            formData.presentaciones = Array.from(presentacionesSeleccionadas);
           }
+          
+          success = await handleUpdate(formData);
+          console.log('✅ Resultado de actualización de detalles:', success);
+          
+          if (success) {
+            if (isEditingMode) {
+              // En modo edición, mostrar notificación de éxito
+              showUpdateSuccess('los detalles del artículo');
+              // Opcional: navegar a la siguiente pestaña después de un breve delay
+              setTimeout(() => {
+                setActiveTab("precios");
+              }, 1500);
+            } else {
+              showCreateSuccess('los detalles del artículo');
+              setShowSuccessModal(true);
+            }
+          }
+        } else {
+          console.log('⚠️ No hay artículo ID para procesar detalles');
+          success = false;
         }
       }
       else if (activeTab === "precios") {
@@ -652,8 +1289,17 @@ const ArticuloForm: React.FC = () => {
 
         success = await saveListasPrecios(articleId);
         if (success) {
-          showUpdateSuccess('los precios');
-          setShowSuccessModal(true);
+          if (isEditingMode) {
+            // En modo edición, mostrar notificación de éxito
+            showUpdateSuccess('los precios');
+            // Opcional: navegar a la siguiente pestaña después de un breve delay
+            setTimeout(() => {
+              setActiveTab("ubicaciones");
+            }, 1500);
+          } else {
+            showCreateSuccess('los precios');
+            setShowSuccessModal(true);
+          }
         }
       }
       else if (activeTab === "ubicaciones") {
@@ -669,8 +1315,17 @@ const ArticuloForm: React.FC = () => {
 
         success = await saveUbicaciones(articleId);
         if (success) {
-          showUpdateSuccess('las ubicaciones');
-          setShowSuccessModal(true);
+          if (isEditingMode) {
+            // En modo edición, mostrar notificación de éxito
+            showUpdateSuccess('las ubicaciones');
+            // Opcional: navegar a la siguiente pestaña después de un breve delay
+            setTimeout(() => {
+              setActiveTab("fotos");
+            }, 1500);
+          } else {
+            showCreateSuccess('las ubicaciones');
+            setShowSuccessModal(true);
+          }
         }
       }
       else if (activeTab === "fotos") {
@@ -683,11 +1338,15 @@ const ArticuloForm: React.FC = () => {
 
         success = await saveFotos(articleId);
         if (success) {
-          showUpdateSuccess('las fotos');
-          // Navegar de vuelta a la lista después de completar todas las pestañas
-          setTimeout(() => {
+          if (isEditingMode) {
+            // En modo edición, navegar directamente sin mostrar notificación
             navigateBack();
-          }, 1500);
+          } else {
+            showCreateSuccess('las fotos');
+            setTimeout(() => {
+              navigateBack();
+            }, 1500);
+          }
         }
       }
     } catch (error) {
@@ -820,59 +1479,249 @@ const ArticuloForm: React.FC = () => {
           </View>
         </View>
 
-        {/* Tab Navigation - Chips Style */}
+        {/* Tab Navigation - Chips or Dropdown Style */}
         <View className="py-2">
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 16, paddingRight: 16, paddingVertical: 8 }}
-          >
-            {[
-              { id: "ficha", name: "Ficha", icon: "document-text-outline" },
-              { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
-              { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-              { id: "precios", name: "Precios", icon: "pricetag-outline" },
-              { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
-              { id: "fotos", name: "Fotos", icon: "camera-outline" }
-            ].map((tab, index) => (
+          {viewMode === 'chips' ? (
+            <View className="flex-row items-center justify-between px-4">
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingVertical: 8 }}
+                style={{ flex: 1 }}
+              >
+                {[
+                  { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                  { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                  { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                  { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                  { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                  { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                ].map((tab, index) => (
+                  <TouchableOpacity
+                    key={tab.id}
+                    style={{
+                      marginRight: index < 5 ? 12 : 0, // No margin en el último elemento
+                      paddingHorizontal: 16,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.2)',
+                      borderWidth: 1,
+                      borderColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.3)',
+                      shadowColor: activeTab === tab.id ? '#000' : 'transparent',
+                      shadowOffset: activeTab === tab.id ? { width: 0, height: 2 } : { width: 0, height: 0 },
+                      shadowOpacity: activeTab === tab.id ? 0.1 : 0,
+                      shadowRadius: activeTab === tab.id ? 4 : 0,
+                      elevation: activeTab === tab.id ? 3 : 0
+                    }}
+                    onPress={() => setActiveTab(tab.id)}
+                  >
+                    <Ionicons
+                      name={tab.icon as any}
+                      size={16}
+                      color={activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)'}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      style={{
+                        color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
+                        fontWeight: activeTab === tab.id ? '600' : 'normal',
+                        fontSize: 14
+                      }}
+                    >
+                      {tab.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
               <TouchableOpacity
-                key={tab.id}
+                className="bg-white rounded-2xl p-2 flex-row items-center ml-3"
+                onPress={() => setViewMode('dropdown')}
                 style={{
-                  marginRight: index < 5 ? 12 : 0, // No margin en el último elemento
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 8,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.2)',
-                  borderWidth: 1,
-                  borderColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.3)',
-                  shadowColor: activeTab === tab.id ? '#000' : 'transparent',
-                  shadowOffset: activeTab === tab.id ? { width: 0, height: 2 } : { width: 0, height: 0 },
-                  shadowOpacity: activeTab === tab.id ? 0.1 : 0,
-                  shadowRadius: activeTab === tab.id ? 4 : 0,
-                  elevation: activeTab === tab.id ? 3 : 0
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3
                 }}
-                onPress={() => setActiveTab(tab.id)}
               >
                 <Ionicons
-                  name={tab.icon as any}
-                  size={16}
-                  color={activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)'}
-                  style={{ marginRight: 6 }}
+                  name="list-outline"
+                  size={18}
+                  color={themes.inventory.headerColor}
                 />
-                <Text
-                  style={{
-                    color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
-                    fontWeight: activeTab === tab.id ? '600' : 'normal',
-                    fontSize: 14
-                  }}
-                >
-                  {tab.name}
+                <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
+                  Lista
                 </Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </View>
+          ) : (
+            <View className="px-4 relative">
+              <View className="flex-row items-center justify-between">
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.2)',
+                    padding: 12,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginRight: 12
+                  }}
+                  onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons
+                      name={[
+                        { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                        { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                        { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                        { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                      ].find(tab => tab.id === activeTab)?.icon as any || 'grid-outline'}
+                      size={18}
+                      color="white"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>
+                      {[
+                        { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                        { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                        { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                        { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                      ].find(tab => tab.id === activeTab)?.name || 'Seleccionar sección'}
+                    </Text>
+                  </View>
+                  <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="bg-white rounded-2xl p-2 flex-row items-center"
+                  onPress={() => setViewMode('chips')}
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 3
+                  }}
+                >
+                  <Ionicons
+                    name="grid-outline"
+                    size={18}
+                    color={themes.inventory.headerColor}
+                  />
+                  <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
+                    Chips
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isDropdownOpen && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderBottomLeftRadius: 12,
+                    borderBottomRightRadius: 12,
+                    borderLeftWidth: 1,
+                    borderRightWidth: 1,
+                    borderBottomWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    marginTop: 4,
+                    maxHeight: 300,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 8,
+                    zIndex: 1000
+                  }}
+                >
+                  {[
+                    { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+                    { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+                    { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+                    { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                    { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                    { id: "fotos", name: "Fotos", icon: "camera-outline" }
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: 16,
+                        borderBottomWidth: 1,
+                        borderBottomColor: 'rgba(0,0,0,0.05)',
+                        backgroundColor: activeTab === tab.id ? 'rgba(88,28,135,0.1)' : 'transparent'
+                      }}
+                      onPress={() => {
+                        setActiveTab(tab.id);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          backgroundColor: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.05)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12
+                        }}
+                      >
+                        <Ionicons
+                          name={tab.icon as any}
+                          size={18}
+                          color={activeTab === tab.id ? 'white' : 'rgba(0,0,0,0.6)'}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.8)',
+                            fontWeight: activeTab === tab.id ? '600' : '500',
+                            fontSize: 16
+                          }}
+                        >
+                          {tab.name}
+                        </Text>
+                      </View>
+                      {activeTab === tab.id && (
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            backgroundColor: themes.inventory.buttonColor,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Ionicons
+                            name="checkmark"
+                            size={16}
+                            color="white"
+                          />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
         </View>
       </View>
 
@@ -924,7 +1773,7 @@ const ArticuloForm: React.FC = () => {
                             onChange(formattedValue);
                           }}
                           keyboardType={getKeyboardType(field.name, field.type)}
-                          returnKeyType={field.name === 'descripcion' || field.name === 'descripcionGarantia' ? "default" : "next"}
+                          returnKeyType="default"
                           autoCorrect={field.name === 'descripcion' || field.name === 'descripcionGarantia'}
                           autoCapitalize={field.name === 'descripcion' || field.name === 'descripcionGarantia' ? "sentences" : "none"}
                           selectTextOnFocus={false}
@@ -1122,131 +1971,142 @@ const ArticuloForm: React.FC = () => {
               <>
                 <View className="mb-6">
                   <Text className="text-lg font-medium text-gray-800 mb-4">
-                    Presentación del Artículo
-                  </Text>
-                  <Text className="text-sm text-gray-600 mb-4">
-                    Selecciona las presentaciones disponibles para este artículo.
+                    Presentaciones
                   </Text>
                   
-                  {/* Select Fields for Presentaciones */}
-                  {selectFields.map((field) => (
-                    <View key={field.name} className="mb-4">
-                      <View className="flex-row mb-1">
-                        <Text className="text-sm font-medium text-gray-700">
-                          {field.label}
-                        </Text>
-                        <Text className="text-gray-400"> (Opcional)</Text>
-                      </View>
-                      <Controller
-                        control={control}
-                        name={field.name as keyof ArticuloFormData}
-                        render={({ field: { onChange, value } }) => {
-                          const selectedOptions = Array.isArray(value) ? value : (value ? [value] : []);
-
-                          return (
-                            <View>
-                              <TouchableOpacity
-                                onPress={() => handleSelectPress(field.name)}
-                                className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name as keyof ArticuloFormData]
-                                    ? "border-red-500"
-                                    : "border-gray-200"
-                                }`}
-                              >
-                                <Text className="text-gray-700">
-                                  {selectedOptions.length > 0
-                                    ? `${selectedOptions.length} presentación(es) seleccionada(s)`
-                                    : "Seleccione presentaciones"}
-                                </Text>
-                                <Ionicons
-                                  name={
-                                    openSelect === field.name
-                                      ? "chevron-up"
-                                      : "chevron-down"
-                                  }
-                                  size={20}
-                                  color="#6B7280"
-                                />
-                              </TouchableOpacity>
-
-                              {openSelect === field.name && (
-                                <View className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48">
-                                  <ScrollView
-                                    nestedScrollEnabled={true}
-                                    className="max-h-48"
-                                  >
-                                    {field.options?.map((option) => {
-                                      const isSelected = selectedOptions.includes((option as any)[field.optionValue || "id"]);
-                                      return (
-                                        <TouchableOpacity
-                                          key={String((option as any)[field.optionValue || "id"])}
-                                          onPress={() => {
-                                            const optionValue = (option as any)[field.optionValue || "id"];
-                                            let newValue;
-                                            if (isSelected) {
-                                              newValue = selectedOptions.filter(v => v !== optionValue);
-                                            } else {
-                                              newValue = [...selectedOptions, optionValue];
-                                            }
-                                            onChange(newValue);
-                                          }}
-                                          className={`px-4 py-3 border-b border-gray-100 flex-row items-center justify-between ${
-                                            isSelected ? "bg-blue-50" : ""
-                                          }`}
-                                        >
-                                          <Text
-                                            className={`${
-                                              isSelected
-                                                ? "text-blue-600"
-                                                : "text-gray-700"
-                                            }`}
-                                          >
-                                            {(option as any)[field.optionLabel || "nombre"]}
-                                          </Text>
-                                          {isSelected && (
-                                            <Ionicons
-                                              name="checkmark"
-                                              size={16}
-                                              color="#2563EB"
-                                            />
-                                          )}
-                                        </TouchableOpacity>
-                                      );
-                                    })}
-                                  </ScrollView>
-                                </View>
-                              )}
-                            </View>
-                          );
-                        }}
-                      />
-                      {field.description && (
-                        <Text className="text-gray-500 text-xs mt-1">
-                          {field.description}
-                        </Text>
-                      )}
-                      {errors[field.name as keyof ArticuloFormData] && (
-                        <Text className="text-red-500 text-sm mt-1">
-                          {errors[field.name as keyof ArticuloFormData]?.message as string}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-
-                  {/* Information about principal presentation */}
-                  <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                    <View className="flex-row items-start">
-                      <Ionicons name="information-circle" size={20} color="#2563EB" className="mt-0.5" />
-                      <View className="ml-2 flex-1">
-                        <Text className="text-blue-800 font-medium text-sm">
-                          Presentación Principal
-                        </Text>
-                        <Text className="text-blue-700 text-xs mt-1">
-                          La primera presentación seleccionada se marcará automáticamente como principal.
-                        </Text>
-                      </View>
-                    </View>
+                  {/* Contador de presentaciones seleccionadas */}
+                  <View className="bg-gray-50 rounded-lg p-4 mb-6">
+                    <Text className="text-sm font-medium text-gray-700">
+                      {presentacionesSeleccionadas.size} de {presentacionesDataArticulo?.data?.length || 0} presentaciones seleccionadas
+                    </Text>
                   </View>
+
+                  {/* Lista de todas las presentaciones disponibles */}
+                  {presentacionesDataArticulo?.data?.map((presentacion) => {
+                    const isSelected = presentacionesSeleccionadas.has(presentacion.id);
+                    const config = presentacionesConfig[presentacion.id];
+
+                    return (
+                      <TouchableOpacity
+                        key={presentacion.id}
+                        onPress={() => togglePresentacionSelection(presentacion.id)}
+                        className="bg-white border rounded-lg p-3 mb-3"
+                        style={{
+                          borderColor: isSelected ? themes.inventory.buttonColor : "#e5e7eb",
+                          backgroundColor: isSelected ? `${themes.inventory.buttonColor}10` : "white"
+                        }}
+                      >
+                        {/* Header con checkbox y nombre */}
+                        <View className="flex-row items-center mb-2">
+                          <View
+                            className="w-5 h-5 rounded border-2 items-center justify-center mr-3"
+                            style={{
+                              backgroundColor: isSelected ? themes.inventory.buttonColor : "white",
+                              borderColor: isSelected ? themes.inventory.buttonColor : "#d1d5db"
+                            }}
+                          >
+                            {isSelected && (
+                              <Ionicons name="checkmark" size={14} color="white" />
+                            )}
+                          </View>
+                          
+                          <View className="flex-1">
+                            <Text className="font-semibold text-gray-800 text-base">
+                              {presentacion.nombre}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Campos de configuración - solo visibles si está seleccionada */}
+                        {isSelected && config && (
+                          <View className="space-y-3 border-t border-gray-200 pt-3">
+                            {/* Equivalencia */}
+                            <View>
+                              <Text className="text-sm font-medium text-gray-700 mb-1">
+                                Equivalencia
+                              </Text>
+                              <TextInput
+                                className="w-full px-3 py-2 bg-white rounded-lg border border-gray-300"
+                                placeholder="1"
+                                value={String(config.equivalencia)}
+                                onChangeText={(value) => 
+                                  updatePresentacionConfig(presentacion.id, "equivalencia", value)
+                                }
+                                keyboardType="numeric"
+                              />
+                            </View>
+
+                            {/* Switches de configuración */}
+                            <View className="space-y-2">
+                              {/* Es Principal */}
+                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                                <View className="flex-1">
+                                  <Text className="text-sm font-medium text-gray-700">
+                                    Es Principal
+                                  </Text>
+                                </View>
+                                <Switch
+                                  value={config.esPrincipal}
+                                  onValueChange={(value) => 
+                                    updatePresentacionConfig(presentacion.id, "esPrincipal", value)
+                                  }
+                                  trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
+                                  thumbColor="#f4f3f4"
+                                />
+                              </View>
+                              
+                              {/* Usar en Ventas */}
+                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                                <View className="flex-1">
+                                  <Text className="text-sm font-medium text-gray-700">
+                                    Usar en Ventas
+                                  </Text>
+                                </View>
+                                <Switch
+                                  value={config.usarEnVentas}
+                                  onValueChange={(value) => 
+                                    updatePresentacionConfig(presentacion.id, "usarEnVentas", value)
+                                  }
+                                  trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
+                                  thumbColor="#f4f3f4"
+                                />
+                              </View>
+                              
+                              {/* Usar en Compras */}
+                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                                <View className="flex-1">
+                                  <Text className="text-sm font-medium text-gray-700">
+                                    Usar en Compras
+                                  </Text>
+                                </View>
+                                <Switch
+                                  value={config.usarEnCompras}
+                                  onValueChange={(value) => 
+                                    updatePresentacionConfig(presentacion.id, "usarEnCompras", value)
+                                  }
+                                  trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
+                                  thumbColor="#f4f3f4"
+                                />
+                              </View>
+                            </View>
+                          </View>
+                        )}
+
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  {(!presentacionesDataArticulo?.data || presentacionesDataArticulo.data.length === 0) && (
+                    <View className="bg-gray-50 rounded-lg p-8 text-center">
+                      <Ionicons name="layers-outline" size={48} color="#9ca3af" />
+                      <Text className="text-gray-500 mt-2 text-center">
+                        No hay presentaciones disponibles
+                      </Text>
+                      <Text className="text-gray-400 text-sm text-center mt-1">
+                        Primero debe crear presentaciones en el catálogo
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </>
             )}
@@ -1292,7 +2152,7 @@ const ArticuloForm: React.FC = () => {
                               onChange(formattedValue);
                             }}
                             keyboardType={getKeyboardType(field.name, field.type)}
-                            returnKeyType={field.name === 'descripcion' || field.name === 'descripcionGarantia' ? "default" : "next"}
+                            returnKeyType="default"
                             autoCorrect={field.name === 'descripcion' || field.name === 'descripcionGarantia'}
                             autoCapitalize={field.name === 'descripcion' || field.name === 'descripcionGarantia' ? "sentences" : "none"}
                             selectTextOnFocus={false}
@@ -1874,22 +2734,32 @@ const ArticuloForm: React.FC = () => {
                   {/* Existing Article Prices */}
                   {isEditingMode && preciosArticuloData && preciosArticuloData.length > 0 && (
                     <View className="mt-6">
-                      <Text className="text-base font-semibold text-gray-800 mb-2">Precios del Artículo</Text>
+                      <Text className="text-base font-semibold text-gray-800 mb-2">Precios Actuales del Artículo</Text>
+                      <Text className="text-sm text-gray-600 mb-3">
+                        Estos precios se cargarán para edición al guardar esta sección.
+                      </Text>
                       <ScrollView className="max-h-48">
                         {preciosArticuloData.map((precio: any) => (
-                          <View key={precio.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                            <Text className="font-medium">
-                              {precio.nombreListaPrecio || "Lista de Precio"}
-                            </Text>
-                            <Text className="text-gray-600">
-                              {precio.nombreMoneda || "Moneda"}
-                            </Text>
-                            <Text className="font-bold text-lg">
-                              {Number(precio.monto).toFixed(2)}
-                            </Text>
-                            <Text className="text-sm text-gray-500">
-                              {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ""}
-                            </Text>
+                          <View key={precio.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+                            <View className="flex-row justify-between items-start">
+                              <View className="flex-1">
+                                <Text className="font-medium">
+                                  {precio.nombreListaPrecio || "Lista de Precio"}
+                                </Text>
+                                <Text className="text-gray-600">
+                                  {precio.nombreMoneda || "Moneda"}
+                                </Text>
+                                <Text className="font-bold text-lg text-blue-700">
+                                  {Number(precio.monto).toFixed(2)}
+                                </Text>
+                                <Text className="text-sm text-gray-500">
+                                  {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ""}
+                                </Text>
+                              </View>
+                              <View className="bg-blue-100 px-3 py-1 rounded-full">
+                                <Text className="text-blue-700 text-xs font-medium">Actual</Text>
+                              </View>
+                            </View>
                           </View>
                         ))}
                       </ScrollView>
@@ -2036,16 +2906,26 @@ const ArticuloForm: React.FC = () => {
                   {/* Existing Article Locations */}
                   {isEditingMode && ubicacionesArticuloData && ubicacionesArticuloData.length > 0 && (
                     <View className="mt-6">
-                      <Text className="text-base font-semibold text-gray-800 mb-2">Ubicaciones del Artículo</Text>
+                      <Text className="text-base font-semibold text-gray-800 mb-2">Ubicaciones Actuales del Artículo</Text>
+                      <Text className="text-sm text-gray-600 mb-3">
+                        Estas ubicaciones se cargarán para edición al guardar esta sección.
+                      </Text>
                       <ScrollView className="max-h-48">
                         {ubicacionesArticuloData.map((ubicacion: any) => (
-                          <View key={ubicacion.id} className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
-                            <Text className="font-medium">
-                              {ubicacion.nombreAlmacen || "Almacén"}
-                            </Text>
-                            <Text className="text-gray-600">
-                              {ubicacion.ubicacion || "Sin ubicación específica"}
-                            </Text>
+                          <View key={ubicacion.id} className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                            <View className="flex-row justify-between items-start">
+                              <View className="flex-1">
+                                <Text className="font-medium">
+                                  {ubicacion.nombreAlmacen || "Almacén"}
+                                </Text>
+                                <Text className="text-gray-600">
+                                  {ubicacion.ubicacion || "Sin ubicación específica"}
+                                </Text>
+                              </View>
+                              <View className="bg-green-100 px-3 py-1 rounded-full">
+                                <Text className="text-green-700 text-xs font-medium">Actual</Text>
+                              </View>
+                            </View>
                           </View>
                         ))}
                       </ScrollView>
@@ -2136,15 +3016,11 @@ const ArticuloForm: React.FC = () => {
                                 (index + 1) % 3 === 2 ? "mr-[2%]" : ""
                               }`}
                             >
-                              <View className="relative">
+                              <View className="relative w-full aspect-square rounded-xl overflow-hidden">
                                 {/* Image */}
                                 <Image
                                   source={{ uri: image.uri }}
-                                  style={{
-                                    width: "100%",
-                                    aspectRatio: 1,
-                                    borderRadius: 8,
-                                  }}
+                                  className="w-full h-full"
                                   contentFit="cover"
                                 />
 
@@ -2224,9 +3100,17 @@ const ArticuloForm: React.FC = () => {
                 isSubmitting ? "opacity-70" : ""
               }`}
               onPress={() => {
-                if(["ficha", "presentaciones", "detalles"].includes(activeTab)){
+                console.log('🔘 Botón presionado. ActiveTab:', activeTab, 'isEditingMode:', isEditingMode);
+                console.log('📊 Errores actuales:', errors);
+                if(activeTab === "ficha"){
+                  console.log('📝 Ejecutando handleSubmit para ficha...');
                   handleSubmit(onSubmit)();
-                }else{
+                } else if(activeTab === "detalles"){
+                  console.log('📝 Ejecutando handleSubmit para detalles...');
+                  handleSubmit(onSubmit)();
+                } else {
+                  // Para presentaciones, precios, ubicaciones, fotos - no necesitamos datos del formulario
+                  console.log('📝 Ejecutando onSubmit directo...');
                   onSubmit({});
                 }
               }}
@@ -2237,6 +3121,9 @@ const ArticuloForm: React.FC = () => {
                   name="refresh"
                   size={20}
                   color={themes.inventory.buttonTextColor}
+                  style={{ 
+                    transform: [{ rotate: isSubmitting ? '360deg' : '0deg' }]
+                  }}
                 />
               ) : (
                 <Ionicons
@@ -2249,7 +3136,10 @@ const ArticuloForm: React.FC = () => {
                 style={{ color: themes.inventory.buttonTextColor }}
                 className="font-semibold ml-2"
               >
-                {isSubmitting ? "Guardando..." : "Guardar"}
+                {isSubmitting 
+                  ? (isEditingMode ? "Actualizando..." : "Guardando...") 
+                  : (isEditingMode ? "Actualizar" : "Guardar")
+                }
               </Text>
             </TouchableOpacity>
           </View>
@@ -2270,7 +3160,22 @@ const ArticuloForm: React.FC = () => {
                 <Ionicons name="checkmark-circle" size={32} color="#10B981" />
               </View>
               <Text className="text-xl font-bold text-center text-gray-800">
-                ¡Artículo {isEditingMode ? 'Actualizado' : 'Creado'} Exitosamente!
+                {(() => {
+                  if (activeTab === "ficha") {
+                    return `¡Artículo ${isEditingMode ? 'Actualizado' : 'Creado'} Exitosamente!`;
+                  } else if (activeTab === "presentaciones") {
+                    return `¡Presentaciones ${isEditingMode ? 'Actualizadas' : 'Creadas'} Exitosamente!`;
+                  } else if (activeTab === "detalles") {
+                    return `¡Detalles ${isEditingMode ? 'Actualizados' : 'Creados'} Exitosamente!`;
+                  } else if (activeTab === "precios") {
+                    return `¡Precios ${isEditingMode ? 'Actualizados' : 'Creados'} Exitosamente!`;
+                  } else if (activeTab === "ubicaciones") {
+                    return `¡Ubicaciones ${isEditingMode ? 'Actualizadas' : 'Creadas'} Exitosamente!`;
+                  } else if (activeTab === "fotos") {
+                    return `¡Fotos ${isEditingMode ? 'Actualizadas' : 'Creadas'} Exitosamente!`;
+                  }
+                  return `¡Información ${isEditingMode ? 'Actualizada' : 'Creada'} Exitosamente!`;
+                })()}
               </Text>
               <Text className="text-sm text-gray-600 text-center mt-2">
                 ¿Desea continuar agregando información al artículo?
@@ -2295,7 +3200,21 @@ const ArticuloForm: React.FC = () => {
               <TouchableOpacity
                 onPress={() => {
                   setShowSuccessModal(false);
-                  setActiveTab("presentaciones");
+                  // Navegar a la siguiente pestaña según el tab actual
+                  if (activeTab === "ficha") {
+                    setActiveTab("presentaciones");
+                  } else if (activeTab === "presentaciones") {
+                    setActiveTab("detalles");
+                  } else if (activeTab === "detalles") {
+                    setActiveTab("precios");
+                  } else if (activeTab === "precios") {
+                    setActiveTab("ubicaciones");
+                  } else if (activeTab === "ubicaciones") {
+                    setActiveTab("fotos");
+                  } else {
+                    // Si estamos en fotos o cualquier otro tab, salir
+                    navigateBack();
+                  }
                 }}
                 style={{ backgroundColor: themes.inventory.buttonColor }}
                 className="flex-1 py-3 rounded-lg"

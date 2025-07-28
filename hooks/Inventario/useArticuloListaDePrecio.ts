@@ -40,12 +40,43 @@ export const useArticuloListaDePrecio = () => {
         if (!formData.idArticulo || !formData.idListasDePrecio || !formData.idMoneda || formData.monto === undefined) {
           throw new Error('Los campos código de artículo, lista de precios, moneda y monto son requeridos');
         }
-        const data: Omit<ArticuloListaPrecio, 'id'> = {
-          ...formData,
+
+        // Función helper para convertir fecha DD-MM-YYYY a YYYY-MM-DD
+        const formatDateToISO = (dateStr: string, isRequired: boolean = false): string => {
+          if (!dateStr || dateStr.trim() === '') {
+            return isRequired ? new Date().toISOString().split('T')[0] : '';
+          }
+          
+          // Si ya está en formato ISO (YYYY-MM-DD), devolver tal como está
+          if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dateStr;
+          }
+          
+          // Si está en formato DD-MM-YYYY, convertir a YYYY-MM-DD
+          if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+            const [day, month, year] = dateStr.split('-');
+            return `${year}-${month}-${day}`;
+          }
+          
+          // Si no coincide con ningún formato, usar fecha actual para campos requeridos
+          return isRequired ? new Date().toISOString().split('T')[0] : dateStr;
+        };
+
+        // Formatear fechaHasta - null si está vacía, fecha formateada si tiene valor
+        const fechaHastaFormatted = formData.fechaHasta && formData.fechaHasta.trim() !== '' 
+          ? formatDateToISO(formData.fechaHasta, false) 
+          : null;
+
+        // Construir solo los campos requeridos primero
+        const baseData = {
+          idArticulo: formData.idArticulo,
+          idListasDePrecio: formData.idListasDePrecio,
+          idMoneda: formData.idMoneda,
+          monto: formData.monto,
+          fechaDesde: formatDateToISO(formData.fechaDesde || '', true),
           equipo: formData.equipo || 'equipo',
-          fechaDesde: formData.fechaDesde || new Date().toISOString(),
-          suspendido: formData.suspendido || false,
           usuario: formData.usuario || 0,
+          suspendido: formData.suspendido || false,
           otrosF1: new Date().toISOString(),
           otrosN1: formData.otrosN1 || 0,
           otrosN2: formData.otrosN2 || 0,
@@ -54,7 +85,12 @@ export const useArticuloListaDePrecio = () => {
           otrosC3: formData.otrosC3 || '',
           otrosC4: formData.otrosC4 || '',
           otrosT1: formData.otrosT1 || '',
-        } as Omit<ArticuloListaPrecio, 'id'>;
+        };
+
+        // Agregar fechaHasta solo si tiene valor
+        const data = fechaHastaFormatted 
+          ? { ...baseData, fechaHasta: fechaHastaFormatted }
+          : baseData;
         console.log("DATAAAAAAAAAAAAAAAAA",data);
         return apiArticuloListaPrecio.create(endpoints.inventory.articulolistaprecio.create, data);
       },
@@ -63,6 +99,12 @@ export const useArticuloListaDePrecio = () => {
       },
       onError: (error) => {
         console.error('Error creating articulo lista de precio:', error);
+        console.error('Error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
       }
     });
   };
@@ -73,9 +115,30 @@ export const useArticuloListaDePrecio = () => {
         if (!formData.idArticulo || !formData.idListasDePrecio || !formData.idMoneda || formData.monto === undefined) {
           throw new Error('Los campos código de artículo, lista de precios, moneda y monto son requeridos');
         }
+
+        // Función helper para convertir fecha DD-MM-YYYY a YYYY-MM-DD
+        const formatDateToISO = (dateStr: string): string => {
+          if (!dateStr) return '';
+          
+          // Si ya está en formato ISO (YYYY-MM-DD), devolver tal como está
+          if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dateStr;
+          }
+          
+          // Si está en formato DD-MM-YYYY, convertir a YYYY-MM-DD
+          if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+            const [day, month, year] = dateStr.split('-');
+            return `${year}-${month}-${day}`;
+          }
+          
+          return dateStr; // Devolver tal como está si no coincide
+        };
+
         const data: Partial<ArticuloListaPrecio> = {
           ...formData,
           id,
+          fechaDesde: formData.fechaDesde ? formatDateToISO(formData.fechaDesde) : formData.fechaDesde,
+          fechaHasta: formData.fechaHasta ? formatDateToISO(formData.fechaHasta) : formData.fechaHasta,
         };
         return apiArticuloListaPrecio.update(endpoints.inventory.articulolistaprecio.update(id), data);
       },

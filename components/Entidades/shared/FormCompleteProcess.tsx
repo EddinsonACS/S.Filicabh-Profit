@@ -1,7 +1,10 @@
+import { useNotificationContext } from "@/contexts/NotificationContext";
 import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
 import { useArticuloFoto } from "@/hooks/Inventario/useArticuloFoto";
 import { useArticuloListaDePrecio } from "@/hooks/Inventario/useArticuloListaDePrecio";
+import { useArticuloPresentaciones } from "@/hooks/Inventario/useArticuloPresentaciones";
 import { useArticuloUbicacion } from "@/hooks/Inventario/useArticuloUbicacion";
+import { usePresentacion } from "@/hooks/Inventario/usePresentacion";
 import { useListaDePrecio } from "@/hooks/Ventas/useListaDePrecio";
 import { useMoneda } from "@/hooks/Ventas/useMoneda";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,6 +46,13 @@ interface PrecioInputs {
   monto: string;
   fechaDesde: string;
   fechaHasta: string;
+}
+
+interface PresentacionConfig {
+  equivalencia: number;
+  usarEnVentas: boolean;
+  usarEnCompras: boolean;
+  esPrincipal: boolean;
 }
 
 interface FormField {
@@ -398,6 +408,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);
+  const [presentacionesConfig, setPresentacionesConfig] = useState<Record<number, PresentacionConfig>>({});
+  const [presentacionesSeleccionadas, setPresentacionesSeleccionadas] = useState<Set<number>>(new Set());
   const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>("");
   const [selectedMoneda, setSelectedMoneda] = useState<string>("");
   const [showListaPrecioSection, setShowListaPrecioSection] = useState(true);
@@ -423,6 +435,20 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   const { useGetListaDePrecioList } = useListaDePrecio();
   const { data: listasPreciosData } = useGetListaDePrecioList(1, 100);
+
+  const { useGetPresentacionList } = usePresentacion();
+  const { data: presentacionesData } = useGetPresentacionList(1, 100);
+
+  const {
+    useCreateArticuloPresentaciones,
+    useUpdateArticuloPresentaciones,
+    useDeleteArticuloPresentaciones,
+  } = useArticuloPresentaciones();
+
+  const { 
+    showUpdateSuccess,
+    showCreateSuccess 
+  } = useNotificationContext();
 
   const insets = useSafeAreaInsets();
 
@@ -479,6 +505,77 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     setListasPrecios((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Function to update presentacion config
+  const updatePresentacionConfig = (
+    presentacionId: number,
+    field: keyof PresentacionConfig,
+    value: string | boolean | number,
+  ) => {
+    setPresentacionesConfig((prev) => {
+      const newConfig = { ...prev };
+      
+      // Si no existe la configuración para esta presentación, crearla
+      if (!newConfig[presentacionId]) {
+        newConfig[presentacionId] = {
+          equivalencia: 1,
+          usarEnVentas: true,
+          usarEnCompras: true,
+          esPrincipal: false,
+        };
+      }
+
+      // Si se está marcando como principal, desmarcar todas las demás
+      if (field === 'esPrincipal' && value === true) {
+        Object.keys(newConfig).forEach(id => {
+          if (Number(id) !== presentacionId) {
+            newConfig[Number(id)].esPrincipal = false;
+          }
+        });
+      }
+
+      // Actualizar el campo específico
+      if (field === "equivalencia" && typeof value === "string") {
+        newConfig[presentacionId] = { 
+          ...newConfig[presentacionId], 
+          [field]: Number(value) || 1 
+        };
+      } else {
+        newConfig[presentacionId] = { 
+          ...newConfig[presentacionId], 
+          [field]: value 
+        };
+      }
+
+      return newConfig;
+    });
+  };
+
+  // Function to remove presentacion config
+  const removePresentacionConfig = (presentacionId: number) => {
+    setPresentacionesConfig((prev) => {
+      const newConfig = { ...prev };
+      delete newConfig[presentacionId];
+      return newConfig;
+    });
+  };
+
+  // Function to toggle presentacion selection
+  const togglePresentacionSelection = (presentacionId: number) => {
+    setPresentacionesSeleccionadas((prev) => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(presentacionId)) {
+        // Deseleccionar: remover de selección y configuración
+        newSelection.delete(presentacionId);
+        removePresentacionConfig(presentacionId);
+      } else {
+        // Seleccionar: agregar a selección y crear configuración por defecto
+        newSelection.add(presentacionId);
+        updatePresentacionConfig(presentacionId, "equivalencia", 1);
+      }
+      return newSelection;
+    });
+  };
+
   const { useGetMonedaList } = useMoneda();
   const { data: monedasData } = useGetMonedaList(1, 100);
 
@@ -497,6 +594,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
   // Estados para expandir/contraer secciones
   const [expandedSections, setExpandedSections] = useState({
+    presentaciones: true,
     listaPrecio: true,
     ubicaciones: true,
   });
@@ -529,6 +627,10 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const createUbicacionMutation = useCreateArticuloUbicacion();
   const updateUbicacionMutation = useUpdateArticuloUbicacion();
   const deleteUbicacionMutation = useDeleteArticuloUbicacion();
+
+  const createPresentacionMutation = useCreateArticuloPresentaciones();
+  const updatePresentacionMutation = useUpdateArticuloPresentaciones();
+  const deletePresentacionMutation = useDeleteArticuloPresentaciones();
 
   // Helper function to handle select field press
   const handleSelectPress = (fieldName: string) => {
@@ -628,6 +730,8 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
       setPrincipalImageIndex(-1);
       setListasPrecios([]);
       setUbicaciones([]);
+      setPresentacionesConfig({});
+      setPresentacionesSeleccionadas(new Set());
       setSelectedListaPrecio("");
       setSelectedMoneda("");
       setCreatedArticleId(null);
@@ -683,7 +787,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -706,7 +810,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -805,6 +909,44 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
     } catch (error) {
       // Relanzar el error para que sea manejado por el componente padre
       throw error;
+    }
+  };
+
+  // Función para guardar presentaciones
+  const savePresentaciones = async (articleId: number) => {
+    if (!articleId || presentacionesSeleccionadas.size === 0) return true;
+
+    try {
+      // Iterar solo sobre las presentaciones seleccionadas por el usuario
+      for (const presentacionId of presentacionesSeleccionadas) {
+        const config = presentacionesConfig[presentacionId];
+        if (!config) continue; // Skip si no tiene configuración
+
+        const presentacionData = {
+          idArticulo: articleId,
+          idPresentacion: presentacionId,
+          esPrincipal: Boolean(config.esPrincipal),
+          equivalencia: Number(config.equivalencia) || 1,
+          usarEnVentas: Boolean(config.usarEnVentas),
+          usarEnCompras: Boolean(config.usarEnCompras),
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: '',
+          otrosC2: '',
+          otrosC3: '',
+          otrosC4: '',
+          otrosT1: '',
+          usuario: 0,
+          equipo: 'mobile'
+        };
+        
+        await createPresentacionMutation.mutateAsync(presentacionData);
+      }
+      return true;
+    } catch (error) {
+      console.error("Error saving presentaciones:", error);
+      return false;
     }
   };
 
@@ -930,7 +1072,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
 
     try {
       // Step 1: Article
-      if (activeTab === "ficha") {
+      if (activeTab === "articulo") {
         if (!isEditing) {
           // For new article, save and get the ID
           const result: boolean | ArticleResponse = await handleCreate(data);
@@ -956,23 +1098,39 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         }
       }
       // Step 2: Additional Info (Precios y Ubicaciones)
-      else if (activeTab === "presentacion") {
+      else if (activeTab === "adicional") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
           console.error("Article ID is missing");
           return;
         }
 
-        // Only save precios and ubicaciones for the current tab
+        // Save presentaciones, precios and ubicaciones for the current tab
+        const presentacionesSuccess = await savePresentaciones(articleId);
         const preciosSuccess = await saveListasPrecios(articleId);
         const ubicacionesSuccess = await saveUbicaciones(articleId);
-        success = preciosSuccess && ubicacionesSuccess;
+        success = presentacionesSuccess && preciosSuccess && ubicacionesSuccess;
 
         if (success) {
+          if (isEditing) {
+            showUpdateSuccess('la presentación del artículo');
+          }
           setActiveTab("detalles");
         }
       }
-      // Step 3: Photos and final save
+      // Step 3: Detalles (no saving needed, just navigation)
+      else if (activeTab === "detalles") {
+        setActiveTab("precios");
+      }
+      // Step 4: Precios (no saving needed, just navigation)
+      else if (activeTab === "precios") {
+        setActiveTab("ubicaciones");
+      }
+      // Step 5: Ubicaciones (no saving needed, just navigation)
+      else if (activeTab === "ubicaciones") {
+        setActiveTab("fotos");
+      }
+      // Step 6: Photos and final save
       else if (activeTab === "fotos") {
         const articleId = isEditing ? currentItem.id : createdArticleId;
         if (!articleId) {
@@ -984,6 +1142,9 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
         success = await saveFotos(articleId);
 
         if (success) {
+          if (isEditing) {
+            showUpdateSuccess('las fotos del artículo');
+          }
           handleClose();
         }
       }
@@ -1003,7 +1164,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
   const selectFields = formFields.filter((f) => f.type === "select");
 
   // Función para alternar sección expandida
-  const toggleSection = (section: "listaPrecio" | "ubicaciones") => {
+  const toggleSection = (section: "presentaciones" | "listaPrecio" | "ubicaciones") => {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
@@ -1264,7 +1425,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
               showsVerticalScrollIndicator={false}
             >
               <View className="py-6">
-                {activeTab === "ficha" && (
+                {activeTab === "articulo" && (
                   <>
                     {/* Campos de texto y número */}
                     {textFields.map((field) => (
@@ -1597,8 +1758,189 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   </>
                 )}
 
-                {activeTab === "presentacion" && (
+                {activeTab === "adicional" && (
                   <>
+                    {/* Sección de Presentaciones */}
+                    <View className="mb-4">
+                      <TouchableOpacity
+                        onPress={() => toggleSection("presentaciones")}
+                        className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <Text className="text-md font-semibold text-gray-800">
+                          Presentaciones
+                        </Text>
+                        <View className="flex-row items-center">
+                          <Text className="text-xs text-gray-600 mr-2">
+                            {presentacionesSeleccionadas.size} de {presentacionesData?.data?.length || 0} seleccionadas
+                          </Text>
+                          <Ionicons
+                            name={
+                              expandedSections.presentaciones
+                                ? "chevron-up"
+                                : "chevron-down"
+                            }
+                            size={20}
+                            color="#6B7280"
+                          />
+                        </View>
+                      </TouchableOpacity>
+
+                      {expandedSections.presentaciones && (
+                        <View className="mt-2">
+                          {/* Lista de todas las presentaciones con checkbox para selección */}
+                          {presentacionesData?.data.map((presentacion) => {
+                            const isSelected = presentacionesSeleccionadas.has(presentacion.id);
+                            const config = presentacionesConfig[presentacion.id];
+
+                            return (
+                              <View
+                                key={presentacion.id}
+                                className={`bg-white border rounded-lg p-4 mb-3 ${
+                                  isSelected ? "border-blue-300 bg-blue-50" : "border-gray-200"
+                                }`}
+                              >
+                                {/* Header con checkbox y nombre */}
+                                <View className="flex-row items-center mb-3">
+                                  <TouchableOpacity
+                                    onPress={() => togglePresentacionSelection(presentacion.id)}
+                                    className="mr-3"
+                                  >
+                                    <View
+                                      className={`w-6 h-6 rounded border-2 items-center justify-center ${
+                                        isSelected
+                                          ? "bg-blue-500 border-blue-500"
+                                          : "border-gray-300 bg-white"
+                                      }`}
+                                    >
+                                      {isSelected && (
+                                        <Ionicons name="checkmark" size={16} color="white" />
+                                      )}
+                                    </View>
+                                  </TouchableOpacity>
+                                  
+                                  <View className="flex-1">
+                                    <Text className="font-semibold text-gray-800 text-lg">
+                                      {presentacion.nombre}
+                                    </Text>
+                                    {config?.esPrincipal && (
+                                      <Text className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-1 self-start">
+                                        ⭐ Principal
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
+
+                                {/* Campos de configuración - solo visibles si está seleccionada */}
+                                {isSelected && config && (
+                                  <View className="space-y-4 border-t border-gray-200 pt-4">
+                                    {/* Equivalencia */}
+                                    <View>
+                                      <Text className="text-sm font-medium text-gray-700 mb-2">
+                                        Equivalencia
+                                      </Text>
+                                      <TextInput
+                                        className="w-full px-3 py-2 bg-white rounded-lg border border-gray-300"
+                                        placeholder="1"
+                                        value={String(config.equivalencia)}
+                                        onChangeText={(value) => 
+                                          updatePresentacionConfig(presentacion.id, "equivalencia", value)
+                                        }
+                                        keyboardType="numeric"
+                                      />
+                                    </View>
+
+                                    {/* Switches de configuración */}
+                                    <View className="space-y-3">
+                                      {/* Es Principal */}
+                                      <View className="flex-row justify-between items-center py-3 px-3 bg-gray-50 rounded-lg">
+                                        <View className="flex-1">
+                                          <Text className="text-sm font-medium text-gray-700">
+                                            Es Principal
+                                          </Text>
+                                          <Text className="text-xs text-gray-500 mt-1">
+                                            Solo una presentación puede ser principal
+                                          </Text>
+                                        </View>
+                                        <Switch
+                                          value={config.esPrincipal}
+                                          onValueChange={(value) => 
+                                            updatePresentacionConfig(presentacion.id, "esPrincipal", value)
+                                          }
+                                          trackColor={{ false: "#d1d5db", true: "#f59e0b" }}
+                                          thumbColor="#f4f3f4"
+                                        />
+                                      </View>
+                                      
+                                      {/* Usar en Ventas */}
+                                      <View className="flex-row justify-between items-center py-3 px-3 bg-gray-50 rounded-lg">
+                                        <View className="flex-1">
+                                          <Text className="text-sm font-medium text-gray-700">
+                                            Usar en Ventas
+                                          </Text>
+                                          <Text className="text-xs text-gray-500 mt-1">
+                                            Disponible para procesos de venta
+                                          </Text>
+                                        </View>
+                                        <Switch
+                                          value={config.usarEnVentas}
+                                          onValueChange={(value) => 
+                                            updatePresentacionConfig(presentacion.id, "usarEnVentas", value)
+                                          }
+                                          trackColor={{ false: "#d1d5db", true: "#10b981" }}
+                                          thumbColor="#f4f3f4"
+                                        />
+                                      </View>
+                                      
+                                      {/* Usar en Compras */}
+                                      <View className="flex-row justify-between items-center py-3 px-3 bg-gray-50 rounded-lg">
+                                        <View className="flex-1">
+                                          <Text className="text-sm font-medium text-gray-700">
+                                            Usar en Compras
+                                          </Text>
+                                          <Text className="text-xs text-gray-500 mt-1">
+                                            Disponible para procesos de compra
+                                          </Text>
+                                        </View>
+                                        <Switch
+                                          value={config.usarEnCompras}
+                                          onValueChange={(value) => 
+                                            updatePresentacionConfig(presentacion.id, "usarEnCompras", value)
+                                          }
+                                          trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
+                                          thumbColor="#f4f3f4"
+                                        />
+                                      </View>
+                                    </View>
+                                  </View>
+                                )}
+
+                                {/* Mensaje cuando no está seleccionada */}
+                                {!isSelected && (
+                                  <View className="py-4 text-center">
+                                    <Text className="text-gray-500 text-sm">
+                                      Marque el checkbox para configurar esta presentación
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            );
+                          })}
+
+                          {(!presentacionesData?.data || presentacionesData.data.length === 0) && (
+                            <View className="bg-gray-50 rounded-lg p-8 text-center">
+                              <Ionicons name="layers-outline" size={48} color="#9ca3af" />
+                              <Text className="text-gray-500 mt-2 text-center">
+                                No hay presentaciones disponibles
+                              </Text>
+                              <Text className="text-gray-400 text-sm text-center mt-1">
+                                Primero debe crear presentaciones en el catálogo
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+                    </View>
+
                     {/* Sección de Lista de Precio */}
                     <View className="mb-4">
                       <TouchableOpacity
@@ -2151,7 +2493,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   </>
                 )}
 
-                {activeTab === "detalle" && (
+                {activeTab === "detalles" && (
                   <>
                     {/* Sección de Fotos */}
                     <View className="mb-6">
@@ -2293,14 +2635,14 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 <TouchableOpacity
                   className="flex-1 bg-gray-100 py-3 rounded-lg mr-2 flex-row justify-center items-center"
                   onPress={() => {
-                    if (activeTab === "ficha") {
+                    if (activeTab === "articulo") {
                       handleClose();
-                    } else if (activeTab === "presentacion") {
-                      setActiveTab("ficha");
-                    } else if (activeTab === "detalle") {
-                      setActiveTab("presentacion");
+                    } else if (activeTab === "adicional") {
+                      setActiveTab("articulo");
+                    } else if (activeTab === "detalles") {
+                      setActiveTab("adicional");
                     } else if (activeTab === "precios") {
-                      setActiveTab("detalle");
+                      setActiveTab("detalles");
                     } else if (activeTab === "ubicaciones") {
                       setActiveTab("precios");
                     } else if (activeTab === "fotos") {
@@ -2311,7 +2653,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                 >
                   <Ionicons
                     name={
-                      activeTab === "ficha"
+                      activeTab === "articulo"
                         ? "close-outline"
                         : "arrow-back-outline"
                     }
@@ -2319,7 +2661,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                     color="#4b5563"
                   />
                   <Text className="text-gray-800 font-medium ml-2">
-                    {activeTab === "ficha" ? "Cancelar" : "Anterior"}
+                    {activeTab === "articulo" ? "Cancelar" : "Anterior"}
                   </Text>
                 </TouchableOpacity>
 
@@ -2328,21 +2670,25 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   style={{ backgroundColor: buttonColor }}
                   className={`flex-1 py-3 rounded-lg ml-2 flex-row justify-center items-center ${isSubmitting ? "opacity-70" : ""}`}
                   onPress={() => {
-                    if (activeTab === "ficha") {
+                    if (activeTab === "articulo") {
                       handleSubmit(onSubmit)();
                     } else {
-                      // Para otros tabs, solo navegar al siguiente
-                      if (activeTab === "presentacion") {
-                        setActiveTab("detalle");
-                      } else if (activeTab === "detalle") {
-                        setActiveTab("precios");
+                      // Para otros tabs, guardar datos y navegar al siguiente
+                      if (activeTab === "adicional") {
+                        // Este tab ya maneja el guardado en onSubmit
+                        handleSubmit(onSubmit)();
+                      } else if (activeTab === "detalles") {
+                        // Para detalles, solo navegar (no requiere guardado)
+                        handleSubmit(onSubmit)();
                       } else if (activeTab === "precios") {
-                        setActiveTab("ubicaciones");
+                        // Para precios, solo navegar (no requiere guardado)
+                        handleSubmit(onSubmit)();
                       } else if (activeTab === "ubicaciones") {
-                        setActiveTab("fotos");
+                        // Para ubicaciones, solo navegar (no requiere guardado)
+                        handleSubmit(onSubmit)();
                       } else {
-                        // Para el último tab, cerrar
-                        handleClose();
+                        // Para el último tab (fotos), manejar guardado con onSubmit
+                        handleSubmit(onSubmit)();
                       }
                     }
                   }}
@@ -2363,7 +2709,7 @@ const FormCompleteProcess: React.FC<FormCompleteProcessProps> = ({
                   >
                     {isSubmitting
                       ? "Procesando..."
-                      : activeTab === "ficha"
+                      : activeTab === "articulo"
                         ? "Siguiente"
                         : activeTab === "fotos"
                           ? "Finalizar"

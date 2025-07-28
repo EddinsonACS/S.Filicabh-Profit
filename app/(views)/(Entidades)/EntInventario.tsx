@@ -14,6 +14,7 @@ import { applyFilters } from '@/utils/helpers/filterUtils';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
+import { useArticuloListaDePrecio } from '@/hooks/Inventario/useArticuloListaDePrecio';
 import { useCategoria } from '@/hooks/Inventario/useCategoria';
 import { useColor } from '@/hooks/Inventario/useColor';
 import { useGrupo } from '@/hooks/Inventario/useGrupo';
@@ -146,6 +147,9 @@ const EntInventario: React.FC = () => {
     useDeleteOrigen
   } = useOrigen();
 
+  // Hook para obtener lista de precios (solo para artículos)
+  const { useGetArticuloListaDePrecioList } = useArticuloListaDePrecio();
+
 
   // State management
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -207,6 +211,9 @@ const EntInventario: React.FC = () => {
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
   const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
   const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(currentPage, PAGE_SIZE);
+  
+  // Lista de precios (solo se carga cuando selectedCategory es 'articulo')
+  const { data: articuloListaPreciosData } = useGetArticuloListaDePrecioList(1, 1000);
   // Articulo hooks
   const { 
     useGetArticuloList, 
@@ -779,6 +786,7 @@ const EntInventario: React.FC = () => {
         dataTalla={tallasDataArticulo?.data || []}
         dataTipoArticulo={tiposArticuloDataArticulo?.data || []}
         dataTipoImpuesto={impuestosDataArticulo?.data || []}
+        articuloListaPrecios={articuloListaPreciosData?.data || []}
         item={item}
         category={selectedCategory}
         onPress={showItemDetails}

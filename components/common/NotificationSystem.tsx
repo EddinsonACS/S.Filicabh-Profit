@@ -117,6 +117,8 @@ const Notification: React.FC<NotificationProps> = ({
     const typeConfig = getTypeConfig();
 
     useEffect(() => {
+        console.log('🔔 Notification useEffect - animando entrada:', { id, title, type });
+        
         // Animación de entrada desde abajo
         translateY.value = withSpring(0, { damping: 15, stiffness: 100 });
         opacity.value = withTiming(1, { duration: 300 });
@@ -124,6 +126,7 @@ const Notification: React.FC<NotificationProps> = ({
 
         // Auto dismiss solo si no es confirmación
         if (!isConfirmation && duration > 0) {
+            console.log('🔔 Configurando auto-dismiss para:', id, 'en', duration, 'ms');
             const timer = setTimeout(() => {
                 handleDismiss();
             }, duration);
@@ -160,6 +163,8 @@ const Notification: React.FC<NotificationProps> = ({
         opacity: opacity.value,
     }));
 
+    // Debug logs removidos - notificaciones funcionando
+    
     return (
         <Animated.View 
             style={[
@@ -177,7 +182,8 @@ const Notification: React.FC<NotificationProps> = ({
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.1,
                     shadowRadius: 8,
-                    elevation: 8,
+                    elevation: 999999, // Elevation muy alto para Android
+                    zIndex: 999999, // Z-index muy alto
                     marginHorizontal: 16,
                     marginBottom: 8
                 }}
@@ -315,30 +321,36 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
     notifications, 
     onDismiss 
 }) => {
+    // Debug logs removidos - notificaciones funcionando
+    
     return (
         <View 
             pointerEvents="box-none" 
             style={{ 
                 position: 'absolute', 
-                width: '100%', 
-                height: '100%', 
-                zIndex: 9999,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 999999, // Z-index muy alto
+                elevation: 999999, // Para Android
                 justifyContent: 'flex-end',
-                paddingBottom: 50 // Espacio desde el bottom para evitar solapamiento con tabs
+                paddingBottom: 100, // Más padding para evitar solapamiento
             }}
         >
             {notifications.map((notification, index) => (
-                <View
-                    key={notification.id}
-                    style={{
-                        zIndex: 9999 + index,
-                    }}
-                >
-                    <Notification
-                        {...notification}
-                        onDismiss={onDismiss}
-                    />
-                </View>
+                    <View
+                        key={notification.id}
+                        style={{
+                            zIndex: 999999 + index,
+                            elevation: 999999 + index, // Para Android
+                        }}
+                    >
+                        <Notification
+                            {...notification}
+                            onDismiss={onDismiss}
+                        />
+                    </View>
             ))}
         </View>
     );
