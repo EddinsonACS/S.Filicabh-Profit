@@ -1577,8 +1577,8 @@ const ArticuloForm: React.FC = () => {
                   { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                   { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
                   { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                  { id: "precios", name: "Precios", icon: "pricetag-outline" },
-                  { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+                  { id: "precios", name: "Precio", icon: "pricetag-outline" },
+                  { id: "ubicaciones", name: "Ubicacion", icon: "location-outline" },
                   { id: "fotos", name: "Fotos", icon: "camera-outline" }
                 ].map((tab, index) => (
                   <TouchableOpacity
@@ -1665,7 +1665,7 @@ const ArticuloForm: React.FC = () => {
                         { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                         { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
                         { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "precios", name: "Precio", icon: "pricetag-outline" },
                         { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
                         { id: "fotos", name: "Fotos", icon: "camera-outline" }
                       ].find(tab => tab.id === activeTab)?.icon as any || 'grid-outline'}
@@ -1678,7 +1678,7 @@ const ArticuloForm: React.FC = () => {
                         { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                         { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
                         { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
+                        { id: "precios", name: "Precio", icon: "pricetag-outline" },
                         { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
                         { id: "fotos", name: "Fotos", icon: "camera-outline" }
                       ].find(tab => tab.id === activeTab)?.name || 'Seleccionar sección'}
@@ -2321,7 +2321,7 @@ const ArticuloForm: React.FC = () => {
                 {/* Price Lists Section */}
                 <View className="mb-6">
                   <Text className="text-lg font-medium text-gray-800 mb-4">
-                    Listas de Precios
+                    Lista de Precio
                   </Text>
                   
                   {/* Form for price list */}

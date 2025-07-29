@@ -640,8 +640,8 @@ const ArticuloDetalle: React.FC = () => {
                       { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                       { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
                       { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                      { id: "precios", name: "Precios", icon: "pricetag-outline" },
-                      { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+                      { id: "precios", name: "Precio", icon: "pricetag-outline" },
+                      { id: "ubicaciones", name: "Ubicacion", icon: "location-outline" }
                     ].map((tab, index) => (
                       <TouchableOpacity
                         key={tab.id}
