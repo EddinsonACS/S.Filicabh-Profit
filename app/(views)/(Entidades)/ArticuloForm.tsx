@@ -291,10 +291,11 @@ const ArticuloForm: React.FC = () => {
       }
 
       // Actualizar el campo específico
-      if (field === "equivalencia" && typeof value === "string") {
+      if (field === "equivalencia") {
+        // Siempre forzar equivalencia a 1
         newConfig[presentacionId] = {
           ...newConfig[presentacionId],
-          [field]: Number(value) || 1
+          [field]: 1
         };
       } else {
         newConfig[presentacionId] = {
@@ -1998,22 +1999,6 @@ const ArticuloForm: React.FC = () => {
                         {/* Campos de configuración - solo visibles si está seleccionada */}
                         {isSelected && config && (
                           <View className="space-y-3 border-t border-gray-200 pt-3">
-                            {/* Equivalencia */}
-                            <View>
-                              <Text className="text-sm font-medium text-gray-700 mb-1">
-                                Equivalencia
-                              </Text>
-                              <TextInput
-                                className="w-full px-3 py-2 bg-white rounded-lg border border-gray-300"
-                                placeholder="1"
-                                value={String(config.equivalencia)}
-                                onChangeText={(value) =>
-                                  updatePresentacionConfig(presentacion.id, "equivalencia", value)
-                                }
-                                keyboardType="numeric"
-                              />
-                            </View>
-
                             {/* Switches de configuración */}
                             <View className="space-y-1">
                               {/* Es Principal */}

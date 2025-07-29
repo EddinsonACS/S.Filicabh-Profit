@@ -1,28 +1,28 @@
 import DropdownOverlay from '@/components/common/DropdownOverlay';
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { useAcuerdoDePago } from '@/hooks/Ventas/useAcuerdoDePago';
+import { useCiudad } from '@/hooks/Ventas/useCiudad';
 import { useFiguraComercial } from '@/hooks/Ventas/useFiguraComercial';
 import { useFiguraComercialForm } from '@/hooks/Ventas/useFiguraComercialForm';
-import { useAcuerdoDePago } from '@/hooks/Ventas/useAcuerdoDePago';
-import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
+import { useMoneda } from '@/hooks/Ventas/useMoneda';
 import { usePais } from '@/hooks/Ventas/usePais';
-import { useCiudad } from '@/hooks/Ventas/useCiudad';
 import { useRubro } from '@/hooks/Ventas/useRubro';
 import { useSector } from '@/hooks/Ventas/useSector';
+import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
 import { useVendedor } from '@/hooks/Ventas/useVendedor';
-import { useMoneda } from '@/hooks/Ventas/useMoneda';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Modal,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Modal,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 // Interfaz para el componente Selector
@@ -1142,7 +1142,7 @@ const FiguraComercialForm: React.FC = () => {
           ) : (
             <>
               <Ionicons 
-                name={activeTab === 'financiera' ? "checkmark" : "arrow-forward"} 
+                name={isEditingMode ? "refresh" : (activeTab === 'financiera' ? "checkmark" : "arrow-forward")} 
                 size={20} 
                 color="white" 
                 style={{ marginRight: 8 }} 

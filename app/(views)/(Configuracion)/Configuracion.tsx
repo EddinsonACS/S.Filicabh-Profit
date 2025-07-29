@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import {
     Dimensions,
     Image,
+    Platform,
     ScrollView,
     StatusBar,
     Text,
@@ -146,11 +147,11 @@ export default function Configuracion() {
         end={{ x: 1, y: 1 }}
         className="pt-12 pb-16 px-6"
         style={{
-          shadowColor: getActiveColor(),
+          shadowColor: Platform.OS === 'ios' ? getActiveColor() : 'transparent',
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
+          shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0,
           shadowRadius: 12,
-          elevation: 8
+          elevation: Platform.OS === 'android' ? 0 : 8
         }}
       >
         <View className="items-center">
@@ -165,11 +166,11 @@ export default function Configuracion() {
                 backgroundColor: 'rgba(255, 255, 255, 0.25)',
                 borderWidth: 4,
                 borderColor: 'rgba(255, 255, 255, 0.3)',
-                shadowColor: '#000',
+                shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
                 shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.15,
+                shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0,
                 shadowRadius: 16,
-                elevation: 8
+                elevation: Platform.OS === 'android' ? 0 : 8
               }}
             >
               {profileImage ? (
@@ -179,15 +180,19 @@ export default function Configuracion() {
                   style={{ 
                     borderWidth: 4, 
                     borderColor: 'rgba(255, 255, 255, 0.8)',
-                    shadowColor: '#000',
+                    shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.1,
+                    shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0,
                     shadowRadius: 8,
-                    elevation: 4
+                    elevation: Platform.OS === 'android' ? 0 : 4
                   }}
                 />
               ) : (
-                <Text className="text-white text-3xl font-bold" style={{ textShadowColor: 'rgba(0, 0, 0, 0.1)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+                <Text className="text-white text-3xl font-bold" style={{ 
+                  textShadowColor: 'rgba(0, 0, 0, 0.1)', 
+                  textShadowOffset: { width: 0, height: 1 }, 
+                  textShadowRadius: 2 
+                }}>
                   {getUserInitials()}
                 </Text>
               )}
@@ -195,11 +200,11 @@ export default function Configuracion() {
             <View 
               className="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-white items-center justify-center"
               style={{
-                shadowColor: '#000',
+                shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
                 shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.15,
+                shadowOpacity: Platform.OS === 'ios' ? 0.15 : 0,
                 shadowRadius: 4,
-                elevation: 4,
+                elevation: Platform.OS === 'android' ? 0 : 4,
                 borderWidth: 2,
                 borderColor: 'rgba(255, 255, 255, 0.8)'
               }}
@@ -208,7 +213,11 @@ export default function Configuracion() {
             </View>
           </TouchableOpacity>
           
-          <Text className="text-white text-2xl font-bold mb-1" style={{ textShadowColor: 'rgba(0, 0, 0, 0.1)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+          <Text className="text-white text-2xl font-bold mb-1" style={{ 
+            textShadowColor: 'rgba(0, 0, 0, 0.1)', 
+            textShadowOffset: { width: 0, height: 1 }, 
+            textShadowRadius: 2 
+          }}>
             {username || 'Usuario'}
           </Text>
           <Text className="text-white text-base opacity-90">
@@ -221,17 +230,17 @@ export default function Configuracion() {
       <View 
         className="flex-1 -mt-8 rounded-t-3xl bg-white px-6"
         style={{
-          shadowColor: '#000',
+          shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
+          shadowOpacity: Platform.OS === 'ios' ? 0.1 : 0,
           shadowRadius: 16,
-          elevation: 8
+          elevation: Platform.OS === 'android' ? 0 : 8
         }}
       >
         <ScrollView 
           className="flex-1 pt-6"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={{ paddingBottom: Platform.OS === 'android' ? 120 : 40 }}
         >
           {/* Sección de opciones */}
           <View className="mb-6">
@@ -244,16 +253,16 @@ export default function Configuracion() {
               const isLast = index === menuItems.length - 1;
               
               return (
-                <View key={item.name} className={`mb-3 ${isLast ? 'mb-0' : ''}`}>
+                <View key={item.name} className={`mb-1 ${isLast ? 'mb-0' : ''}`}>
                   <TouchableOpacity
-                    className="flex-row items-center py-4 px-5 rounded-2xl"
+                    className="flex-row items-center py-2.5 px-4 rounded-2xl"
                     style={{ 
                       backgroundColor: styles.bg,
-                      shadowColor: item.name === 'Cerrar sesión' ? '#ef4444' : getActiveColor(),
+                      shadowColor: Platform.OS === 'ios' ? (item.name === 'Cerrar sesión' ? '#ef4444' : getActiveColor()) : 'transparent',
                       shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: item.name === 'Cerrar sesión' ? 0.1 : 0.08,
+                      shadowOpacity: Platform.OS === 'ios' ? (item.name === 'Cerrar sesión' ? 0.1 : 0.08) : 0,
                       shadowRadius: 4,
-                      elevation: 2
+                      elevation: Platform.OS === 'android' ? 0 : 2
                     }}
                     onPress={() => {
                       if (!item.disabled && item.route) {
@@ -264,17 +273,17 @@ export default function Configuracion() {
                     disabled={item.disabled}
                   >
                     <View
-                      className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+                      className="w-9 h-9 rounded-xl items-center justify-center mr-3"
                       style={{ 
                         backgroundColor: item.name === 'Cerrar sesión' ? '#fef2f2' : 'rgba(255, 255, 255, 0.9)',
-                        shadowColor: '#000',
+                        shadowColor: Platform.OS === 'ios' ? '#000' : 'transparent',
                         shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.05,
+                        shadowOpacity: Platform.OS === 'ios' ? 0.05 : 0,
                         shadowRadius: 2,
-                        elevation: 1
+                        elevation: Platform.OS === 'android' ? 0 : 1
                       }}
                     >
-                      <Ionicons name={item.icon} size={22} color={styles.icon} />
+                      <Ionicons name={item.icon} size={18} color={styles.icon} />
                     </View>
                     
                     <View className="flex-1">
@@ -292,14 +301,14 @@ export default function Configuracion() {
                     </View>
                     
                     {item.name !== 'Cerrar sesión' && !item.disabled && (
-                      <View className="w-8 h-8 rounded-full items-center justify-center bg-gray-50">
-                        <Ionicons name="chevron-forward" size={16} color={styles.icon} />
+                      <View className="w-6 h-6 rounded-full items-center justify-center bg-gray-50">
+                        <Ionicons name="chevron-forward" size={12} color={styles.icon} />
                       </View>
                     )}
                     
                     {item.disabled && (
-                      <View className="w-8 h-8 rounded-full items-center justify-center bg-gray-100">
-                        <Ionicons name="lock-closed" size={16} color="#9ca3af" />
+                      <View className="w-6 h-6 rounded-full items-center justify-center bg-gray-100">
+                        <Ionicons name="lock-closed" size={12} color="#9ca3af" />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -309,7 +318,7 @@ export default function Configuracion() {
           </View>
 
           {/* Información adicional */}
-          <View className="bg-gray-50 rounded-2xl p-5 mt-4">
+          <View className="bg-gray-50 rounded-2xl p-5 mt-4 mb-8">
             <View className="flex-row items-center mb-3">
               <View className="w-8 h-8 rounded-lg bg-blue-100 items-center justify-center mr-3">
                 <Ionicons name="information-circle" size={18} color="#3b82f6" />

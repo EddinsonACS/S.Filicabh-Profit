@@ -32,6 +32,7 @@ const ArticuloDetalle: React.FC = () => {
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0, width: 0 });
   const dropdownButtonRef = useRef<any>(null);
+  const photoScrollRef = useRef<ScrollView>(null);
   
   const { 
     showDeleteSuccess,
@@ -506,6 +507,7 @@ const ArticuloDetalle: React.FC = () => {
           <View className="relative">
             {articulo.fotos && articulo.fotos.length > 0 ? (
               <ScrollView
+                ref={photoScrollRef}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
@@ -562,6 +564,11 @@ const ArticuloDetalle: React.FC = () => {
                     onPress={() => {
                       const newIndex = currentPhotoIndex - 1;
                       setCurrentPhotoIndex(newIndex);
+                      const screenWidth = require('react-native').Dimensions.get('window').width;
+                      photoScrollRef.current?.scrollTo({
+                        x: newIndex * screenWidth,
+                        animated: true
+                      });
                     }}
                     style={{
                       backgroundColor: 'rgba(0,0,0,0.5)',
@@ -582,6 +589,11 @@ const ArticuloDetalle: React.FC = () => {
                     onPress={() => {
                       const newIndex = currentPhotoIndex + 1;
                       setCurrentPhotoIndex(newIndex);
+                      const screenWidth = require('react-native').Dimensions.get('window').width;
+                      photoScrollRef.current?.scrollTo({
+                        x: newIndex * screenWidth,
+                        animated: true
+                      });
                     }}
                     style={{
                       backgroundColor: 'rgba(0,0,0,0.5)',
