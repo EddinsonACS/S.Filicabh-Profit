@@ -3,6 +3,14 @@ import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useFiguraComercial } from '@/hooks/Ventas/useFiguraComercial';
 import { useFiguraComercialForm } from '@/hooks/Ventas/useFiguraComercialForm';
+import { useAcuerdoDePago } from '@/hooks/Ventas/useAcuerdoDePago';
+import { useTipoPersona } from '@/hooks/Ventas/useTipoPersona';
+import { usePais } from '@/hooks/Ventas/usePais';
+import { useCiudad } from '@/hooks/Ventas/useCiudad';
+import { useRubro } from '@/hooks/Ventas/useRubro';
+import { useSector } from '@/hooks/Ventas/useSector';
+import { useVendedor } from '@/hooks/Ventas/useVendedor';
+import { useMoneda } from '@/hooks/Ventas/useMoneda';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -17,6 +25,138 @@ import {
   View
 } from 'react-native';
 
+// Interfaz para el componente Selector
+interface SelectorProps {
+  id: string;          // ID único del selector
+  label: string;
+  required?: boolean;
+  options: any[];
+  value: number;
+  onValueChange: (value: number) => void;
+  placeholder: string;
+  displayField: string; // 'nombre' o 'codigo'
+  valueField: string;   // 'id'
+  openDropdownId: string | null;
+  setOpenDropdownId: (id: string | null) => void;
+}
+
+// Componente Selector reutilizable con dropdown
+const Selector: React.FC<SelectorProps> = ({
+  id,
+  label,
+  required = false,
+  options,
+  value,
+  onValueChange,
+  placeholder,
+  displayField,
+  valueField,
+  openDropdownId,
+  setOpenDropdownId
+}) => {
+  const isOpen = openDropdownId === id;
+  const selectedOption = options?.find(opt => opt[valueField] === value);
+
+  const handleToggle = () => {
+    if (isOpen) {
+      setOpenDropdownId(null);
+    } else {
+      setOpenDropdownId(id);
+    }
+  };
+
+  return (
+    <View className="mb-4 relative z-10">
+      <Text className="text-sm font-medium text-gray-700 mb-1">
+        {label} {required && '*'}
+      </Text>
+      <TouchableOpacity
+        className="border border-gray-300 rounded-lg px-3 py-2 bg-white min-h-[44px] justify-center"
+        onPress={handleToggle}
+      >
+        <View className="flex-row justify-between items-center">
+          <Text className={selectedOption ? "text-gray-900" : "text-gray-500"}>
+            {selectedOption ? selectedOption[displayField] : placeholder}
+          </Text>
+          <Ionicons 
+            name={isOpen ? "chevron-up" : "chevron-down"} 
+            size={16} 
+            color="#9ca3af" 
+          />
+        </View>
+      </TouchableOpacity>
+      
+      {isOpen && (
+        <>
+          {/* Overlay invisible para cerrar al hacer clic fuera */}
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: -1000,
+              right: -1000,
+              bottom: -1000,
+              zIndex: 999
+            }}
+            activeOpacity={1}
+            onPress={() => setOpenDropdownId(null)}
+          />
+          
+          {/* Lista desplegable */}
+          <View
+            className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-60"
+            style={{
+              zIndex: 1000,
+              elevation: 1000,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 5
+            }}
+          >
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+            >
+              {options?.map((option, index) => (
+                <TouchableOpacity
+                  key={option[valueField]}
+                  className={`p-3 flex-row justify-between items-center ${
+                    index < options.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                  onPress={() => {
+                    onValueChange(option[valueField]);
+                    setOpenDropdownId(null);
+                  }}
+                >
+                  <Text className="text-gray-900 flex-1 text-sm">
+                    {option[displayField]}
+                  </Text>
+                  {value === option[valueField] && (
+                    <Ionicons name="checkmark" size={16} color="#10B981" />
+                  )}
+                </TouchableOpacity>
+              ))}
+              {(!options || options.length === 0) && (
+                <View className="p-3">
+                  <Text className="text-gray-500 text-sm text-center">
+                    No hay opciones disponibles
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </>
+      )}
+    </View>
+  );
+};
+
 const FiguraComercialForm: React.FC = () => {
   const router = useRouter();
   const { id, isEditing } = useLocalSearchParams<{ id?: string; isEditing?: string }>();
@@ -26,6 +166,7 @@ const FiguraComercialForm: React.FC = () => {
   const dropdownButtonRef = useRef<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdFiguraId, setCreatedFiguraId] = useState<number | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const { 
     showCreateSuccess,
@@ -37,6 +178,30 @@ const FiguraComercialForm: React.FC = () => {
   // Datos para edición - primero obtener los datos
   const { useGetFiguraComercialItem, useCreateFiguraComercial, useUpdateFiguraComercial } = useFiguraComercial();
   const { data: currentItem, isLoading } = useGetFiguraComercialItem(Number(id));
+
+  // Hooks para obtener opciones de selección
+  const { useGetAcuerdoDePagoList } = useAcuerdoDePago();
+  const { useGetTipoPersonaList } = useTipoPersona();
+  const { useGetPaisList } = usePais();
+  const { useGetCiudadList } = useCiudad();
+  const { useGetRubroList } = useRubro();
+  const { useGetSectorList } = useSector();
+  const { useGetVendedorList } = useVendedor();
+  const { useGetMonedaList } = useMoneda();
+
+  // Obtener los datos de las opciones
+  const { data: acuerdosDePago } = useGetAcuerdoDePagoList(1, 1000);
+  const { data: tiposPersona } = useGetTipoPersonaList(1, 1000);
+  const { data: paises } = useGetPaisList(1, 1000);
+  const { data: ciudades } = useGetCiudadList(1, 1000);
+  const { data: rubros } = useGetRubroList(1, 1000);
+  const { data: sectores } = useGetSectorList(1, 1000);
+  const { data: vendedores } = useGetVendedorList(1, 1000);
+  const { data: monedas } = useGetMonedaList(1, 1000);
+  
+  // Para Casa Matriz (otras figuras comerciales)
+  const { useGetFiguraComercialList: useGetFigurasComercialesList } = useFiguraComercial();
+  const { data: figurasComercialesData } = useGetFigurasComercialesList(1, 1000);
 
   // Hook completo de formulario con pasos usando datos obtenidos
   const {
@@ -382,7 +547,7 @@ const FiguraComercialForm: React.FC = () => {
               {activeTab === "ficha" && (
                 <>
                   {/* Información Básica */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Información Básica</Text>
                     
                     {/* Nombre */}
@@ -419,16 +584,19 @@ const FiguraComercialForm: React.FC = () => {
                     </View>
 
                     {/* Tipo de Persona */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Tipo de Persona *</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del tipo de persona"
-                        onChangeText={(value) => setValue('idTipoPersona', Number(value))}
-                        defaultValue={String(getValues('idTipoPersona') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="tipoPersona"
+                      label="Tipo de Persona"
+                      required
+                      options={tiposPersona?.data || []}
+                      value={getValues('idTipoPersona')}
+                      onValueChange={(value) => setValue('idTipoPersona', value)}
+                      placeholder="Seleccione tipo de persona"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
 
                     {/* Es Sucursal */}
                     <View className="mb-4">
@@ -448,21 +616,24 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* Casa Matriz - Condicional */}
                     {shouldShowConditionalField('idFiguraComercialCasaMatriz') && (
-                      <View className="mb-4">
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Casa Matriz *</Text>
-                        <TextInput
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                          placeholder="Seleccione casa matriz"
-                          onChangeText={(value) => setValue('idFiguraComercialCasaMatriz', Number(value))}
-                          defaultValue={String(getValues('idFiguraComercialCasaMatriz') || '')}
-                          keyboardType="numeric"
-                        />
-                      </View>
+                      <Selector
+                        id="casaMatriz"
+                        label="Casa Matriz"
+                        required
+                        options={figurasComercialesData?.data?.filter(fc => fc.id !== Number(id)) || []}
+                        value={getValues('idFiguraComercialCasaMatriz')}
+                        onValueChange={(value) => setValue('idFiguraComercialCasaMatriz', value)}
+                        placeholder="Seleccione casa matriz"
+                        displayField="nombre"
+                        valueField="id"
+                        openDropdownId={openDropdownId}
+                        setOpenDropdownId={setOpenDropdownId}
+                      />
                     )}
                   </View>
 
                   {/* Contacto */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Información de Contacto</Text>
                     
                     {/* Teléfono */}
@@ -513,77 +684,92 @@ const FiguraComercialForm: React.FC = () => {
                   </View>
 
                   {/* Ubicación */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Ubicación</Text>
                     
                     {/* País */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">País *</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del país"
-                        onChangeText={(value) => setValue('idPais', Number(value))}
-                        defaultValue={String(getValues('idPais') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="pais"
+                      label="País"
+                      required
+                      options={paises?.data || []}
+                      value={getValues('idPais')}
+                      onValueChange={(value) => setValue('idPais', value)}
+                      placeholder="Seleccione un país"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
 
                     {/* Ciudad */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Ciudad *</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID de la ciudad"
-                        onChangeText={(value) => setValue('idCiudad', Number(value))}
-                        defaultValue={String(getValues('idCiudad') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="ciudad"
+                      label="Ciudad"
+                      required
+                      options={ciudades?.data || []}
+                      value={getValues('idCiudad')}
+                      onValueChange={(value) => setValue('idCiudad', value)}
+                      placeholder="Seleccione una ciudad"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
                   </View>
 
                   {/* Clasificación */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Clasificación</Text>
                     
                     {/* Rubro */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Rubro</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del rubro"
-                        onChangeText={(value) => setValue('idRubro', Number(value))}
-                        defaultValue={String(getValues('idRubro') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="rubro"
+                      label="Rubro"
+                      required
+                      options={rubros?.data || []}
+                      value={getValues('idRubro')}
+                      onValueChange={(value) => setValue('idRubro', value)}
+                      placeholder="Seleccione un rubro"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
 
                     {/* Sector */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Sector</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del sector"
-                        onChangeText={(value) => setValue('idSector', Number(value))}
-                        defaultValue={String(getValues('idSector') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="sector"
+                      label="Sector"
+                      required
+                      options={sectores?.data || []}
+                      value={getValues('idSector')}
+                      onValueChange={(value) => setValue('idSector', value)}
+                      placeholder="Seleccione un sector"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
 
                     {/* Vendedor */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Vendedor</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del vendedor"
-                        onChangeText={(value) => setValue('idVendedor', Number(value))}
-                        defaultValue={String(getValues('idVendedor') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="vendedor"
+                      label="Vendedor"
+                      required
+                      options={vendedores?.data || []}
+                      value={getValues('idVendedor')}
+                      onValueChange={(value) => setValue('idVendedor', value)}
+                      placeholder="Seleccione un vendedor"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
                   </View>
 
                   {/* Estado */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Estado</Text>
                     
                     {/* Suspendido */}
@@ -601,7 +787,7 @@ const FiguraComercialForm: React.FC = () => {
                   </View>
 
                   {/* Direcciones */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Direcciones</Text>
                     
                     {/* Dirección Comercial */}
@@ -652,24 +838,27 @@ const FiguraComercialForm: React.FC = () => {
               {activeTab === "financiera" && (
                 <>
                   {/* Acuerdo de Pago */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Acuerdo de Pago</Text>
                     
                     {/* Acuerdo de Pago */}
-                    <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Acuerdo de Pago</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                        placeholder="ID del acuerdo de pago"
-                        onChangeText={(value) => setValue('idAcuerdoDePago', Number(value))}
-                        defaultValue={String(getValues('idAcuerdoDePago') || '')}
-                        keyboardType="numeric"
-                      />
-                    </View>
+                    <Selector
+                      id="acuerdoPago"
+                      label="Acuerdo de Pago"
+                      required
+                      options={acuerdosDePago?.data || []}
+                      value={getValues('idAcuerdoDePago')}
+                      onValueChange={(value) => setValue('idAcuerdoDePago', value)}
+                      placeholder="Seleccione acuerdo de pago"
+                      displayField="nombre"
+                      valueField="id"
+                      openDropdownId={openDropdownId}
+                      setOpenDropdownId={setOpenDropdownId}
+                    />
                   </View>
 
                   {/* Configuración de Ventas */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Configuración de Ventas</Text>
                     
                     {/* Activo para Ventas */}
@@ -701,16 +890,19 @@ const FiguraComercialForm: React.FC = () => {
                     {/* Campos de Límite de Crédito - Condicionales */}
                     {shouldShowConditionalField('idMonedaLimiteCreditoVentas') && (
                       <>
-                        <View className="mb-4">
-                          <Text className="text-sm font-medium text-gray-700 mb-1">Moneda Límite de Crédito *</Text>
-                          <TextInput
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                            placeholder="ID de moneda"
-                            onChangeText={(value) => setValue('idMonedaLimiteCreditoVentas', Number(value))}
-                            defaultValue={String(getValues('idMonedaLimiteCreditoVentas') || '')}
-                            keyboardType="numeric"
-                          />
-                        </View>
+                        <Selector
+                          id="monedaLimiteCredito"
+                          label="Moneda Límite de Crédito"
+                          required
+                          options={monedas?.data || []}
+                          value={getValues('idMonedaLimiteCreditoVentas')}
+                          onValueChange={(value) => setValue('idMonedaLimiteCreditoVentas', value)}
+                          placeholder="Seleccione moneda"
+                          displayField="nombre"
+                          valueField="id"
+                          openDropdownId={openDropdownId}
+                          setOpenDropdownId={setOpenDropdownId}
+                        />
 
                         <View className="mb-4">
                           <Text className="text-sm font-medium text-gray-700 mb-1">Monto Límite de Crédito *</Text>
@@ -727,7 +919,7 @@ const FiguraComercialForm: React.FC = () => {
                   </View>
 
                   {/* Configuración de Compras */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Configuración de Compras</Text>
                     
                     {/* Activo para Compras */}
@@ -759,16 +951,19 @@ const FiguraComercialForm: React.FC = () => {
                     {/* Campos de Límite de Débito - Condicionales */}
                     {shouldShowConditionalField('idMonedaLimiteCreditoCompras') && (
                       <>
-                        <View className="mb-4">
-                          <Text className="text-sm font-medium text-gray-700 mb-1">Moneda Límite de Débito *</Text>
-                          <TextInput
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
-                            placeholder="ID de moneda"
-                            onChangeText={(value) => setValue('idMonedaLimiteCreditoCompras', Number(value))}
-                            defaultValue={String(getValues('idMonedaLimiteCreditoCompras') || '')}
-                            keyboardType="numeric"
-                          />
-                        </View>
+                        <Selector
+                          id="monedaLimiteDebito"
+                          label="Moneda Límite de Débito"
+                          required
+                          options={monedas?.data || []}
+                          value={getValues('idMonedaLimiteCreditoCompras')}
+                          onValueChange={(value) => setValue('idMonedaLimiteCreditoCompras', value)}
+                          placeholder="Seleccione moneda"
+                          displayField="nombre"
+                          valueField="id"
+                          openDropdownId={openDropdownId}
+                          setOpenDropdownId={setOpenDropdownId}
+                        />
 
                         <View className="mb-4">
                           <Text className="text-sm font-medium text-gray-700 mb-1">Monto Límite de Débito *</Text>
@@ -785,7 +980,7 @@ const FiguraComercialForm: React.FC = () => {
                   </View>
 
                   {/* Retenciones */}
-                  <View className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+                  <View className="bg-white rounded-xl p-6 mb-4 border border-gray-100">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">Configuración de Retenciones</Text>
                     
                     {/* Aplica Retención Ventas Auto */}
