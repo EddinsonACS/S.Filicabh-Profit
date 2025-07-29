@@ -71,18 +71,29 @@ export const useFiguraComercial = () => {
           idCiudad: formData.idCiudad || 0,
           idRubro: formData.idRubro || 0,
           idSector: formData.idSector || 0,
-          idVendedor: formData.idVendedor || 0,
+          // Vendedor es opcional - solo incluir si tiene valor válido
+          ...(formData.idVendedor && formData.idVendedor !== 0 
+            ? { idVendedor: formData.idVendedor } 
+            : {}),
           idAcuerdoDePago: formData.idAcuerdoDePago || 0,
           idTipoPersona: formData.idTipoPersona || 0,
           activoVentas: formData.activoVentas !== undefined ? formData.activoVentas : true,
           activoCompras: formData.activoCompras !== undefined ? formData.activoCompras : true,
           esSucursal: formData.esSucursal !== undefined ? formData.esSucursal : false,
-          idFiguraComercialCasaMatriz: formData.idFiguraComercialCasaMatriz || 0,
+          // Solo incluir idFiguraComercialCasaMatriz si existe y no es 0
+          ...(formData.idFiguraComercialCasaMatriz && formData.idFiguraComercialCasaMatriz !== 0 
+            ? { idFiguraComercialCasaMatriz: formData.idFiguraComercialCasaMatriz } 
+            : {}),
           direccionComercial: formData.direccionComercial || '',
           direccionEntrega: formData.direccionEntrega || '',
-          idMonedaLimiteCreditoVentas: formData.idMonedaLimiteCreditoVentas || 0,
+          // Solo incluir campos de moneda si existen y no son 0
+          ...(formData.idMonedaLimiteCreditoVentas && formData.idMonedaLimiteCreditoVentas !== 0 
+            ? { idMonedaLimiteCreditoVentas: formData.idMonedaLimiteCreditoVentas } 
+            : {}),
           montolimiteCreditoVentas: formData.montolimiteCreditoVentas || 0,
-          idMonedaLimiteCreditoCompras: formData.idMonedaLimiteCreditoCompras || 0,
+          ...(formData.idMonedaLimiteCreditoCompras && formData.idMonedaLimiteCreditoCompras !== 0 
+            ? { idMonedaLimiteCreditoCompras: formData.idMonedaLimiteCreditoCompras } 
+            : {}),
           montolimiteCreditoCompras: formData.montolimiteCreditoCompras || 0,
           porceRetencionIvaCompra: formData.porceRetencionIvaCompra || 0,
           aplicaRetVentasAuto: formData.aplicaRetVentasAuto !== undefined ? formData.aplicaRetVentasAuto : false,

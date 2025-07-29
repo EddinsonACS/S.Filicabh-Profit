@@ -171,20 +171,52 @@ export const useFiguraComercialForm = (initialData?: Partial<FiguraComercial>) =
   // Función para procesar datos antes del envío
   const processFormData = (data: any): Partial<FiguraComercial> => {
     const processedData = { ...data };
+    console.log('🔧 processFormData - Datos originales:', JSON.stringify(data, null, 2));
+    console.log('🔧 Estados de límites: manejaLimiteCredito=', formState.manejaLimiteCredito, 'manejaLimiteDebito=', formState.manejaLimiteDebito);
     
     // Limpiar campos condicionales si no se deben mostrar
     if (!formState.esSucursal) {
-      processedData.idFiguraComercialCasaMatriz = 0;
+      console.log('🗑️  Eliminando idFiguraComercialCasaMatriz porque no es sucursal');
+      delete processedData.idFiguraComercialCasaMatriz;
     }
 
     if (!formState.manejaLimiteCredito) {
-      processedData.idMonedaLimiteCreditoVentas = 0;
+      // Si no maneja límite de crédito, eliminar campos en lugar de enviar 0
+      console.log('🗑️  Eliminando campos de crédito porque manejaLimiteCredito=false');
+      delete processedData.idMonedaLimiteCreditoVentas;
       processedData.montolimiteCreditoVentas = 0;
     }
 
     if (!formState.manejaLimiteDebito) {
-      processedData.idMonedaLimiteCreditoCompras = 0;
+      // Si no maneja límite de débito, eliminar campos en lugar de enviar 0
+      console.log('🗑️  Eliminando campos de débito porque manejaLimiteDebito=false');
+      delete processedData.idMonedaLimiteCreditoCompras;
       processedData.montolimiteCreditoCompras = 0;
+    }
+    
+    // Limpiar montos si no hay moneda válida (casos inconsistentes)
+    if (!processedData.idMonedaLimiteCreditoVentas || processedData.idMonedaLimiteCreditoVentas === 0) {
+      console.log('🗑️  Eliminando monto de crédito porque no hay moneda válida');
+      processedData.montolimiteCreditoVentas = 0;
+    }
+    
+    if (!processedData.idMonedaLimiteCreditoCompras || processedData.idMonedaLimiteCreditoCompras === 0) {
+      console.log('🗑️  Eliminando monto de débito porque no hay moneda válida');
+      processedData.montolimiteCreditoCompras = 0;
+    }
+    
+    // Validar y limpiar IDs con valor 0 (no válidos)
+    if (processedData.idMonedaLimiteCreditoVentas === 0) {
+      console.log('🗑️  Eliminando idMonedaLimiteCreditoVentas=0');
+      delete processedData.idMonedaLimiteCreditoVentas;
+    }
+    if (processedData.idMonedaLimiteCreditoCompras === 0) {
+      console.log('🗑️  Eliminando idMonedaLimiteCreditoCompras=0');
+      delete processedData.idMonedaLimiteCreditoCompras;
+    }
+    if (processedData.idFiguraComercialCasaMatriz === 0) {
+      console.log('🗑️  Eliminando idFiguraComercialCasaMatriz=0');
+      delete processedData.idFiguraComercialCasaMatriz;
     }
 
     // Asegurar que todos los campos del endpoint estén presentes
@@ -214,18 +246,29 @@ export const useFiguraComercialForm = (initialData?: Partial<FiguraComercial>) =
       idCiudad: processedData.idCiudad || 0,
       idRubro: processedData.idRubro || 0,
       idSector: processedData.idSector || 0,
-      idVendedor: processedData.idVendedor || 0,
+      // Vendedor es opcional - solo incluir si tiene valor válido
+      ...(processedData.idVendedor && processedData.idVendedor !== 0 
+        ? { idVendedor: processedData.idVendedor } 
+        : {}),
       idAcuerdoDePago: processedData.idAcuerdoDePago || 0,
       idTipoPersona: processedData.idTipoPersona || 0,
       activoVentas: processedData.activoVentas !== undefined ? processedData.activoVentas : true,
       activoCompras: processedData.activoCompras !== undefined ? processedData.activoCompras : true,
       esSucursal: processedData.esSucursal !== undefined ? processedData.esSucursal : false,
-      idFiguraComercialCasaMatriz: processedData.idFiguraComercialCasaMatriz || 0,
+      // Solo incluir idFiguraComercialCasaMatriz si existe y no es 0
+      ...(processedData.idFiguraComercialCasaMatriz && processedData.idFiguraComercialCasaMatriz !== 0 
+        ? { idFiguraComercialCasaMatriz: processedData.idFiguraComercialCasaMatriz } 
+        : {}),
       direccionComercial: processedData.direccionComercial || '',
       direccionEntrega: processedData.direccionEntrega || '',
-      idMonedaLimiteCreditoVentas: processedData.idMonedaLimiteCreditoVentas || 0,
+      // Solo incluir campos de moneda si existen y no son 0
+      ...(processedData.idMonedaLimiteCreditoVentas && processedData.idMonedaLimiteCreditoVentas !== 0 
+        ? { idMonedaLimiteCreditoVentas: processedData.idMonedaLimiteCreditoVentas } 
+        : {}),
       montolimiteCreditoVentas: processedData.montolimiteCreditoVentas || 0,
-      idMonedaLimiteCreditoCompras: processedData.idMonedaLimiteCreditoCompras || 0,
+      ...(processedData.idMonedaLimiteCreditoCompras && processedData.idMonedaLimiteCreditoCompras !== 0 
+        ? { idMonedaLimiteCreditoCompras: processedData.idMonedaLimiteCreditoCompras } 
+        : {}),
       montolimiteCreditoCompras: processedData.montolimiteCreditoCompras || 0,
       porceRetencionIvaCompra: processedData.porceRetencionIvaCompra || 0,
       aplicaRetVentasAuto: processedData.aplicaRetVentasAuto !== undefined ? processedData.aplicaRetVentasAuto : false,
@@ -233,7 +276,10 @@ export const useFiguraComercialForm = (initialData?: Partial<FiguraComercial>) =
       suspendido: processedData.suspendido !== undefined ? processedData.suspendido : false
     };
 
-    return { ...processedData, ...requiredFields };
+    // Combinar datos pero sin sobrescribir campos eliminados
+    const finalData = { ...requiredFields, ...processedData };
+    console.log('✅ processFormData - Datos finales:', JSON.stringify(finalData, null, 2));
+    return finalData;
   };
 
   // Función para validar pestaña actual
@@ -246,36 +292,44 @@ export const useFiguraComercialForm = (initialData?: Partial<FiguraComercial>) =
       if (!data.nombre?.trim()) errors.push('El nombre es requerido');
       if (!data.rif?.trim()) errors.push('El RIF es requerido');
       if (!data.idTipoPersona || data.idTipoPersona === 0) errors.push('El tipo de persona es requerido');
+      if (!data.idPais || data.idPais === 0) errors.push('El país es requerido');
+      if (!data.idCiudad || data.idCiudad === 0) errors.push('La ciudad es requerida');
+      if (!data.idRubro || data.idRubro === 0) errors.push('El rubro es requerido');
+      if (!data.idSector || data.idSector === 0) errors.push('El sector es requerido');
+      if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
+      if (!data.email?.trim()) errors.push('El email es requerido');
+      if (!data.direccionComercial?.trim()) errors.push('La dirección comercial es requerida');
       
-      // Validar casa matriz si es sucursal
+      // Nota: Vendedor NO es requerido según especificaciones
+      
+      // Validaciones condicionales
       if (formState.esSucursal && (!data.idFiguraComercialCasaMatriz || data.idFiguraComercialCasaMatriz === 0)) {
         errors.push('La casa matriz es requerida cuando es sucursal');
       }
     }
 
     if (formState.activeTab === 'financiera') {
-      // Validaciones para INFORMACIÓN FINANCIERA
+      // Validaciones obligatorias para INFORMACIÓN FINANCIERA
       if (!data.idAcuerdoDePago || data.idAcuerdoDePago === 0) {
         errors.push('El acuerdo de pago es requerido');
       }
 
-      // Validar límites de crédito si está habilitado
+      // Validaciones condicionales solo si están habilitadas
       if (formState.manejaLimiteCredito) {
         if (!data.idMonedaLimiteCreditoVentas || data.idMonedaLimiteCreditoVentas === 0) {
-          errors.push('La moneda de límite de crédito es requerida');
+          errors.push('La moneda de límite de crédito es requerida cuando maneja límite de crédito');
         }
         if (!data.montolimiteCreditoVentas || data.montolimiteCreditoVentas <= 0) {
-          errors.push('El monto de límite de crédito debe ser mayor a 0');
+          errors.push('El monto de límite de crédito debe ser mayor a 0 cuando maneja límite de crédito');
         }
       }
 
-      // Validar límites de débito si está habilitado
       if (formState.manejaLimiteDebito) {
         if (!data.idMonedaLimiteCreditoCompras || data.idMonedaLimiteCreditoCompras === 0) {
-          errors.push('La moneda de límite de débito es requerida');
+          errors.push('La moneda de límite de débito es requerida cuando maneja límite de débito');
         }
         if (!data.montolimiteCreditoCompras || data.montolimiteCreditoCompras <= 0) {
-          errors.push('El monto de límite de débito debe ser mayor a 0');
+          errors.push('El monto de límite de débito debe ser mayor a 0 cuando maneja límite de débito');
         }
       }
     }

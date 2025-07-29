@@ -38,6 +38,7 @@ interface SelectorProps {
   valueField: string;   // 'id'
   openDropdownId: string | null;
   setOpenDropdownId: (id: string | null) => void;
+  zIndexBase?: number;  // Z-index base para el dropdown
 }
 
 // Componente Selector reutilizable con dropdown
@@ -52,7 +53,8 @@ const Selector: React.FC<SelectorProps> = ({
   displayField,
   valueField,
   openDropdownId,
-  setOpenDropdownId
+  setOpenDropdownId,
+  zIndexBase = 100
 }) => {
   const isOpen = openDropdownId === id;
   const selectedOption = options?.find(opt => opt[valueField] === value);
@@ -66,7 +68,7 @@ const Selector: React.FC<SelectorProps> = ({
   };
 
   return (
-    <View className="mb-4 relative z-10">
+    <View className="mb-4 relative" style={{ zIndex: zIndexBase }}>
       <Text className="text-sm font-medium text-gray-700 mb-1">
         {label} {required && '*'}
       </Text>
@@ -96,7 +98,7 @@ const Selector: React.FC<SelectorProps> = ({
               left: -1000,
               right: -1000,
               bottom: -1000,
-              zIndex: 999
+              zIndex: zIndexBase + 9
             }}
             activeOpacity={1}
             onPress={() => setOpenDropdownId(null)}
@@ -106,8 +108,8 @@ const Selector: React.FC<SelectorProps> = ({
           <View
             className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg max-h-60"
             style={{
-              zIndex: 1000,
-              elevation: 1000,
+              zIndex: zIndexBase + 10,
+              elevation: zIndexBase + 10,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.25,
@@ -167,6 +169,17 @@ const FiguraComercialForm: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdFiguraId, setCreatedFiguraId] = useState<number | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  
+  // Estados para manejo de datos temporales y actuales
+  const [tempFormData, setTempFormData] = useState<any>({}); // Para acumular datos en modo creación
+  const [currentFormState, setCurrentFormState] = useState<any>({}); // Para mantener estado actual en edición
+  
+  // Estados para switches
+  const [activoVentas, setActivoVentas] = useState(true);
+  const [activoCompras, setActivoCompras] = useState(true);
+  const [suspendido, setSuspendido] = useState(false);
+  const [aplicaRetVentasAuto, setAplicaRetVentasAuto] = useState(false);
+  const [aplicaRetComprasAuto, setAplicaRetComprasAuto] = useState(false);
 
   const { 
     showCreateSuccess,
@@ -244,9 +257,25 @@ const FiguraComercialForm: React.FC = () => {
   React.useEffect(() => {
     if (currentItem && isEditingMode) {
       reset(currentItem);
+      setCurrentFormState(currentItem); // Inicializar estado actual para edición
       setEsSucursal(currentItem.esSucursal || false);
-      setManejaLimiteCredito((currentItem.montolimiteCreditoVentas || 0) > 0);
-      setManejaLimiteDebito((currentItem.montolimiteCreditoCompras || 0) > 0);
+      setManejaLimiteCredito(
+        (currentItem.montolimiteCreditoVentas || 0) > 0 && 
+        currentItem.idMonedaLimiteCreditoVentas && 
+        currentItem.idMonedaLimiteCreditoVentas > 0
+      );
+      setManejaLimiteDebito(
+        (currentItem.montolimiteCreditoCompras || 0) > 0 && 
+        currentItem.idMonedaLimiteCreditoCompras && 
+        currentItem.idMonedaLimiteCreditoCompras > 0
+      );
+      
+      // Inicializar estados de switches
+      setActivoVentas(currentItem.activoVentas !== undefined ? currentItem.activoVentas : true);
+      setActivoCompras(currentItem.activoCompras !== undefined ? currentItem.activoCompras : true);
+      setSuspendido(currentItem.suspendido !== undefined ? currentItem.suspendido : false);
+      setAplicaRetVentasAuto(currentItem.aplicaRetVentasAuto !== undefined ? currentItem.aplicaRetVentasAuto : false);
+      setAplicaRetComprasAuto(currentItem.aplicaRetComprasAuto !== undefined ? currentItem.aplicaRetComprasAuto : false);
     }
   }, [currentItem, isEditingMode, reset]);
 
@@ -296,48 +325,96 @@ const FiguraComercialForm: React.FC = () => {
       const processedData = processFormData(data);
       console.log('📊 Datos procesados:', processedData);
 
-      if (activeTab === 'ficha') {
-        if (isEditingMode) {
-          // Actualizar figura comercial
-          await updateMutation.mutateAsync({
-            id: Number(id),
-            formData: processedData
-          });
-          showUpdateSuccess('la figura comercial');
+      if (isEditingMode) {
+        // MODO EDICIÓN: Enviar inmediatamente con todos los datos actualizados
+        const updatedFormState = { ...currentFormState, ...processedData };
+        setCurrentFormState(updatedFormState);
+        
+        console.log('=== MODO EDICIÓN - DATOS ENVIADOS A LA API ===');
+        console.log('🆔 ID de figura comercial:', Number(id));
+        console.log('📊 currentFormState (estado anterior):', JSON.stringify(currentFormState, null, 2));
+        console.log('🆕 processedData (datos nuevos):', JSON.stringify(processedData, null, 2));
+        console.log('🔄 updatedFormState (datos completos a enviar):', JSON.stringify(updatedFormState, null, 2));
+        console.log('📋 Campos específicos:');
+        Object.keys(updatedFormState).forEach(key => {
+          console.log(`  - ${key}:`, updatedFormState[key]);
+        });
+        console.log('=== FIN DATOS EDICIÓN ===');
+        
+        await updateMutation.mutateAsync({
+          id: Number(id),
+          formData: updatedFormState
+        });
+        
+        if (activeTab === 'ficha') {
+          showUpdateSuccess('la información básica');
           setTimeout(() => {
             setActiveTab('financiera');
           }, 1500);
         } else {
-          // Crear nueva figura comercial
-          const result = await createMutation.mutateAsync(processedData);
+          showUpdateSuccess('la información financiera');
+          setTimeout(() => {
+            navigateBack();
+          }, 1500);
+        }
+      } else {
+        // MODO CREACIÓN: Lógica de 2 pasos
+        if (activeTab === 'ficha') {
+          // Paso 1: Solo almacenar datos temporalmente, NO enviar
+          setTempFormData({ ...tempFormData, ...processedData });
+          console.log('📝 Datos del paso 1 almacenados temporalmente:', { ...tempFormData, ...processedData });
+          
+          // Continuar al siguiente paso
+          setActiveTab('financiera');
+          setIsSubmitting(false);
+          return;
+        } else if (activeTab === 'financiera') {
+          // Paso 2: Enviar TODO junto (datos del paso 1 + paso 2)
+          const completeData = { ...tempFormData, ...processedData };
+          
+          console.log('=== MODO CREACIÓN - DATOS ENVIADOS A LA API ===');
+          console.log('📝 tempFormData (datos del paso 1):', JSON.stringify(tempFormData, null, 2));
+          console.log('🆕 processedData (datos del paso 2):', JSON.stringify(processedData, null, 2));
+          console.log('📤 completeData (datos completos a enviar):', JSON.stringify(completeData, null, 2));
+          
+          // Limpiar campos problemáticos en datos completos
+          if (completeData.idMonedaLimiteCreditoVentas === 0) {
+            console.log('🗑️ Eliminando idMonedaLimiteCreditoVentas=0 de datos completos');
+            delete completeData.idMonedaLimiteCreditoVentas;
+          }
+          if (completeData.idMonedaLimiteCreditoCompras === 0) {
+            console.log('🗑️ Eliminando idMonedaLimiteCreditoCompras=0 de datos completos');
+            delete completeData.idMonedaLimiteCreditoCompras;
+          }
+          if (completeData.idFiguraComercialCasaMatriz === 0) {
+            console.log('🗑️ Eliminando idFiguraComercialCasaMatriz=0 de datos completos');
+            delete completeData.idFiguraComercialCasaMatriz;
+          }
+          
+          console.log('📋 Campos específicos (después de limpieza):');
+          Object.keys(completeData).forEach(key => {
+            console.log(`  - ${key}:`, completeData[key]);
+          });
+          console.log('=== FIN DATOS CREACIÓN ===');
+          
+          const result = await createMutation.mutateAsync(completeData);
           if (result && 'id' in result) {
             setCreatedFiguraId(result.id);
             showCreateSuccess('la figura comercial');
             setShowSuccessModal(true);
           }
         }
-      } else if (activeTab === 'financiera') {
-        const figuraId = isEditingMode ? Number(id) : createdFiguraId;
-        
-        if (figuraId) {
-          await updateMutation.mutateAsync({
-            id: figuraId,
-            formData: processedData
-          });
-          
-          if (isEditingMode) {
-            showUpdateSuccess('la información financiera');
-            setTimeout(() => {
-              navigateBack();
-            }, 1500);
-          } else {
-            showCreateSuccess('la información financiera');
-            setShowSuccessModal(true);
-          }
-        }
       }
     } catch (error: any) {
-      console.error('Error en onSubmit:', error);
+      console.log('=== ERROR EN ENVÍO A LA API ===');
+      console.error('❌ Error completo:', error);
+      console.error('📊 Status Code:', error.response?.status);
+      console.error('📝 Response Data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('🔗 Request URL:', error.config?.url);
+      console.error('📤 Request Method:', error.config?.method);
+      console.error('📋 Request Data:', JSON.stringify(error.config?.data, null, 2));
+      console.log('=== FIN ERROR ===');
+      
       const errorMessage = error.response?.data?.mensaje || error.message || 'Error al procesar la solicitud';
       showError('Error', errorMessage);
     } finally {
@@ -574,7 +651,7 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* NIT */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">NIT</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">NIT (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="Ingrese el NIT"
@@ -661,7 +738,7 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* Email Alterno */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Email Alterno</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Email Alterno (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="Ingrese el email alterno"
@@ -673,7 +750,7 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* Persona de Contacto */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Persona de Contacto</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Persona de Contacto (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="Ingrese la persona de contacto"
@@ -700,6 +777,7 @@ const FiguraComercialForm: React.FC = () => {
                       valueField="id"
                       openDropdownId={openDropdownId}
                       setOpenDropdownId={setOpenDropdownId}
+                      zIndexBase={200}
                     />
 
                     {/* Ciudad */}
@@ -715,6 +793,7 @@ const FiguraComercialForm: React.FC = () => {
                       valueField="id"
                       openDropdownId={openDropdownId}
                       setOpenDropdownId={setOpenDropdownId}
+                      zIndexBase={190}
                     />
                   </View>
 
@@ -735,6 +814,7 @@ const FiguraComercialForm: React.FC = () => {
                       valueField="id"
                       openDropdownId={openDropdownId}
                       setOpenDropdownId={setOpenDropdownId}
+                      zIndexBase={180}
                     />
 
                     {/* Sector */}
@@ -750,13 +830,13 @@ const FiguraComercialForm: React.FC = () => {
                       valueField="id"
                       openDropdownId={openDropdownId}
                       setOpenDropdownId={setOpenDropdownId}
+                      zIndexBase={170}
                     />
 
                     {/* Vendedor */}
                     <Selector
                       id="vendedor"
-                      label="Vendedor"
-                      required
+                      label="Vendedor (opcional)"
                       options={vendedores?.data || []}
                       value={getValues('idVendedor')}
                       onValueChange={(value) => setValue('idVendedor', value)}
@@ -765,6 +845,7 @@ const FiguraComercialForm: React.FC = () => {
                       valueField="id"
                       openDropdownId={openDropdownId}
                       setOpenDropdownId={setOpenDropdownId}
+                      zIndexBase={160}
                     />
                   </View>
 
@@ -777,10 +858,13 @@ const FiguraComercialForm: React.FC = () => {
                       <View className="flex-row items-center justify-between">
                         <Text className="text-sm font-medium text-gray-700">Suspendido</Text>
                         <Switch
-                          value={getValues('suspendido')}
-                          onValueChange={(value) => setValue('suspendido', value)}
+                          value={suspendido}
+                          onValueChange={(value) => {
+                            setSuspendido(value);
+                            setValue('suspendido', value);
+                          }}
                           trackColor={{ false: '#e5e7eb', true: '#10B981' }}
-                          thumbColor={getValues('suspendido') ? '#ffffff' : '#f3f4f6'}
+                          thumbColor={suspendido ? '#ffffff' : '#f3f4f6'}
                         />
                       </View>
                     </View>
@@ -806,7 +890,7 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* Dirección de Entrega */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Dirección de Entrega</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Dirección de Entrega (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="Ingrese la dirección de entrega"
@@ -820,7 +904,7 @@ const FiguraComercialForm: React.FC = () => {
 
                     {/* Descripción */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Descripción</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="Ingrese una descripción"
@@ -866,10 +950,13 @@ const FiguraComercialForm: React.FC = () => {
                       <View className="flex-row items-center justify-between">
                         <Text className="text-sm font-medium text-gray-700">Activo para Ventas</Text>
                         <Switch
-                          value={getValues('activoVentas')}
-                          onValueChange={(value) => setValue('activoVentas', value)}
+                          value={activoVentas}
+                          onValueChange={(value) => {
+                            setActivoVentas(value);
+                            setValue('activoVentas', value);
+                          }}
                           trackColor={{ false: '#e5e7eb', true: '#10B981' }}
-                          thumbColor={getValues('activoVentas') ? '#ffffff' : '#f3f4f6'}
+                          thumbColor={activoVentas ? '#ffffff' : '#f3f4f6'}
                         />
                       </View>
                     </View>
@@ -927,10 +1014,13 @@ const FiguraComercialForm: React.FC = () => {
                       <View className="flex-row items-center justify-between">
                         <Text className="text-sm font-medium text-gray-700">Activo para Compras</Text>
                         <Switch
-                          value={getValues('activoCompras')}
-                          onValueChange={(value) => setValue('activoCompras', value)}
+                          value={activoCompras}
+                          onValueChange={(value) => {
+                            setActivoCompras(value);
+                            setValue('activoCompras', value);
+                          }}
                           trackColor={{ false: '#e5e7eb', true: '#10B981' }}
-                          thumbColor={getValues('activoCompras') ? '#ffffff' : '#f3f4f6'}
+                          thumbColor={activoCompras ? '#ffffff' : '#f3f4f6'}
                         />
                       </View>
                     </View>
@@ -988,10 +1078,13 @@ const FiguraComercialForm: React.FC = () => {
                       <View className="flex-row items-center justify-between">
                         <Text className="text-sm font-medium text-gray-700">Aplica Ret. Ventas Auto.</Text>
                         <Switch
-                          value={getValues('aplicaRetVentasAuto')}
-                          onValueChange={(value) => setValue('aplicaRetVentasAuto', value)}
+                          value={aplicaRetVentasAuto}
+                          onValueChange={(value) => {
+                            setAplicaRetVentasAuto(value);
+                            setValue('aplicaRetVentasAuto', value);
+                          }}
                           trackColor={{ false: '#e5e7eb', true: '#10B981' }}
-                          thumbColor={getValues('aplicaRetVentasAuto') ? '#ffffff' : '#f3f4f6'}
+                          thumbColor={aplicaRetVentasAuto ? '#ffffff' : '#f3f4f6'}
                         />
                       </View>
                     </View>
@@ -1001,17 +1094,20 @@ const FiguraComercialForm: React.FC = () => {
                       <View className="flex-row items-center justify-between">
                         <Text className="text-sm font-medium text-gray-700">Aplica Ret. Compras Auto.</Text>
                         <Switch
-                          value={getValues('aplicaRetComprasAuto')}
-                          onValueChange={(value) => setValue('aplicaRetComprasAuto', value)}
+                          value={aplicaRetComprasAuto}
+                          onValueChange={(value) => {
+                            setAplicaRetComprasAuto(value);
+                            setValue('aplicaRetComprasAuto', value);
+                          }}
                           trackColor={{ false: '#e5e7eb', true: '#10B981' }}
-                          thumbColor={getValues('aplicaRetComprasAuto') ? '#ffffff' : '#f3f4f6'}
+                          thumbColor={aplicaRetComprasAuto ? '#ffffff' : '#f3f4f6'}
                         />
                       </View>
                     </View>
 
                     {/* Porcentaje Retención */}
                     <View className="mb-4">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Porcentaje Retención (%)</Text>
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Porcentaje Retención (%) (opcional)</Text>
                       <TextInput
                         className="border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                         placeholder="0.00"
@@ -1052,9 +1148,9 @@ const FiguraComercialForm: React.FC = () => {
                 style={{ marginRight: 8 }} 
               />
               <Text className="text-white font-semibold">
-                {activeTab === 'financiera' 
-                  ? (isEditingMode ? 'Actualizar' : 'Finalizar') 
-                  : 'Continuar'
+                {isEditingMode 
+                  ? 'Actualizar'
+                  : (activeTab === 'financiera' ? 'Finalizar' : 'Continuar')
                 }
               </Text>
             </>
@@ -1075,43 +1171,22 @@ const FiguraComercialForm: React.FC = () => {
               <Ionicons name="checkmark-circle" size={32} color="#10B981" />
             </View>
             <Text className="text-xl font-bold text-center text-gray-800">
-              ¡{activeTab === 'ficha' ? 'Figura Comercial' : 'Información Financiera'} {isEditingMode ? 'Actualizada' : 'Creada'} Exitosamente!
+              ¡Figura Comercial {isEditingMode ? 'Actualizada' : 'Creada'} Exitosamente!
             </Text>
             <Text className="text-gray-600 text-center mt-2 mb-6">
-              {activeTab === 'ficha' 
-                ? '¿Desea continuar con la información financiera?' 
-                : 'La figura comercial ha sido configurada completamente.'
-              }
+              La figura comercial ha sido configurada completamente.
             </Text>
             
-            <View className="flex-row space-x-3">
-              {/* No, salir */}
-              <TouchableOpacity
-                onPress={() => {
-                  setShowSuccessModal(false);
-                  navigateBack();
-                }}
-                className="flex-1 py-3 px-6 rounded-xl border border-gray-300"
-              >
-                <Text className="text-gray-700 font-medium text-center">
-                  {activeTab === 'ficha' ? 'No, salir' : 'Finalizar'}
-                </Text>
-              </TouchableOpacity>
-              
-              {/* Sí, continuar */}
-              {activeTab === 'ficha' && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowSuccessModal(false);
-                    setActiveTab('financiera');
-                  }}
-                  style={{ backgroundColor: themes.sales.buttonColor }}
-                  className="flex-1 py-3 px-6 rounded-xl"
-                >
-                  <Text className="text-white font-medium text-center">Sí, continuar</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigateBack();
+              }}
+              style={{ backgroundColor: themes.sales.buttonColor }}
+              className="w-full py-3 px-6 rounded-xl"
+            >
+              <Text className="text-white font-medium text-center">Finalizar</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
