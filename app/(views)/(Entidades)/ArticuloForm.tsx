@@ -85,7 +85,7 @@ type ArticuloFormData = InventoryFormData['articulo'];
 const ArticuloForm: React.FC = () => {
   const router = useRouter();
   const { id, isEditing } = useLocalSearchParams<{ id?: string; isEditing?: string }>();
-  
+
   // Helper function for navigation
   const navigateBack = () => {
     if (isEditing === 'true' && id) {
@@ -128,15 +128,15 @@ const ArticuloForm: React.FC = () => {
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0, width: 0 });
   const dropdownButtonRef = useRef<any>(null);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
-  const [imageOrder, setImageOrder] = useState<{[key: number]: number}>({});
+  const [imageOrder, setImageOrder] = useState<{ [key: number]: number }>({});
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
   const [listasPrecios, setListasPrecios] = useState<ListaPrecioItem[]>([]);
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);
   const [selectedListaPrecio, setSelectedListaPrecio] = useState<string>("");
   const [selectedMoneda, setSelectedMoneda] = useState<string>("");
   const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState<{[key: string]: boolean}>({});
-  const [showPrecioDatePicker, setShowPrecioDatePicker] = useState<{[key: string]: boolean}>({});
+  const [showDatePicker, setShowDatePicker] = useState<{ [key: string]: boolean }>({});
+  const [showPrecioDatePicker, setShowPrecioDatePicker] = useState<{ [key: string]: boolean }>({});
   const [openSelect, setOpenSelect] = useState<string | null>(null);
   const [selectedAlmacen, setSelectedAlmacen] = useState<string>("");
   const [ubicacionInput, setUbicacionInput] = useState<string>("");
@@ -145,25 +145,25 @@ const ArticuloForm: React.FC = () => {
     fechaDesde: "",
     fechaHasta: "",
   });
-  
+
   // Estados para presentaciones
   const [presentacionesConfig, setPresentacionesConfig] = useState<Record<number, PresentacionConfig>>({});
   const [presentacionesSeleccionadas, setPresentacionesSeleccionadas] = useState<Set<number>>(new Set());
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
+
   // Estados para el modo de ordenamiento de fotos
   const [isOrderMode, setIsOrderMode] = useState(false);
   const [selectedImageForDelete, setSelectedImageForDelete] = useState<number | null>(null);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
 
-  const { 
-    showCreateSuccess, 
+
+  const {
+    showCreateSuccess,
     showUpdateSuccess,
-    showError 
+    showError
   } = useNotificationContext();
 
   // Hooks para datos
@@ -178,9 +178,9 @@ const ArticuloForm: React.FC = () => {
   const { useGetAlmacenList } = useAlmacen();
 
   // Hooks para artículo
-  const { 
+  const {
     useGetArticuloItem,
-    useCreateArticulo, 
+    useCreateArticulo,
     useUpdateArticulo
   } = useArticulo();
 
@@ -188,10 +188,10 @@ const ArticuloForm: React.FC = () => {
   const { useCreateArticuloFoto, useUpdateArticuloFoto, useGetArticuloFotoList, useDeleteArticuloFoto } = useArticuloFoto();
   const { useCreateArticuloListaDePrecio, useGetArticuloListaDePrecioList, useDeleteArticuloListaDePrecio } = useArticuloListaDePrecio();
   const { useCreateArticuloUbicacion, useGetArticuloUbicacionList, useDeleteArticuloUbicacion } = useArticuloUbicacion();
-  const { 
-    useCreateArticuloPresentaciones, 
+  const {
+    useCreateArticuloPresentaciones,
     useGetArticuloPresentacionesList,
-    useDeleteArticuloPresentaciones 
+    useDeleteArticuloPresentaciones
   } = useArticuloPresentaciones();
 
   // Data queries
@@ -210,10 +210,10 @@ const ArticuloForm: React.FC = () => {
   const { data: almacenesData } = useGetAlmacenList(1, 100);
 
   // Get filtered data for editing mode
-  const preciosArticuloData = isEditing === 'true' && !!id 
+  const preciosArticuloData = isEditing === 'true' && !!id
     ? listasPreciosDataArticulo?.data?.filter((precio: any) => precio.idArticulo === Number(id))
     : [];
-  const ubicacionesArticuloData = isEditing === 'true' && !!id 
+  const ubicacionesArticuloData = isEditing === 'true' && !!id
     ? ubicacionesDataArticulo?.data?.filter((ubicacion: any) => ubicacion.idArticulo === Number(id))
     : [];
 
@@ -270,7 +270,7 @@ const ArticuloForm: React.FC = () => {
   ) => {
     setPresentacionesConfig((prev) => {
       const newConfig = { ...prev };
-      
+
       // Si no existe la configuración para esta presentación, crearla
       if (!newConfig[presentacionId]) {
         newConfig[presentacionId] = {
@@ -292,14 +292,14 @@ const ArticuloForm: React.FC = () => {
 
       // Actualizar el campo específico
       if (field === "equivalencia" && typeof value === "string") {
-        newConfig[presentacionId] = { 
-          ...newConfig[presentacionId], 
-          [field]: Number(value) || 1 
+        newConfig[presentacionId] = {
+          ...newConfig[presentacionId],
+          [field]: Number(value) || 1
         };
       } else {
-        newConfig[presentacionId] = { 
-          ...newConfig[presentacionId], 
-          [field]: value 
+        newConfig[presentacionId] = {
+          ...newConfig[presentacionId],
+          [field]: value
         };
       }
 
@@ -336,9 +336,7 @@ const ArticuloForm: React.FC = () => {
     getValues,
   } = useForm<ArticuloFormData>({
     resolver: zodResolver(
-      isEditingMode 
-        ? inventorySchema['articulo'].partial() // En modo edición, todos los campos son opcionales
-        : inventorySchema['articulo']
+      inventorySchema['articulo'] // En modo edición, todos los campos son opcionales
     ),
     defaultValues: isEditingMode ? (currentItem as ArticuloFormData) : DEFAULT_VALUES_INVENTORY['articulo'],
   });
@@ -386,21 +384,23 @@ const ArticuloForm: React.FC = () => {
   // Efecto separado para cargar presentaciones existentes cuando se carga articuloPresentacionesData
   useEffect(() => {
     if (isEditingMode && currentItem && articuloPresentacionesData?.data) {
+      console.log('ACTUAL EN EL USEEFFECT DE PRESENTACIONES')
+      console.log(currentItem)
       console.log('🔄 Cargando presentaciones existentes para edición...');
-      
+
       // Filtrar presentaciones que pertenecen a este artículo
       const presentacionesExistentes = articuloPresentacionesData.data.filter(
         (articuloPres: any) => articuloPres.idArticulo === currentItem.id
       );
-      
+
       console.log('📋 Presentaciones existentes encontradas:', presentacionesExistentes);
-      
+
       if (presentacionesExistentes.length > 0) {
         // Crear Set de IDs seleccionados
         const idsSeleccionados = new Set(
           presentacionesExistentes.map((articuloPres: any) => articuloPres.idPresentacion)
         );
-        
+
         // Crear configuración para cada presentación
         const config: Record<number, PresentacionConfig> = {};
         presentacionesExistentes.forEach((articuloPres: any) => {
@@ -411,10 +411,10 @@ const ArticuloForm: React.FC = () => {
             esPrincipal: articuloPres.esPrincipal ?? false
           };
         });
-        
+
         console.log('🎯 Presentaciones seleccionadas:', Array.from(idsSeleccionados));
         console.log('⚙️ Configuración de presentaciones:', config);
-        
+
         // Actualizar estados
         setPresentacionesSeleccionadas(idsSeleccionados);
         setPresentacionesConfig(config);
@@ -430,14 +430,14 @@ const ArticuloForm: React.FC = () => {
   useEffect(() => {
     if (isEditingMode && currentItem && listasPreciosDataArticulo?.data) {
       console.log('🔄 Cargando precios existentes para edición...');
-      
+
       // Filtrar precios que pertenecen a este artículo
       const preciosExistentes = listasPreciosDataArticulo.data.filter(
         (precio: any) => precio.idArticulo === currentItem.id
       );
-      
+
       console.log('💰 Precios existentes encontrados:', preciosExistentes);
-      
+
       if (preciosExistentes.length > 0) {
         // Mapear precios existentes al formato esperado
         const preciosFormateados = preciosExistentes.map((precio: any) => ({
@@ -449,7 +449,7 @@ const ArticuloForm: React.FC = () => {
           fechaHasta: precio.fechaHasta?.replace(/-/g, "/") || "",
           suspendido: precio.suspendido ?? false
         }));
-        
+
         console.log('💰 Precios formateados:', preciosFormateados);
         setListasPrecios(preciosFormateados);
       } else {
@@ -463,14 +463,14 @@ const ArticuloForm: React.FC = () => {
   useEffect(() => {
     if (isEditingMode && currentItem && ubicacionesDataArticulo?.data) {
       console.log('🔄 Cargando ubicaciones existentes para edición...');
-      
+
       // Filtrar ubicaciones que pertenecen a este artículo
       const ubicacionesExistentes = ubicacionesDataArticulo.data.filter(
         (ubicacion: any) => ubicacion.idArticulo === currentItem.id
       );
-      
+
       console.log('📍 Ubicaciones existentes encontradas:', ubicacionesExistentes);
-      
+
       if (ubicacionesExistentes.length > 0) {
         // Mapear ubicaciones existentes al formato esperado
         const ubicacionesFormateadas = ubicacionesExistentes.map((ubicacion: any) => ({
@@ -479,7 +479,7 @@ const ArticuloForm: React.FC = () => {
           ubicacion: ubicacion.ubicacion,
           suspendido: ubicacion.suspendido ?? false
         }));
-        
+
         console.log('📍 Ubicaciones formateadas:', ubicacionesFormateadas);
         setUbicaciones(ubicacionesFormateadas);
       } else {
@@ -493,14 +493,14 @@ const ArticuloForm: React.FC = () => {
   useEffect(() => {
     if (isEditingMode && currentItem && articuloFotosData?.data) {
       console.log('🔄 Cargando fotos existentes para edición...');
-      
+
       // Filtrar fotos que pertenecen a este artículo
       const fotosExistentes = articuloFotosData.data.filter(
         (foto: any) => foto.idArticulo === currentItem.id
       );
-      
+
       console.log('📸 Fotos existentes encontradas:', fotosExistentes);
-      
+
       if (fotosExistentes.length > 0) {
         // Mapear fotos existentes al formato esperado
         const fotosFormateadas = fotosExistentes.map((foto: any, index: number) => ({
@@ -514,20 +514,20 @@ const ArticuloForm: React.FC = () => {
           name: `existing_image_${foto.id}.jpg`,
           type: 'image/jpeg'
         }));
-        
+
         // Crear el orden de imágenes
-        const ordenImagenes: {[key: number]: number} = {};
+        const ordenImagenes: { [key: number]: number } = {};
         fotosFormateadas.forEach((foto, index) => {
           ordenImagenes[index] = foto.orden;
         });
-        
+
         // Encontrar la imagen principal
         const principalIndex = fotosFormateadas.findIndex(foto => foto.esPrincipal);
-        
+
         console.log('📸 Fotos formateadas:', fotosFormateadas);
         console.log('📸 Orden de imágenes:', ordenImagenes);
         console.log('📸 Índice principal:', principalIndex);
-        
+
         // Actualizar estados
         setSelectedImages(fotosFormateadas);
         setImageOrder(ordenImagenes);
@@ -553,7 +553,7 @@ const ArticuloForm: React.FC = () => {
 
     if (fieldType === "number") {
       const cleanedValue = text.trim().replace(",", ".");
-      
+
       if (!cleanedValue || cleanedValue === "") {
         return 0;
       }
@@ -584,7 +584,7 @@ const ArticuloForm: React.FC = () => {
   const processSelectedImage = (result: any) => {
     try {
       console.log('📷 Processing selected image:', result);
-      
+
       if (!result || result.cancelled || result.canceled) {
         console.log('📷 Image selection was cancelled');
         return;
@@ -622,14 +622,14 @@ const ArticuloForm: React.FC = () => {
 
       console.log('📷 Adding new image:', newImage);
       setSelectedImages((prev) => [...prev, newImage]);
-      
+
       // Auto-assign next available order
       const nextOrder = getNextAvailableOrder();
       setImageOrder(prev => ({
         ...prev,
         [newImage.id]: nextOrder
       }));
-      
+
       console.log('📷 Image processed successfully');
     } catch (error) {
       console.error('📷 Error processing selected image:', error);
@@ -639,25 +639,25 @@ const ArticuloForm: React.FC = () => {
 
   const pickImageFromGallery = async () => {
     setShowImagePickerModal(false);
-    
+
     try {
       // Primero verificar el estado actual de los permisos
       const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
       let finalStatus = status;
-      
+
       if (status !== 'granted') {
         // Si no tiene permisos, solicitarlos
         const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         finalStatus = newStatus;
       }
-      
+
       if (finalStatus !== 'granted') {
         alert("Se necesitan permisos para acceder a la galería. Por favor, habilítalos en configuración.");
         return;
       }
-      
+
       console.log('📸 Abriendo galería con permisos:', finalStatus);
-      
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -665,7 +665,7 @@ const ArticuloForm: React.FC = () => {
         quality: 0.8,
         allowsMultipleSelection: false,
       });
-      
+
       console.log('📸 Resultado de galería:', result);
       processSelectedImage(result);
     } catch (error) {
@@ -676,32 +676,32 @@ const ArticuloForm: React.FC = () => {
 
   const takePhotoWithCamera = async () => {
     setShowImagePickerModal(false);
-    
+
     try {
       // Primero verificar el estado actual de los permisos de cámara
       const { status } = await ImagePicker.getCameraPermissionsAsync();
       let finalStatus = status;
-      
+
       if (status !== 'granted') {
         // Si no tiene permisos, solicitarlos
         const { status: newStatus } = await ImagePicker.requestCameraPermissionsAsync();
         finalStatus = newStatus;
       }
-      
+
       if (finalStatus !== 'granted') {
         alert("Se necesitan permisos para acceder a la cámara. Por favor, habilítalos en configuración.");
         return;
       }
-      
+
       console.log('📸 Abriendo cámara con permisos:', finalStatus);
-      
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
-      
+
       console.log('📸 Resultado de cámara:', result);
       processSelectedImage(result);
     } catch (error) {
@@ -713,12 +713,12 @@ const ArticuloForm: React.FC = () => {
   const removeImage = (index: number) => {
     const imageToRemove = selectedImages[index];
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
-    
+
     // Update image order mapping
     setImageOrder((prev) => {
       const newOrder = { ...prev };
       delete newOrder[imageToRemove.id];
-      
+
       // Adjust order numbers for remaining images
       const removedOrder = prev[imageToRemove.id];
       if (removedOrder) {
@@ -728,10 +728,10 @@ const ArticuloForm: React.FC = () => {
           }
         });
       }
-      
+
       return newOrder;
     });
-    
+
     if (principalImageIndex === index) {
       setPrincipalImageIndex(-1);
     } else if (principalImageIndex > index) {
@@ -742,27 +742,27 @@ const ArticuloForm: React.FC = () => {
   const setImageOrderNumber = (imageId: number, order: number) => {
     setImageOrder((prev) => {
       const newOrder = { ...prev };
-      
+
       // If trying to set the same order, do nothing
       if (newOrder[imageId] === order) return prev;
-      
+
       // Find image that currently has this order
       const currentImageWithOrder = Object.keys(newOrder).find(id => newOrder[Number(id)] === order);
-      
+
       // If another image has this order, swap them
       if (currentImageWithOrder) {
         const oldOrder = newOrder[imageId];
         newOrder[Number(currentImageWithOrder)] = oldOrder;
       }
-      
+
       newOrder[imageId] = order;
-      
+
       // Update principal image index if order 1 changed
       if (order === 1) {
         const imageIndex = selectedImages.findIndex(img => img.id === imageId);
         setPrincipalImageIndex(imageIndex);
       }
-      
+
       return newOrder;
     });
   };
@@ -779,7 +779,7 @@ const ArticuloForm: React.FC = () => {
 
   const setImageAsFavorite = (index: number) => {
     const imageId = selectedImages[index].id;
-    
+
     // Toggle principal status
     const currentOrder = imageOrder[imageId];
     if (currentOrder === 1) {
@@ -801,7 +801,7 @@ const ArticuloForm: React.FC = () => {
       setIsOrderMode(false);
     } else {
       // Entrar al modo ordenamiento - limpiar todos los órdenes
-      const newImageOrder: {[key: number]: number} = {};
+      const newImageOrder: { [key: number]: number } = {};
       setImageOrder(newImageOrder);
       setIsOrderMode(true);
     }
@@ -810,11 +810,11 @@ const ArticuloForm: React.FC = () => {
   // Función para manejar la selección de orden en modo ordenamiento
   const handleOrderSelection = (imageId: number) => {
     if (!isOrderMode) return;
-    
+
     // Obtener el siguiente orden disponible
     const nextOrder = Object.keys(imageOrder).length + 1;
     setImageOrderNumber(imageId, nextOrder);
-    
+
     // Si es la primera foto seleccionada, hacerla principal
     if (nextOrder === 1) {
       const imageIndex = selectedImages.findIndex(img => img.id === imageId);
@@ -897,12 +897,12 @@ const ArticuloForm: React.FC = () => {
       }
 
       console.log(`📸 Procesando ${selectedImages.length} fotos...`);
-      
+
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
         const order = imageOrder[i] || i + 1;
         const esPrincipal = i === principalImageIndex;
-        
+
         console.log(`📸 Procesando foto ${i + 1}:`, {
           orden: order,
           esPrincipal,
@@ -910,7 +910,7 @@ const ArticuloForm: React.FC = () => {
           fotoId: image.fotoId,
           uri: image.uri
         });
-        
+
         // Prepare the parameters object
         const fotoParams = {
           idArticulo: articleId,
@@ -928,9 +928,9 @@ const ArticuloForm: React.FC = () => {
           if (image.existente && image.fotoId) {
             // Actualizar foto existente usando PUT /api/articulofoto/{id}
             console.log(`🔄 Actualizando foto existente ID: ${image.fotoId}`);
-            await updateFotoMutation.mutateAsync({ 
-              id: image.fotoId, 
-              params: fotoParams 
+            await updateFotoMutation.mutateAsync({
+              id: image.fotoId,
+              params: fotoParams
             });
             console.log(`✅ Foto ${i + 1} actualizada exitosamente`);
           } else {
@@ -944,7 +944,7 @@ const ArticuloForm: React.FC = () => {
           // Continuar con las demás fotos
         }
       }
-      
+
       return true;
     } catch (error) {
       console.error("Error general al guardar fotos:", error);
@@ -963,13 +963,13 @@ const ArticuloForm: React.FC = () => {
       // En modo edición, eliminar precios existentes solo si hay precios nuevos
       if (isEditingMode && listasPreciosDataArticulo?.data && listasPrecios.length > 0) {
         console.log('🗑️ Eliminando precios existentes en modo edición...');
-        
+
         const preciosExistentes = listasPreciosDataArticulo.data.filter(
           (precio: any) => precio.idArticulo === articleId
         );
-        
+
         console.log(`💰 ${preciosExistentes.length} precios existentes encontrados`);
-        
+
         for (const precioExistente of preciosExistentes) {
           try {
             console.log(`🗑️ Eliminando precio ID: ${precioExistente.id}`);
@@ -984,7 +984,7 @@ const ArticuloForm: React.FC = () => {
 
       // Crear nuevos precios
       console.log(`💰 Creando ${listasPrecios.length} nuevos precios...`);
-      
+
       for (const precio of listasPrecios) {
         const precioData = {
           idArticulo: articleId,
@@ -998,7 +998,7 @@ const ArticuloForm: React.FC = () => {
 
         await createPrecioMutation.mutateAsync(precioData);
       }
-      
+
       return true;
     } catch (error) {
       console.error("Error al guardar precios:", error);
@@ -1017,13 +1017,13 @@ const ArticuloForm: React.FC = () => {
       // En modo edición, eliminar ubicaciones existentes solo si hay ubicaciones nuevas
       if (isEditingMode && ubicacionesDataArticulo?.data && ubicaciones.length > 0) {
         console.log('🗑️ Eliminando ubicaciones existentes en modo edición...');
-        
+
         const ubicacionesExistentes = ubicacionesDataArticulo.data.filter(
           (ubicacion: any) => ubicacion.idArticulo === articleId
         );
-        
+
         console.log(`📍 ${ubicacionesExistentes.length} ubicaciones existentes encontradas`);
-        
+
         for (const ubicacionExistente of ubicacionesExistentes) {
           try {
             console.log(`🗑️ Eliminando ubicación ID: ${ubicacionExistente.id}`);
@@ -1038,7 +1038,7 @@ const ArticuloForm: React.FC = () => {
 
       // Crear nuevas ubicaciones
       console.log(`📍 Creando ${ubicaciones.length} nuevas ubicaciones...`);
-      
+
       for (const ubicacion of ubicaciones) {
         const ubicacionData = {
           idArticulo: articleId,
@@ -1049,7 +1049,7 @@ const ArticuloForm: React.FC = () => {
 
         await createUbicacionMutation.mutateAsync(ubicacionData);
       }
-      
+
       return true;
     } catch (error) {
       console.error("Error al guardar ubicaciones:", error);
@@ -1061,7 +1061,7 @@ const ArticuloForm: React.FC = () => {
   const cleanArticuloData = (formData: any) => {
     // Remover presentaciones y cualquier campo que no sea parte del esquema del artículo
     const { presentaciones, ...cleanData } = formData;
-    
+
     // Asegurar que los campos numéricos sean números
     const numericFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo'];
     numericFields.forEach(field => {
@@ -1069,7 +1069,7 @@ const ArticuloForm: React.FC = () => {
         cleanData[field] = Number(cleanData[field]);
       }
     });
-    
+
     // Asegurar que los campos booleanos sean booleanos
     const booleanFields = ['manejaLote', 'manejaSerial', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'suspendido'];
     booleanFields.forEach(field => {
@@ -1077,7 +1077,7 @@ const ArticuloForm: React.FC = () => {
         cleanData[field] = Boolean(cleanData[field]);
       }
     });
-    
+
     console.log('🧹 Datos limpiados para artículo (sin presentaciones):', cleanData);
     return cleanData;
   };
@@ -1092,17 +1092,17 @@ const ArticuloForm: React.FC = () => {
     try {
       console.log(`💾 Procesando presentaciones para artículo ${articleId}...`);
       console.log(`📋 Presentaciones seleccionadas:`, Array.from(presentacionesSeleccionadas));
-      
+
       // En modo edición, primero eliminar presentaciones existentes
       if (isEditingMode && articuloPresentacionesData?.data) {
         console.log('🗑️ Eliminando presentaciones existentes en modo edición...');
-        
+
         const presentacionesExistentes = articuloPresentacionesData.data.filter(
           (articuloPres: any) => articuloPres.idArticulo === articleId
         );
-        
+
         console.log(`📋 ${presentacionesExistentes.length} presentaciones existentes encontradas`);
-        
+
         for (const presentacionExistente of presentacionesExistentes) {
           try {
             console.log(`🗑️ Eliminando presentación ID: ${presentacionExistente.id}`);
@@ -1117,12 +1117,12 @@ const ArticuloForm: React.FC = () => {
 
       // Crear nuevas presentaciones con su configuración específica
       console.log(`📦 Creando ${presentacionesSeleccionadas.size} nuevas presentaciones...`);
-      
+
       let i = 0;
       for (const presentacionId of presentacionesSeleccionadas) {
         const config = presentacionesConfig[presentacionId];
         if (!config) continue; // Skip si no tiene configuración
-        
+
         const presentacionData = {
           idArticulo: articleId,
           idPresentacion: presentacionId,
@@ -1143,9 +1143,9 @@ const ArticuloForm: React.FC = () => {
         };
 
         console.log(`📦 Creando presentación ${i + 1}:`, presentacionData);
-        
+
         await createPresentacionMutation.mutateAsync(presentacionData);
-        
+
         console.log(`✅ Presentación ${i + 1} creada exitosamente`);
         i++;
       }
@@ -1177,11 +1177,11 @@ const ArticuloForm: React.FC = () => {
     console.log('🔄 handleUpdate ejecutándose...');
     let articleId = null;
     console.log('SE LLAMO EL HANDLE UPDATE');
-    if(isEditingMode && currentItem){
+    if (isEditingMode && currentItem) {
       console.log('SE LLAMO EL HANDLE UPDATE EN EDIT MODE');
       console.log(currentItem);
       articleId = currentItem.id;
-    }else if(createdArticleId){
+    } else if (createdArticleId) {
       articleId = createdArticleId;
     }
     if (!articleId) {
@@ -1195,26 +1195,24 @@ const ArticuloForm: React.FC = () => {
       // Actualizar el artículo principal
       console.log('📝 Datos del formulario recibidos:', formData);
       console.log('📝 Cantidad de claves:', Object.keys(formData).length);
-      
+
       // En modo edición, siempre actualizar incluso si no hay cambios
       if (isEditingMode) {
         console.log('📝 Actualizando datos del artículo principal...');
         // Limpiar datos para remover presentaciones del payload del artículo
         const cleanData = cleanArticuloData(formData);
         console.log('📝 Datos limpiados para envío:', cleanData);
-        
+
         await updateArticuloMutation.mutateAsync({ id: articleId, formData: cleanData });
         console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
-        showUpdateSuccess('el artículo');
       } else if (Object.keys(formData).length > 0) {
         // En modo creación, solo actualizar si hay datos
         console.log('📝 Actualizando datos del artículo principal...');
         const cleanData = cleanArticuloData(formData);
         console.log('📝 Datos limpiados para envío:', cleanData);
-        
+
         await updateArticuloMutation.mutateAsync({ id: articleId, formData: cleanData });
         console.log('LUEGO DEL LLAMADO A UPDATE ARTICULO');
-        showUpdateSuccess('el artículo');
       } else {
         console.log('ℹ️ No hay datos del formulario para actualizar');
       }
@@ -1230,7 +1228,7 @@ const ArticuloForm: React.FC = () => {
     console.log('🚀 onSubmit ejecutándose. ActiveTab:', activeTab, 'isEditingMode:', isEditingMode);
     console.log('📊 Datos recibidos:', data);
     console.log('📊 Errores del formulario:', errors);
-    
+
     if (isSubmitting) {
       console.log('⚠️ Ya está enviando, retornando...');
       return;
@@ -1260,13 +1258,13 @@ const ArticuloForm: React.FC = () => {
           console.log('📝 Datos para actualización:', formData);
           console.log('📝 Campo presentaciones:', formData.presentaciones);
           console.log('📝 Tipo de presentaciones:', typeof formData.presentaciones);
-          
+
           // Asegurar que el campo presentaciones sea un array de números
           if (formData.presentaciones && typeof formData.presentaciones === 'object' && !Array.isArray(formData.presentaciones)) {
             console.log('⚠️ Campo presentaciones es un objeto, convirtiendo a array...');
             formData.presentaciones = Array.from(presentacionesSeleccionadas);
           }
-          
+
           success = await handleUpdate(formData);
           console.log('✅ Resultado de actualización:', success);
         }
@@ -1291,14 +1289,14 @@ const ArticuloForm: React.FC = () => {
       else if (activeTab === "presentaciones") {
         console.log('🎯 Procesando presentaciones...');
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
-        
+
         if (articleId && presentacionesSeleccionadas.size > 0) {
           console.log("📋 Presentaciones seleccionadas:", Array.from(presentacionesSeleccionadas));
-          
+
           try {
             // Usar la nueva función para manejar presentaciones
             success = await handlePresentaciones(articleId);
-            
+
             if (success) {
               console.log('✅ Presentaciones procesadas exitosamente. isEditingMode:', isEditingMode);
               if (isEditingMode) {
@@ -1329,23 +1327,23 @@ const ArticuloForm: React.FC = () => {
       else if (activeTab === "detalles") {
         console.log('🔧 Procesando detalles del artículo...');
         const articleId = isEditingMode ? currentItem?.id : createdArticleId;
-        
+
         if (articleId) {
           // En modo edición, siempre usar getValues para obtener todos los datos del formulario
           const formData = getValues();
           console.log('📝 Datos para actualización de detalles:', formData);
           console.log('📝 Campo presentaciones en detalles:', formData.presentaciones);
           console.log('📝 Tipo de presentaciones en detalles:', typeof formData.presentaciones);
-          
+
           // Asegurar que el campo presentaciones sea un array de números
           if (formData.presentaciones && typeof formData.presentaciones === 'object' && !Array.isArray(formData.presentaciones)) {
             console.log('⚠️ Campo presentaciones es un objeto, convirtiendo a array...');
             formData.presentaciones = Array.from(presentacionesSeleccionadas);
           }
-          
+
           success = await handleUpdate(formData);
           console.log('✅ Resultado de actualización de detalles:', success);
-          
+
           if (success) {
             if (isEditingMode) {
               // En modo edición, mostrar notificación de éxito
@@ -1492,7 +1490,7 @@ const ArticuloForm: React.FC = () => {
   if (isLoadingArticle) {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
-        <View 
+        <View
           className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.inventory.headerColor }}
         >
@@ -1502,20 +1500,20 @@ const ArticuloForm: React.FC = () => {
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={themes.inventory.headerTextColor} 
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={themes.inventory.headerTextColor}
             />
           </TouchableOpacity>
-          <Text 
+          <Text
             className="text-lg font-medium"
             style={{ color: themes.inventory.headerTextColor }}
           >
             Cargando...
           </Text>
         </View>
-        
+
         <View className="flex-1 justify-center items-center">
           <View className="bg-white rounded-xl p-8 mx-4 items-center shadow-sm">
             <Ionicons name="refresh" size={48} color={themes.inventory.buttonColor} />
@@ -1530,7 +1528,7 @@ const ArticuloForm: React.FC = () => {
   return (
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header */}
-      <View 
+      <View
         className="px-4 pt-4 pb-2 shadow-sm"
         style={{ backgroundColor: themes.inventory.headerColor }}
       >
@@ -1541,20 +1539,20 @@ const ArticuloForm: React.FC = () => {
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={themes.inventory.headerTextColor} 
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={themes.inventory.headerTextColor}
             />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text 
+            <Text
               className="text-lg font-bold"
               style={{ color: themes.inventory.headerTextColor }}
             >
               {isEditingMode ? "Editar Artículo" : "Nuevo Artículo"}
             </Text>
-            <Text 
+            <Text
               className="text-sm opacity-80"
               style={{ color: themes.inventory.headerTextColor }}
             >
@@ -1567,8 +1565,8 @@ const ArticuloForm: React.FC = () => {
         <View className="py-2">
           {viewMode === 'chips' ? (
             <View className="flex-row items-center justify-between py-3">
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingVertical: 0 }}
                 style={{ flex: 1 }}
@@ -1746,11 +1744,10 @@ const ArticuloForm: React.FC = () => {
                       name={field.name as keyof ArticuloFormData}
                       render={({ field: { onChange, value } }) => (
                         <TextInput
-                          className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                            errors[field.name as keyof ArticuloFormData]
-                              ? "border-red-500"
-                              : "border-gray-200"
-                          }`}
+                          className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${errors[field.name as keyof ArticuloFormData]
+                            ? "border-red-500"
+                            : "border-gray-200"
+                            }`}
                           placeholder={field.placeholder}
                           value={String(value || "")}
                           onChangeText={(text) => {
@@ -1815,17 +1812,16 @@ const ArticuloForm: React.FC = () => {
                           <View>
                             <TouchableOpacity
                               onPress={() => handleSelectPress(field.name)}
-                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                errors[field.name as keyof ArticuloFormData]
-                                  ? "border-red-500"
-                                  : "border-gray-200"
-                              }`}
+                              className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name as keyof ArticuloFormData]
+                                ? "border-red-500"
+                                : "border-gray-200"
+                                }`}
                             >
                               <Text className="text-gray-700">
                                 {selectedOption
                                   ? String(
-                                      (selectedOption as any)[field.optionLabel || "nombre"],
-                                    )
+                                    (selectedOption as any)[field.optionLabel || "nombre"],
+                                  )
                                   : "Seleccione una opción"}
                               </Text>
                               <Ionicons
@@ -1852,20 +1848,18 @@ const ArticuloForm: React.FC = () => {
                                         onChange((option as any)[field.optionValue || "id"]);
                                         setOpenSelect(null);
                                       }}
-                                      className={`px-4 py-3 border-b border-gray-100 ${
-                                        String(value) ===
+                                      className={`px-4 py-3 border-b border-gray-100 ${String(value) ===
                                         String((option as any)[field.optionValue || "id"])
-                                          ? "bg-blue-50"
-                                          : ""
-                                      }`}
+                                        ? "bg-blue-50"
+                                        : ""
+                                        }`}
                                     >
                                       <Text
-                                        className={`${
-                                          String(value) ===
+                                        className={`${String(value) ===
                                           String((option as any)[field.optionValue || "id"])
-                                            ? "text-blue-600"
-                                            : "text-gray-700"
-                                        }`}
+                                          ? "text-blue-600"
+                                          : "text-gray-700"
+                                          }`}
                                       >
                                         {(option as any)[field.optionLabel || "nombre"]}
                                       </Text>
@@ -1900,11 +1894,10 @@ const ArticuloForm: React.FC = () => {
                     {switchFields.map((field, idx) => (
                       <View
                         key={field.name}
-                        className={`flex-row w-full justify-between items-center py-2 ${
-                          idx < switchFields.length - 1
-                            ? "border-b border-gray-300"
-                            : ""
-                        }`}
+                        className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1
+                          ? "border-b border-gray-300"
+                          : ""
+                          }`}
                       >
                         <View className="w-3/4">
                           <Text className="text-gray-700 font-medium">
@@ -1958,7 +1951,7 @@ const ArticuloForm: React.FC = () => {
 
             {activeTab === "presentaciones" && (
               <>
-                <View className="mb-6">                  
+                <View className="mb-6">
                   {/* Contador de presentaciones seleccionadas */}
                   <View className="bg-gray-50 rounded-lg p-4 mb-2">
                     <Text className="text-sm font-medium text-gray-700">
@@ -1994,7 +1987,7 @@ const ArticuloForm: React.FC = () => {
                               <Ionicons name="checkmark" size={14} color="white" />
                             )}
                           </View>
-                          
+
                           <View className="flex-1">
                             <Text className="font-semibold text-gray-800 text-base">
                               {presentacion.nombre}
@@ -2014,7 +2007,7 @@ const ArticuloForm: React.FC = () => {
                                 className="w-full px-3 py-2 bg-white rounded-lg border border-gray-300"
                                 placeholder="1"
                                 value={String(config.equivalencia)}
-                                onChangeText={(value) => 
+                                onChangeText={(value) =>
                                   updatePresentacionConfig(presentacion.id, "equivalencia", value)
                                 }
                                 keyboardType="numeric"
@@ -2032,7 +2025,7 @@ const ArticuloForm: React.FC = () => {
                                 </View>
                                 <Switch
                                   value={config.esPrincipal}
-                                  onValueChange={(value) => 
+                                  onValueChange={(value) =>
                                     updatePresentacionConfig(presentacion.id, "esPrincipal", value)
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
@@ -2040,7 +2033,7 @@ const ArticuloForm: React.FC = () => {
                                   style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
-                              
+
                               {/* Usar en Ventas */}
                               <View className="flex-row justify-between items-center py-1 px-2 bg-gray-50 rounded-md">
                                 <View className="flex-1">
@@ -2050,7 +2043,7 @@ const ArticuloForm: React.FC = () => {
                                 </View>
                                 <Switch
                                   value={config.usarEnVentas}
-                                  onValueChange={(value) => 
+                                  onValueChange={(value) =>
                                     updatePresentacionConfig(presentacion.id, "usarEnVentas", value)
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
@@ -2058,7 +2051,7 @@ const ArticuloForm: React.FC = () => {
                                   style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
-                              
+
                               {/* Usar en Compras */}
                               <View className="flex-row justify-between items-center py-1 px-2 bg-gray-50 rounded-md">
                                 <View className="flex-1">
@@ -2068,7 +2061,7 @@ const ArticuloForm: React.FC = () => {
                                 </View>
                                 <Switch
                                   value={config.usarEnCompras}
-                                  onValueChange={(value) => 
+                                  onValueChange={(value) =>
                                     updatePresentacionConfig(presentacion.id, "usarEnCompras", value)
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
@@ -2105,7 +2098,7 @@ const ArticuloForm: React.FC = () => {
                   <Text className="text-lg font-medium text-gray-800 mb-4">
                     Detalle del Producto
                   </Text>
-                  
+
                   {/* Text and Number Fields */}
                   {textFields.map((field) => (
                     <View key={field.name} className="mb-4">
@@ -2124,11 +2117,10 @@ const ArticuloForm: React.FC = () => {
                         name={field.name as keyof ArticuloFormData}
                         render={({ field: { onChange, value } }) => (
                           <TextInput
-                            className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${
-                              errors[field.name as keyof ArticuloFormData]
-                                ? "border-red-500"
-                                : "border-gray-200"
-                            }`}
+                            className={`w-full px-4 py-3 bg-gray-50 rounded-lg border ${errors[field.name as keyof ArticuloFormData]
+                              ? "border-red-500"
+                              : "border-gray-200"
+                              }`}
                             placeholder={field.placeholder}
                             value={String(value || "")}
                             onChangeText={(text) => {
@@ -2192,17 +2184,16 @@ const ArticuloForm: React.FC = () => {
                             <View>
                               <TouchableOpacity
                                 onPress={() => handleSelectPress(field.name)}
-                                className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${
-                                  errors[field.name as keyof ArticuloFormData]
-                                    ? "border-red-500"
-                                    : "border-gray-200"
-                                }`}
+                                className={`w-full px-4 py-3 bg-gray-50 rounded-lg border flex-row justify-between items-center ${errors[field.name as keyof ArticuloFormData]
+                                  ? "border-red-500"
+                                  : "border-gray-200"
+                                  }`}
                               >
                                 <Text className="text-gray-700">
                                   {selectedOption
                                     ? String(
-                                        (selectedOption as any)[field.optionLabel || "nombre"],
-                                      )
+                                      (selectedOption as any)[field.optionLabel || "nombre"],
+                                    )
                                     : "Seleccione una opción"}
                                 </Text>
                                 <Ionicons
@@ -2229,20 +2220,18 @@ const ArticuloForm: React.FC = () => {
                                           onChange((option as any)[field.optionValue || "id"]);
                                           setOpenSelect(null);
                                         }}
-                                        className={`px-4 py-3 border-b border-gray-100 ${
-                                          String(value) ===
+                                        className={`px-4 py-3 border-b border-gray-100 ${String(value) ===
                                           String((option as any)[field.optionValue || "id"])
-                                            ? "bg-blue-50"
-                                            : ""
-                                        }`}
+                                          ? "bg-blue-50"
+                                          : ""
+                                          }`}
                                       >
                                         <Text
-                                          className={`${
-                                            String(value) ===
+                                          className={`${String(value) ===
                                             String((option as any)[field.optionValue || "id"])
-                                              ? "text-blue-600"
-                                              : "text-gray-700"
-                                          }`}
+                                            ? "text-blue-600"
+                                            : "text-gray-700"
+                                            }`}
                                         >
                                           {(option as any)[field.optionLabel || "nombre"]}
                                         </Text>
@@ -2277,11 +2266,10 @@ const ArticuloForm: React.FC = () => {
                       {switchFields.map((field, idx) => (
                         <View
                           key={field.name}
-                          className={`flex-row w-full justify-between items-center py-2 ${
-                            idx < switchFields.length - 1
-                              ? "border-b border-gray-300"
-                              : ""
-                          }`}
+                          className={`flex-row w-full justify-between items-center py-2 ${idx < switchFields.length - 1
+                            ? "border-b border-gray-300"
+                            : ""
+                            }`}
                         >
                           <View className="w-3/4">
                             <Text className="text-gray-700 font-medium">
@@ -2323,7 +2311,7 @@ const ArticuloForm: React.FC = () => {
                   <Text className="text-lg font-medium text-gray-800 mb-4">
                     Lista de Precio
                   </Text>
-                  
+
                   {/* Form for price list */}
                   <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
                     {/* Lista de Precio */}
@@ -2339,8 +2327,8 @@ const ArticuloForm: React.FC = () => {
                           <Text className="text-gray-700">
                             {selectedListaPrecio
                               ? listasPreciosData?.data.find(
-                                  (l) => l.id === Number(selectedListaPrecio),
-                                )?.nombre
+                                (l) => l.id === Number(selectedListaPrecio),
+                              )?.nombre
                               : "Seleccione una lista de precio"}
                           </Text>
                           <Ionicons
@@ -2386,8 +2374,8 @@ const ArticuloForm: React.FC = () => {
                           <Text className="text-gray-700">
                             {selectedMoneda
                               ? monedasData?.data.find(
-                                  (m) => m.id === Number(selectedMoneda),
-                                )?.nombre
+                                (m) => m.id === Number(selectedMoneda),
+                              )?.nombre
                               : "Seleccione una moneda"}
                           </Text>
                           <Ionicons
@@ -2455,7 +2443,7 @@ const ArticuloForm: React.FC = () => {
                               // Solo permite números y barras
                               const numericText = text.replace(/[^0-9]/g, '');
                               let formattedText = '';
-                              
+
                               // Auto-formateo con barras
                               if (numericText.length <= 2) {
                                 formattedText = numericText;
@@ -2464,7 +2452,7 @@ const ArticuloForm: React.FC = () => {
                               } else if (numericText.length <= 8) {
                                 formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2, 4) + '/' + numericText.slice(4, 8);
                               }
-                              
+
                               if (formattedText.length <= 10) {
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
@@ -2512,18 +2500,18 @@ const ArticuloForm: React.FC = () => {
                                 }));
                                 return;
                               }
-                              
+
                               if (selectedDate) {
                                 const day = selectedDate.getDate().toString().padStart(2, '0');
                                 const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
                                 const year = selectedDate.getFullYear().toString();
                                 const formattedDate = `${year}/${month}/${day}`;
-                                
+
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
                                   fechaDesde: formattedDate,
                                 }));
-                                
+
                                 if (Platform.OS === 'android') {
                                   setShowPrecioDatePicker((prev) => ({
                                     ...prev,
@@ -2535,7 +2523,7 @@ const ArticuloForm: React.FC = () => {
                           />
                         )}
                       </View>
-                      
+
                       {/* Fecha Hasta */}
                       <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">
@@ -2550,7 +2538,7 @@ const ArticuloForm: React.FC = () => {
                               // Solo permite números y barras
                               const numericText = text.replace(/[^0-9]/g, '');
                               let formattedText = '';
-                              
+
                               // Auto-formateo con barras
                               if (numericText.length <= 2) {
                                 formattedText = numericText;
@@ -2559,7 +2547,7 @@ const ArticuloForm: React.FC = () => {
                               } else if (numericText.length <= 8) {
                                 formattedText = numericText.slice(0, 2) + '/' + numericText.slice(2, 4) + '/' + numericText.slice(4, 8);
                               }
-                              
+
                               if (formattedText.length <= 10) {
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
@@ -2607,18 +2595,18 @@ const ArticuloForm: React.FC = () => {
                                 }));
                                 return;
                               }
-                              
+
                               if (selectedDate) {
                                 const day = selectedDate.getDate().toString().padStart(2, '0');
                                 const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
                                 const year = selectedDate.getFullYear().toString();
                                 const formattedDate = `${year}/${month}/${day}`;
-                                
+
                                 setPrecioInputs((prev: PrecioInputs) => ({
                                   ...prev,
                                   fechaHasta: formattedDate,
                                 }));
-                                
+
                                 if (Platform.OS === 'android') {
                                   setShowPrecioDatePicker((prev) => ({
                                     ...prev,
@@ -2642,36 +2630,34 @@ const ArticuloForm: React.FC = () => {
                           !selectedListaPrecio ||
                           !selectedMoneda
                         }
-                        className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
-                          !precioInputs.monto ||
+                        className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${!precioInputs.monto ||
                           !precioInputs.fechaDesde ||
                           !selectedListaPrecio ||
                           !selectedMoneda
-                            ? "bg-gray-100"
-                            : "bg-blue-500"
-                        }`}
+                          ? "bg-gray-100"
+                          : "bg-blue-500"
+                          }`}
                       >
                         <Ionicons
                           name="add-circle"
                           size={20}
                           color={
                             !precioInputs.monto ||
-                            !precioInputs.fechaDesde ||
-                            !selectedListaPrecio ||
-                            !selectedMoneda
+                              !precioInputs.fechaDesde ||
+                              !selectedListaPrecio ||
+                              !selectedMoneda
                               ? "#9CA3AF"
                               : "#FFFFFF"
                           }
                         />
                         <Text
-                          className={`text-sm font-medium ${
-                            !precioInputs.monto ||
+                          className={`text-sm font-medium ${!precioInputs.monto ||
                             !precioInputs.fechaDesde ||
                             !selectedListaPrecio ||
                             !selectedMoneda
-                              ? "text-gray-400"
-                              : "text-white"
-                          }`}
+                            ? "text-gray-400"
+                            : "text-white"
+                            }`}
                         >
                           Agregar Precio
                         </Text>
@@ -2719,7 +2705,7 @@ const ArticuloForm: React.FC = () => {
                     </View>
                   ))}
 
-                  
+
                 </View>
               </>
             )}
@@ -2731,7 +2717,7 @@ const ArticuloForm: React.FC = () => {
                   <Text className="text-lg font-medium text-gray-800 mb-4">
                     Ubicaciones en Almacén
                   </Text>
-                  
+
                   {/* Form for location */}
                   <View className="bg-white border border-gray-200 rounded-lg p-3 mb-4">
                     {/* Almacén */}
@@ -2747,8 +2733,8 @@ const ArticuloForm: React.FC = () => {
                           <Text className="text-gray-700">
                             {selectedAlmacen
                               ? almacenesData?.data.find(
-                                  (a) => a.id === Number(selectedAlmacen),
-                                )?.nombre
+                                (a) => a.id === Number(selectedAlmacen),
+                              )?.nombre
                               : "Seleccione un almacén"}
                           </Text>
                           <Ionicons
@@ -2799,11 +2785,10 @@ const ArticuloForm: React.FC = () => {
                       <TouchableOpacity
                         onPress={addUbicacion}
                         disabled={!selectedAlmacen || !ubicacionInput}
-                        className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${
-                          !selectedAlmacen || !ubicacionInput
-                            ? "bg-gray-100"
-                            : "bg-blue-500"
-                        }`}
+                        className={`flex-row items-center space-x-2 py-2 px-4 rounded-lg ${!selectedAlmacen || !ubicacionInput
+                          ? "bg-gray-100"
+                          : "bg-blue-500"
+                          }`}
                       >
                         <Ionicons
                           name="add-circle"
@@ -2815,11 +2800,10 @@ const ArticuloForm: React.FC = () => {
                           }
                         />
                         <Text
-                          className={`text-sm font-medium ${
-                            !selectedAlmacen || !ubicacionInput
-                              ? "text-gray-400"
-                              : "text-white"
-                          }`}
+                          className={`text-sm font-medium ${!selectedAlmacen || !ubicacionInput
+                            ? "text-gray-400"
+                            : "text-white"
+                            }`}
                         >
                           Agregar Ubicación
                         </Text>
@@ -2873,18 +2857,13 @@ const ArticuloForm: React.FC = () => {
                       {selectedImages.length > 1 && (
                         <TouchableOpacity
                           onPress={toggleOrderMode}
-                          className={`px-3 py-1 rounded-lg flex-row items-center mr-2 ${
-                            isOrderMode ? 'bg-blue-500' : 'bg-gray-200'
-                          }`}
-                        >
+                          className={`px-3 py-1 rounded-lg flex-row items-center mr-2 ${isOrderMode ? 'bg-blue-500' : 'bg-gray-200'}`}>
                           <Ionicons
                             name="swap-vertical"
                             size={16}
                             color={isOrderMode ? 'white' : '#6B7280'}
                           />
-                          <Text className={`ml-1 text-sm font-medium ${
-                            isOrderMode ? 'text-white' : 'text-gray-700'
-                          }`}>
+                          <Text className={`ml-1 text-sm font-medium ${isOrderMode ? 'text-white' : 'text-gray-700'}`}>
                             {isOrderMode ? 'Cancelar' : 'Orden'}
                           </Text>
                         </TouchableOpacity>
@@ -2906,7 +2885,7 @@ const ArticuloForm: React.FC = () => {
                       )}
                     </View>
                   </View>
-                  
+
                   {/* Instrucciones para modo ordenamiento */}
                   {isOrderMode && selectedImages.length > 0 && (
                     <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
@@ -2954,7 +2933,7 @@ const ArticuloForm: React.FC = () => {
                           const order = imageOrder[image.id] || 0;
                           const isPrincipal = order === 1;
                           const isSelectedForDelete = selectedImageForDelete === index;
-                          
+
                           return (
                             <View
                               key={image.id || `image-${index}`}
@@ -2973,11 +2952,9 @@ const ArticuloForm: React.FC = () => {
                                 }}
                                 activeOpacity={0.8}
                               >
-                                <View className={`relative w-full aspect-square rounded-xl overflow-hidden ${
-                                  isPrincipal ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
-                                } ${isSelectedForDelete ? 'ring-2 ring-red-500 ring-offset-2' : ''} ${
-                                  isOrderMode && !order ? 'ring-2 ring-blue-400 ring-offset-2' : ''
-                                }`}>
+                                <View className={`relative w-full aspect-square rounded-xl overflow-hidden ${isPrincipal ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
+                                  } ${isSelectedForDelete ? 'ring-2 ring-red-500 ring-offset-2' : ''} ${isOrderMode && !order ? 'ring-2 ring-blue-400 ring-offset-2' : ''
+                                  }`}>
                                   {/* Image */}
                                   <Image
                                     source={{ uri: image.uri }}
@@ -2987,9 +2964,8 @@ const ArticuloForm: React.FC = () => {
 
                                   {/* Order Number Badge - Solo visible cuando no está en modo ordenamiento */}
                                   {!isOrderMode && (
-                                    <View className={`absolute top-1 left-1 w-6 h-6 rounded-full items-center justify-center shadow-lg z-10 ${
-                                      isPrincipal ? "bg-yellow-500" : "bg-blue-500"
-                                    }`}>
+                                    <View className={`absolute top-1 left-1 w-6 h-6 rounded-full items-center justify-center shadow-lg z-10 ${isPrincipal ? "bg-yellow-500" : "bg-blue-500"
+                                      }`}>
                                       <Text className="text-white text-xs font-bold">
                                         {order || '#'}
                                       </Text>
@@ -3024,13 +3000,13 @@ const ArticuloForm: React.FC = () => {
 
             {/* Modal de confirmación de eliminación - Global */}
             {showDeleteModal && (
-              <TouchableOpacity 
-                className="absolute inset-0 items-center justify-center z-50" 
-                style={{ 
-                  position: 'absolute', 
-                  top: 0, 
-                  left: 0, 
-                  right: 0, 
+              <TouchableOpacity
+                className="absolute inset-0 items-center justify-center z-50"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
                   bottom: 0,
                   width: '100%',
                   height: '100%'
@@ -3038,11 +3014,11 @@ const ArticuloForm: React.FC = () => {
                 activeOpacity={1}
                 onPress={cancelDeleteImage}
               >
-                <TouchableOpacity 
+                <TouchableOpacity
                   activeOpacity={1}
                   onPress={(e) => e.stopPropagation()}
                 >
-                  <View className="bg-white rounded-xl p-6 mx-6 max-w-sm" style={{ 
+                  <View className="bg-white rounded-xl p-6 mx-6 max-w-sm" style={{
                     elevation: 30,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 10 },
@@ -3082,7 +3058,7 @@ const ArticuloForm: React.FC = () => {
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
-            </View>
+          </View>
         </ScrollView>
 
         {/* Footer Buttons - Changed to Cancel/Save */}
@@ -3092,8 +3068,8 @@ const ArticuloForm: React.FC = () => {
             <TouchableOpacity
               className="flex-1 bg-gray-100 py-2 rounded-xl flex-row justify-center items-center"
               onPress={() => {
-              navigateBack();
-            }}
+                navigateBack();
+              }}
               disabled={isSubmitting}
             >
               <Ionicons
@@ -3109,16 +3085,16 @@ const ArticuloForm: React.FC = () => {
             {/* Save Button */}
             <TouchableOpacity
               style={{ backgroundColor: themes.inventory.buttonColor }}
-              className={`flex-1 py-3 rounded-xl flex-row justify-center items-center shadow-sm ${
-                isSubmitting ? "opacity-70" : ""
-              }`}
+              className={`flex-1 py-3 rounded-xl flex-row justify-center items-center shadow-sm ${isSubmitting ? "opacity-70" : ""
+                }`}
               onPress={() => {
                 console.log('🔘 Botón presionado. ActiveTab:', activeTab, 'isEditingMode:', isEditingMode);
                 console.log('📊 Errores actuales:', errors);
-                if(activeTab === "ficha"){
+                if (activeTab === "ficha") {
                   console.log('📝 Ejecutando handleSubmit para ficha...');
+                  console.log(currentItem)
                   handleSubmit(onSubmit)();
-                } else if(activeTab === "detalles"){
+                } else if (activeTab === "detalles") {
                   console.log('📝 Ejecutando handleSubmit para detalles...');
                   handleSubmit(onSubmit)();
                 } else {
@@ -3134,7 +3110,7 @@ const ArticuloForm: React.FC = () => {
                   name="refresh"
                   size={20}
                   color={themes.inventory.buttonTextColor}
-                  style={{ 
+                  style={{
                     transform: [{ rotate: isSubmitting ? '360deg' : '0deg' }]
                   }}
                 />
@@ -3149,8 +3125,8 @@ const ArticuloForm: React.FC = () => {
                 style={{ color: themes.inventory.buttonTextColor }}
                 className="font-semibold ml-2"
               >
-                {isSubmitting 
-                  ? (isEditingMode ? "Actualizando..." : "Guardando...") 
+                {isSubmitting
+                  ? (isEditingMode ? "Actualizando..." : "Guardando...")
                   : (isEditingMode ? "Actualizar" : "Guardar")
                 }
               </Text>
@@ -3232,7 +3208,7 @@ const ArticuloForm: React.FC = () => {
                 style={{ backgroundColor: themes.inventory.buttonColor }}
                 className="flex-1 py-3 rounded-lg"
               >
-                <Text 
+                <Text
                   style={{ color: themes.inventory.buttonTextColor }}
                   className="text-center font-medium"
                 >

@@ -25,46 +25,46 @@ export const inventorySchema = {
     nombre: z
       .string({ required_error: "El nombre es requerido" })
       .min(1, "El nombre es requerido"),
-    descripcion: z.string().optional(),
-    codigo: z.string().optional(),
-    codigoArticulo: z.string().optional(),
-    codigoModelo: z.string().optional(),
-    codigoBarra: z.string().optional(),
+    descripcion: z.string().nullable().optional(),
+    codigo: z.string().nullable().optional(),
+    codigoArticulo: z.string().nullable().optional(),
+    codigoModelo: z.string().nullable().optional(),
+    codigoBarra: z.string().nullable().optional(),
     idGrupo: z
       .number({ required_error: "Debe seleccionar un grupo" })
       .min(1, "Debe seleccionar un grupo válido"),
-    idColor: z.number().optional(),
-    idTalla: z.number().optional(),
+    idColor: z.number().nullable().optional(),
+    idTalla: z.number().nullable().optional(),
     idTipoArticulo: z
       .number({ required_error: "Debe seleccionar un tipo de artículo" })
       .min(1, "Debe seleccionar un tipo de artículo válido"),
     idImpuesto: z
       .number({ required_error: "Debe seleccionar un impuesto" })
       .min(1, "Debe seleccionar un impuesto válido"),
-    presentaciones: z.array(z.number()).optional(),
-    peso: z.number().optional(),
+    presentaciones: z.array(z.any()).optional(),
+    peso: z.number().nullable().optional(),
     precio: z
       .number({ required_error: "El precio es requerido" })
       .min(0, "El precio debe ser mayor o igual a 0"),
     stockActual: z
       .number({ required_error: "El stock es requerido" })
       .min(0, "El stock debe ser mayor o igual a 0"),
-    volumen: z.number().optional(),
-    metroCubico: z.number().optional(),
-    pie: z.number().optional(),
-    manejaLote: z.boolean().optional(),
-    manejaSerial: z.boolean().optional(),
-    poseeGarantia: z.boolean().optional(),
-    descripcionGarantia: z.string().optional(),
-    manejaPuntoMinimo: z.boolean().optional(),
+    volumen: z.number().nullable().optional(),
+    metroCubico: z.number().nullable().optional(),
+    pie: z.number().nullable().optional(),
+    manejaLote: z.boolean().nullable().optional(),
+    manejaSerial: z.boolean().nullable().optional(),
+    poseeGarantia: z.boolean().nullable().optional(),
+    descripcionGarantia: z.string().nullable().optional(),
+    manejaPuntoMinimo: z.boolean().nullable().optional(),
     puntoMinimo: z
       .number({ required_error: "El punto mínimo es requerido" })
       .min(0, "El punto mínimo debe ser mayor o igual a 0"),
-    manejaPuntoMaximo: z.boolean().optional(),
+    manejaPuntoMaximo: z.boolean().nullable().optional(),
     puntoMaximo: z
       .number({ required_error: "El punto máximo es requerido" })
       .min(0, "El punto máximo debe ser mayor o igual a 0"),
-    suspendido: z.boolean().optional(),
+    suspendido: z.boolean().nullable().optional(),
   }),
   categoria: z.object({
     ...baseSchema,
