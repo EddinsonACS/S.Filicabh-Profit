@@ -2889,19 +2889,21 @@ const ArticuloForm: React.FC = () => {
                           </Text>
                         </TouchableOpacity>
                       )}
-                      <TouchableOpacity
-                        onPress={() => setShowImagePickerModal(true)}
-                        className="px-3 py-1 rounded-lg bg-blue-500 flex-row items-center"
-                      >
-                        <Ionicons
-                          name="camera-outline"
-                          size={16}
-                          color="white"
-                        />
-                        <Text className="ml-1 text-sm font-medium text-white">
-                          Agregar
-                        </Text>
-                      </TouchableOpacity>
+                      {selectedImages.length > 0 && (
+                        <TouchableOpacity
+                          onPress={() => setShowImagePickerModal(true)}
+                          className="px-3 py-1 rounded-lg bg-blue-500 flex-row items-center"
+                        >
+                          <Ionicons
+                            name="camera-outline"
+                            size={16}
+                            color="white"
+                          />
+                          <Text className="ml-1 text-sm font-medium text-white">
+                            Agregar
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                   

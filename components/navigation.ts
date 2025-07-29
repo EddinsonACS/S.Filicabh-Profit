@@ -9,7 +9,9 @@ export const PUBLIC_ROUTES = [
   'MethodAuth',
   'LoadingScreen',
   'ArticuloDetalle',
-  'ArticuloForm'
+  'ArticuloForm',
+  'FiguraComercialDetalle',
+  'FiguraComercialForm'
 ];
 
 export const isPublicRoute = (path: string): boolean => {

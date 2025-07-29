@@ -43,8 +43,22 @@ export const useFiguraComercial = () => {
         if (!formData.rif) {
           throw new Error('El RIF es requerido');
         }
+        
         // Ensure all required fields for FiguraComercial are present or have defaults
         const data: Omit<FiguraComercial, 'id'> = {
+          // Campos del sistema
+          otrosF1: new Date().toISOString(),
+          otrosN1: 0,
+          otrosN2: 0,
+          otrosC1: '',
+          otrosC2: '',
+          otrosC3: '',
+          otrosC4: '',
+          otrosT1: '',
+          usuario: 1,
+          equipo: 'mobile',
+          
+          // Campos del formulario
           nombre: formData.nombre,
           rif: formData.rif,
           nit: formData.nit || '',
@@ -53,39 +67,30 @@ export const useFiguraComercial = () => {
           email: formData.email || '',
           emailAlterno: formData.emailAlterno || '',
           descripcionFiguraComercial: formData.descripcionFiguraComercial || '',
-          idPais: formData.idPais || 0, // Assuming 0 or a valid default
-          idCiudad: formData.idCiudad || 0, // Assuming 0 or a valid default
-          idRubro: formData.idRubro || 0, // Assuming 0 or a valid default
-          idSector: formData.idSector || 0, // Assuming 0 or a valid default
-          idVendedor: formData.idVendedor || 0, // Assuming 0 or a valid default
-          idAcuerdoDePago: formData.idAcuerdoDePago || 0, // Assuming 0 or a valid default
-          idTipoPersona: formData.idTipoPersona || 0, // Assuming 0 or a valid default
+          idPais: formData.idPais || 0,
+          idCiudad: formData.idCiudad || 0,
+          idRubro: formData.idRubro || 0,
+          idSector: formData.idSector || 0,
+          idVendedor: formData.idVendedor || 0,
+          idAcuerdoDePago: formData.idAcuerdoDePago || 0,
+          idTipoPersona: formData.idTipoPersona || 0,
           activoVentas: formData.activoVentas !== undefined ? formData.activoVentas : true,
           activoCompras: formData.activoCompras !== undefined ? formData.activoCompras : true,
-          esCasaMatriz: formData.esCasaMatriz !== undefined ? formData.esCasaMatriz : false,
-          codigoFiguraComercialCasaMatriz: formData.codigoFiguraComercialCasaMatriz || 0,
+          esSucursal: formData.esSucursal !== undefined ? formData.esSucursal : false,
+          idFiguraComercialCasaMatriz: formData.idFiguraComercialCasaMatriz || 0,
           direccionComercial: formData.direccionComercial || '',
           direccionEntrega: formData.direccionEntrega || '',
-          codigoMonedaLimiteCreditoVentas: formData.codigoMonedaLimiteCreditoVentas || '',
+          idMonedaLimiteCreditoVentas: formData.idMonedaLimiteCreditoVentas || 0,
           montolimiteCreditoVentas: formData.montolimiteCreditoVentas || 0,
-          codigoMonedaLimiteCreditoCompras: formData.codigoMonedaLimiteCreditoCompras || '',
+          idMonedaLimiteCreditoCompras: formData.idMonedaLimiteCreditoCompras || 0,
           montolimiteCreditoCompras: formData.montolimiteCreditoCompras || 0,
-          porceRetencionIva: formData.porceRetencionIva || 0,
+          porceRetencionIvaCompra: formData.porceRetencionIvaCompra || 0,
           aplicaRetVentasAuto: formData.aplicaRetVentasAuto !== undefined ? formData.aplicaRetVentasAuto : false,
           aplicaRetComprasAuto: formData.aplicaRetComprasAuto !== undefined ? formData.aplicaRetComprasAuto : false,
-          suspendido: formData.suspendido !== undefined ? formData.suspendido : false,
-          otrosF1: formData.otrosF1 || new Date().toISOString(),
-          otrosN1: formData.otrosN1 || 0,
-          otrosN2: formData.otrosN2 || 0,
-          otrosC1: formData.otrosC1 || '',
-          otrosC2: formData.otrosC2 || '',
-          otrosC3: formData.otrosC3 || '',
-          otrosC4: formData.otrosC4 || '',
-          otrosT1: formData.otrosT1 || '',
-          usuario: formData.usuario || 1, // Assuming a default user ID
-          equipo: formData.equipo || 'equipo' // Assuming a default team/device identifier
+          suspendido: formData.suspendido !== undefined ? formData.suspendido : false
         };
-        console.log(data);
+        
+        console.log('📊 Datos completos para crear figura comercial:', data);
         return apiFiguraComercial.create(endpoints.sales.figuraComercial.create, data);
       },
       onSuccess: () => {

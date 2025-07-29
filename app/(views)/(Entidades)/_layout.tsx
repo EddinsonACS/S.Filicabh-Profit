@@ -22,6 +22,20 @@ export default function RootLayout(): JSX.Element {
           animation: 'slide_from_right'
         }} 
       />
+      <Stack.Screen 
+        name="FiguraComercialDetalle" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right'
+        }} 
+      />
+      <Stack.Screen 
+        name="FiguraComercialForm" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right'
+        }} 
+      />
     </Stack>
   );
 }

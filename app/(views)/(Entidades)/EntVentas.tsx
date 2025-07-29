@@ -29,7 +29,7 @@ import { TipoVendedor } from '@/core/models/Ventas/TipoVendedor';
 import { Vendedor } from '@/core/models/Ventas/Vendedor';
 
 import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
@@ -769,7 +769,10 @@ const EntVentas: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<ItemUnion | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('acuerdodepago');
+  const { category } = useLocalSearchParams<{ category?: string }>();
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>(
+    (category && CATEGORIES.find(cat => cat.id === category)) ? category as CategoryId : 'acuerdodepago'
+  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<ItemUnion[]>([]);
@@ -824,6 +827,13 @@ const EntVentas: React.FC = () => {
   const { data: acuerdosDePagoOptionsData } = useGetAcuerdoDePagoList(1, 1000);
   const { data: tiposPersonaOptionsData } = useGetTipoPersonaList(1, 1000);
   const { data: figurasComercialesOptionsData } = useGetFiguraComercialList(1, 1000);
+
+  // Update selected category when URL parameter changes
+  useEffect(() => {
+    if (category && CATEGORIES.find(cat => cat.id === category)) {
+      setSelectedCategory(category as CategoryId);
+    }
+  }, [category]);
 
   // Reset pagination when category changes
   useEffect(() => {
@@ -1454,11 +1464,23 @@ const EntVentas: React.FC = () => {
   };
 
   const showItemDetails = (item: ItemUnion) => {
+    // Para figura comercial, usar componente con pestañas
+    if (selectedCategory === 'figuracomercial') {
+      router.push(`/(views)/(Entidades)/FiguraComercialDetalle?id=${item.id}`);
+      return;
+    }
+    
     setCurrentItem(item);
     setDetailModalVisible(true);
   };
 
   const openEditModal = (item: ItemUnion) => {
+    // Para figura comercial, usar componente con pestañas
+    if (selectedCategory === 'figuracomercial') {
+      router.push(`/(views)/(Entidades)/FiguraComercialForm?id=${item.id}&isEditing=true`);
+      return;
+    }
+    
     setCurrentItem(item);
     setIsEditing(true);
     setFormModalVisible(true);
@@ -1504,6 +1526,12 @@ const EntVentas: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onAddPress={() => {
+          // Para figura comercial, usar componente con pestañas
+          if (selectedCategory === 'figuracomercial') {
+            router.push('/(views)/(Entidades)/FiguraComercialForm');
+            return;
+          }
+          
           setCurrentItem(null);
           setIsEditing(false);
           setFormModalVisible(true);
