@@ -41,9 +41,9 @@ import {
 
 interface ListaPrecioItem {
   id: number;
-  idListasdePrecio: string;
-  idMoneda: string;
-  monto: string | number;
+  idListasdePrecio: number;
+  idMoneda: number;
+  monto: number;
   fechaDesde: string;
   fechaHasta: string;
   suspendido: boolean;
@@ -441,15 +441,28 @@ const ArticuloForm: React.FC = () => {
 
       if (preciosExistentes.length > 0) {
         // Mapear precios existentes al formato esperado
-        const preciosFormateados = preciosExistentes.map((precio: any) => ({
-          id: precio.id || Date.now() + Math.random(), // Usar ID del precio o generar uno único
-          idListasdePrecio: precio.idListasDePrecio,
-          idMoneda: precio.idMoneda,
-          monto: precio.monto,
-          fechaDesde: precio.fechaDesde?.replace(/-/g, "/") || "",
-          fechaHasta: precio.fechaHasta?.replace(/-/g, "/") || "",
-          suspendido: precio.suspendido ?? false
-        }));
+        const preciosFormateados = preciosExistentes.map((precio: any) => {
+          console.log('🔍 Precio individual antes del mapeo:', precio);
+          console.log('🔍 Campos específicos:', {
+            'precio.idListasDePrecio': precio.idListasDePrecio,
+            'precio.idListasdePrecio': precio.idListasdePrecio,
+            'precio.idMoneda': precio.idMoneda,
+            'precio.monto': precio.monto
+          });
+          
+          // Intentar ambas variaciones del nombre del campo
+          const idListasDePrecio = precio.idListasDePrecio || precio.idListasdePrecio || 0;
+          
+          return {
+            id: precio.id || Date.now() + Math.random(), // Usar ID del precio o generar uno único
+            idListasdePrecio: Number(idListasDePrecio),
+            idMoneda: Number(precio.idMoneda) || 0,
+            monto: Number(precio.monto) || 0,
+            fechaDesde: precio.fechaDesde?.replace(/-/g, "/") || "",
+            fechaHasta: precio.fechaHasta?.replace(/-/g, "/") || "",
+            suspendido: precio.suspendido ?? false
+          };
+        });
 
         console.log('💰 Precios formateados:', preciosFormateados);
         setListasPrecios(preciosFormateados);
@@ -503,8 +516,17 @@ const ArticuloForm: React.FC = () => {
       console.log('📸 Fotos existentes encontradas:', fotosExistentes);
 
       if (fotosExistentes.length > 0) {
+        // Ordenar fotos por el campo 'orden' antes de mapear
+        const fotosOrdenadas = fotosExistentes.sort((a: any, b: any) => {
+          const ordenA = a.orden || 999;
+          const ordenB = b.orden || 999;
+          return ordenA - ordenB;
+        });
+
+        console.log('📸 Fotos ordenadas por campo orden:', fotosOrdenadas.map(f => ({ id: f.id, orden: f.orden })));
+
         // Mapear fotos existentes al formato esperado
-        const fotosFormateadas = fotosExistentes.map((foto: any, index: number) => ({
+        const fotosFormateadas = fotosOrdenadas.map((foto: any, index: number) => ({
           id: foto.id,
           fotoId: foto.id, // ID de la foto para actualizaciones
           uri: `https://wise.filicabh.com.ve:5000/${foto.urlFoto}`,
@@ -516,10 +538,10 @@ const ArticuloForm: React.FC = () => {
           type: 'image/jpeg'
         }));
 
-        // Crear el orden de imágenes
+        // Crear el orden de imágenes usando el ID de la foto como clave
         const ordenImagenes: { [key: number]: number } = {};
-        fotosFormateadas.forEach((foto, index) => {
-          ordenImagenes[index] = foto.orden;
+        fotosFormateadas.forEach((foto) => {
+          ordenImagenes[foto.id] = foto.orden;
         });
 
         // Encontrar la imagen principal
@@ -851,9 +873,9 @@ const ArticuloForm: React.FC = () => {
     if (selectedListaPrecio && selectedMoneda && precioInputs.monto) {
       const nuevoPrecio: ListaPrecioItem = {
         id: Date.now(),
-        idListasdePrecio: selectedListaPrecio,
-        idMoneda: selectedMoneda,
-        monto: precioInputs.monto,
+        idListasdePrecio: Number(selectedListaPrecio),
+        idMoneda: Number(selectedMoneda),
+        monto: Number(precioInputs.monto),
         fechaDesde: precioInputs.fechaDesde,
         fechaHasta: precioInputs.fechaHasta,
         suspendido: false,
@@ -891,7 +913,34 @@ const ArticuloForm: React.FC = () => {
   // Submission functions
   const saveFotos = async (articleId: number): Promise<boolean> => {
     try {
-      // Solo procesar si hay fotos que agregar
+      // En modo edición, primero eliminar fotos que ya no están en selectedImages
+      if (isEditingMode && articuloFotosData?.data) {
+        console.log('🗑️ Verificando fotos a eliminar en modo edición...');
+        
+        const fotosExistentesEnBackend = articuloFotosData.data.filter(
+          (foto: any) => foto.idArticulo === articleId
+        );
+        
+        const fotosExistentesEnUI = selectedImages.filter(img => img.existente && img.fotoId);
+        const idsEnUI = fotosExistentesEnUI.map(img => img.fotoId);
+        
+        // Eliminar fotos que están en backend pero no en UI
+        const fotosAEliminar = fotosExistentesEnBackend.filter(
+          (foto: any) => !idsEnUI.includes(foto.id)
+        );
+        
+        for (const foto of fotosAEliminar) {
+          try {
+            console.log(`🗑️ Eliminando foto ID: ${foto.id}`);
+            await deleteFotoMutation.mutateAsync(foto.id);
+            console.log(`✅ Foto ${foto.id} eliminada`);
+          } catch (error) {
+            console.error(`❌ Error eliminando foto ${foto.id}:`, error);
+          }
+        }
+      }
+
+      // Solo procesar si hay fotos que agregar/actualizar
       if (selectedImages.length === 0) {
         console.log('📸 No hay fotos para procesar');
         return true;
@@ -901,10 +950,11 @@ const ArticuloForm: React.FC = () => {
 
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
-        const order = imageOrder[i] || i + 1;
-        const esPrincipal = i === principalImageIndex;
+        const order = imageOrder[image.id] || i + 1; // Usar image.id como clave
+        const esPrincipal = imageOrder[image.id] === 1; // Principal es la que tiene orden 1
 
         console.log(`📸 Procesando foto ${i + 1}:`, {
+          imageId: image.id,
           orden: order,
           esPrincipal,
           existente: image.existente || false,
@@ -987,16 +1037,34 @@ const ArticuloForm: React.FC = () => {
       console.log(`💰 Creando ${listasPrecios.length} nuevos precios...`);
 
       for (const precio of listasPrecios) {
+        // Validar que los campos requeridos no sean NaN y que los IDs sean válidos (> 0)
+        const idListasDePrecio = Number(precio.idListasdePrecio);
+        const idMoneda = Number(precio.idMoneda);
+        const monto = Number(precio.monto);
+        
+        if (isNaN(idListasDePrecio) || idListasDePrecio <= 0 ||
+            isNaN(idMoneda) || idMoneda <= 0 || 
+            isNaN(monto)) {
+          console.error('❌ Precio con campos inválidos, saltando:', {
+            idListasDePrecio,
+            idMoneda,
+            monto,
+            precio
+          });
+          continue;
+        }
+
         const precioData = {
           idArticulo: articleId,
-          idListasDePrecio: Number(precio.idListasdePrecio),
-          idMoneda: Number(precio.idMoneda),
-          monto: Number(precio.monto),
+          idListasDePrecio: idListasDePrecio,
+          idMoneda: idMoneda,
+          monto: monto,
           fechaDesde: precio.fechaDesde.replaceAll("/", "-"),
           fechaHasta: precio.fechaHasta.replaceAll("/", "-"),
           suspendido: precio.suspendido,
         };
 
+        console.log('💰 Enviando precio al backend:', precioData);
         await createPrecioMutation.mutateAsync(precioData);
       }
 

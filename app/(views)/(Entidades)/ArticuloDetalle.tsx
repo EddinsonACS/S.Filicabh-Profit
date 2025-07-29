@@ -1,4 +1,5 @@
 import DropdownOverlay from '@/components/common/DropdownOverlay';
+import ImageViewer from '@/components/common/ImageViewer';
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
@@ -10,15 +11,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  Image,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    Image,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const ArticuloDetalle: React.FC = () => {
@@ -127,6 +127,10 @@ const ArticuloDetalle: React.FC = () => {
         setIsDropdownOpen(!isDropdownOpen);
       });
     }
+  };
+
+  const handleImageModalClose = () => {
+    setShowImageViewer(false);
   };
 
   // Función para obtener campos de ficha básica
@@ -835,155 +839,13 @@ const ArticuloDetalle: React.FC = () => {
       />
 
 
-      {/* Image Viewer Modal with Zoom */}
-      <Modal
+      {/* Image Viewer Component */}
+      <ImageViewer
         visible={showImageViewer}
-        transparent={true}
-        statusBarTranslucent={true}
-        onRequestClose={() => setShowImageViewer(false)}
-      >
-        <View style={{ 
-          flex: 1, 
-          backgroundColor: 'rgba(0,0,0,0.9)',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          {/* Close Button */}
-          <TouchableOpacity
-            onPress={() => setShowImageViewer(false)}
-            style={{
-              position: 'absolute',
-              top: 50,
-              right: 20,
-              zIndex: 1000,
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              borderRadius: 20,
-              width: 40,
-              height: 40,
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <Ionicons name="close" size={24} color="white" />
-          </TouchableOpacity>
-
-          {/* Image Counter */}
-          {articulo?.fotos && articulo.fotos.length > 1 && (
-            <View style={{
-              position: 'absolute',
-              top: 50,
-              left: 20,
-              zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              borderRadius: 15,
-              paddingHorizontal: 12,
-              paddingVertical: 6
-            }}>
-              <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}>
-                {currentPhotoIndex + 1} de {articulo.fotos.length}
-              </Text>
-            </View>
-          )}
-
-          {/* Main Image with Zoom */}
-          {articulo?.fotos && articulo.fotos[currentPhotoIndex] && (
-            <ScrollView
-              maximumZoomScale={5}
-              minimumZoomScale={1}
-              showsHorizontalScrollIndicator={false}
-              showsVerticalScrollIndicator={false}
-              centerContent={true}
-              style={{ 
-                flex: 1,
-                width: screenWidth,
-                height: screenHeight * 0.8 
-              }}
-              contentContainerStyle={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: screenHeight * 0.8,
-                minWidth: screenWidth
-              }}
-            >
-              <Image
-                source={{
-                  uri: `https://wise.filicabh.com.ve:5000/${articulo.fotos[currentPhotoIndex].urlFoto}`,
-                }}
-                style={{
-                  width: screenWidth * 0.95,
-                  height: screenHeight * 0.7,
-                }}
-                resizeMode="contain"
-              />
-            </ScrollView>
-          )}
-
-          {/* Navigation for multiple images */}
-          {articulo?.fotos && articulo.fotos.length > 1 && (
-            <>
-              {/* Previous Button */}
-              {currentPhotoIndex > 0 && (
-                <TouchableOpacity
-                  onPress={() => setCurrentPhotoIndex(prev => prev - 1)}
-                  style={{
-                    position: 'absolute',
-                    left: 20,
-                    top: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    borderRadius: 25,
-                    width: 50,
-                    height: 50,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  <Ionicons name="chevron-back" size={30} color="white" />
-                </TouchableOpacity>
-              )}
-
-              {/* Next Button */}
-              {currentPhotoIndex < articulo.fotos.length - 1 && (
-                <TouchableOpacity
-                  onPress={() => setCurrentPhotoIndex(prev => prev + 1)}
-                  style={{
-                    position: 'absolute',
-                    right: 20,
-                    top: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    borderRadius: 25,
-                    width: 50,
-                    height: 50,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  <Ionicons name="chevron-forward" size={30} color="white" />
-                </TouchableOpacity>
-              )}
-            </>
-          )}
-
-          {/* Photo info overlay */}
-          {articulo?.fotos && articulo.fotos[currentPhotoIndex]?.esPrincipal && (
-            <View style={{
-              position: 'absolute',
-              bottom: 100,
-              alignSelf: 'center',
-              backgroundColor: 'rgba(255,215,0,0.9)',
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              flexDirection: 'row',
-              alignItems: 'center'
-            }}>
-              <Ionicons name="star" size={16} color="white" style={{ marginRight: 6 }} />
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                Imagen Principal
-              </Text>
-            </View>
-          )}
-        </View>
-      </Modal>
+        images={articulo?.fotos || []}
+        initialIndex={currentPhotoIndex}
+        onClose={handleImageModalClose}
+      />
     </View>
   );
 };
