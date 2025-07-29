@@ -1,3 +1,4 @@
+import DropdownOverlay from '@/components/common/DropdownOverlay';
 import { themes } from "@/components/Entidades/shared/theme";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { useAlmacen } from "@/hooks/Inventario/useAlmacen";
@@ -23,20 +24,20 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 interface ListaPrecioItem {
   id: number;
@@ -83,7 +84,6 @@ type ArticuloFormData = InventoryFormData['articulo'];
 
 const ArticuloForm: React.FC = () => {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id, isEditing } = useLocalSearchParams<{ id?: string; isEditing?: string }>();
   
   // Helper function for navigation
@@ -96,11 +96,37 @@ const ArticuloForm: React.FC = () => {
       router.replace('/(views)/(Entidades)/EntInventario?category=articulo');
     }
   };
-  
+
+  const handleDropdownPress = () => {
+    if (dropdownButtonRef.current) {
+      dropdownButtonRef.current.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+        setDropdownPosition({
+          x: pageX,
+          y: pageY,
+          width: width
+        });
+        setIsDropdownOpen(!isDropdownOpen);
+      });
+    } else {
+      // Si el ref no está disponible, solo toggle el estado
+      setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
+
+  const handleViewModeChange = (newMode: 'chips' | 'dropdown') => {
+    setViewMode(newMode);
+    // Resetear el estado del dropdown cuando se cambia de vista
+    setIsDropdownOpen(false);
+    // Resetear la posición del dropdown
+    setDropdownPosition({ x: 0, y: 0, width: 0 });
+  };
+
   const [activeTab, setActiveTab] = useState("ficha");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewMode, setViewMode] = useState<'chips' | 'dropdown'>('chips');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0, width: 0 });
+  const dropdownButtonRef = useRef<any>(null);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [imageOrder, setImageOrder] = useState<{[key: number]: number}>({});
   const [principalImageIndex, setPrincipalImageIndex] = useState<number>(-1);
@@ -126,6 +152,12 @@ const ArticuloForm: React.FC = () => {
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Estados para el modo de ordenamiento de fotos
+  const [isOrderMode, setIsOrderMode] = useState(false);
+  const [selectedImageForDelete, setSelectedImageForDelete] = useState<number | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
 
   const { 
@@ -409,6 +441,7 @@ const ArticuloForm: React.FC = () => {
       if (preciosExistentes.length > 0) {
         // Mapear precios existentes al formato esperado
         const preciosFormateados = preciosExistentes.map((precio: any) => ({
+          id: precio.id || Date.now() + Math.random(), // Usar ID del precio o generar uno único
           idListasdePrecio: precio.idListasDePrecio,
           idMoneda: precio.idMoneda,
           monto: precio.monto,
@@ -759,6 +792,57 @@ const ArticuloForm: React.FC = () => {
       setImageOrderNumber(imageId, 1);
       setPrincipalImageIndex(index);
     }
+  };
+
+  // Función para manejar el modo de ordenamiento
+  const toggleOrderMode = () => {
+    if (isOrderMode) {
+      // Salir del modo ordenamiento
+      setIsOrderMode(false);
+    } else {
+      // Entrar al modo ordenamiento - limpiar todos los órdenes
+      const newImageOrder: {[key: number]: number} = {};
+      setImageOrder(newImageOrder);
+      setIsOrderMode(true);
+    }
+  };
+
+  // Función para manejar la selección de orden en modo ordenamiento
+  const handleOrderSelection = (imageId: number) => {
+    if (!isOrderMode) return;
+    
+    // Obtener el siguiente orden disponible
+    const nextOrder = Object.keys(imageOrder).length + 1;
+    setImageOrderNumber(imageId, nextOrder);
+    
+    // Si es la primera foto seleccionada, hacerla principal
+    if (nextOrder === 1) {
+      const imageIndex = selectedImages.findIndex(img => img.id === imageId);
+      if (imageIndex !== -1) {
+        setPrincipalImageIndex(imageIndex);
+      }
+    }
+  };
+
+  // Función para manejar el long press para eliminar
+  const handleImageLongPress = (index: number) => {
+    setSelectedImageForDelete(index);
+    setShowDeleteModal(true);
+  };
+
+  // Función para confirmar eliminación
+  const confirmDeleteImage = () => {
+    if (selectedImageForDelete !== null) {
+      removeImage(selectedImageForDelete);
+      setSelectedImageForDelete(null);
+      setShowDeleteModal(false);
+    }
+  };
+
+  // Función para cancelar eliminación
+  const cancelDeleteImage = () => {
+    setSelectedImageForDelete(null);
+    setShowDeleteModal(false);
   };
 
   // List management functions
@@ -1409,7 +1493,7 @@ const ArticuloForm: React.FC = () => {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
         <View 
-          className="px-4 pt-12 pb-4 flex-row items-center"
+          className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.inventory.headerColor }}
         >
           <TouchableOpacity
@@ -1447,7 +1531,7 @@ const ArticuloForm: React.FC = () => {
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header */}
       <View 
-        className="px-4 pt-12 pb-2 shadow-sm"
+        className="px-4 pt-4 pb-2 shadow-sm"
         style={{ backgroundColor: themes.inventory.headerColor }}
       >
         <View className="flex-row items-center mb-2">
@@ -1482,11 +1566,11 @@ const ArticuloForm: React.FC = () => {
         {/* Tab Navigation - Chips or Dropdown Style */}
         <View className="py-2">
           {viewMode === 'chips' ? (
-            <View className="flex-row items-center justify-between px-4">
+            <View className="flex-row items-center justify-between py-3">
               <ScrollView 
                 horizontal 
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingVertical: 8 }}
+                contentContainerStyle={{ paddingVertical: 0 }}
                 style={{ flex: 1 }}
               >
                 {[
@@ -1500,10 +1584,10 @@ const ArticuloForm: React.FC = () => {
                   <TouchableOpacity
                     key={tab.id}
                     style={{
-                      marginRight: index < 5 ? 12 : 0, // No margin en el último elemento
-                      paddingHorizontal: 16,
-                      paddingVertical: 8,
-                      borderRadius: 8,
+                      marginRight: index < 5 ? 4 : 0, // Aplicar margen a todos excepto el último
+                      paddingHorizontal: 12, // Reducido de 16 a 12
+                      paddingVertical: 8, // Reducido de 8 a 6
+                      borderRadius: 6, // Reducido de 8 a 6
                       flexDirection: 'row',
                       alignItems: 'center',
                       backgroundColor: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.2)',
@@ -1519,15 +1603,15 @@ const ArticuloForm: React.FC = () => {
                   >
                     <Ionicons
                       name={tab.icon as any}
-                      size={16}
+                      size={14} // Reducido de 16 a 14
                       color={activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)'}
-                      style={{ marginRight: 6 }}
+                      style={{ marginRight: 4 }} // Reducido de 6 a 4
                     />
                     <Text
                       style={{
                         color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
                         fontWeight: activeTab === tab.id ? '600' : 'normal',
-                        fontSize: 14
+                        fontSize: 12 // Reducido de 14 a 12
                       }}
                     >
                       {tab.name}
@@ -1536,8 +1620,8 @@ const ArticuloForm: React.FC = () => {
                 ))}
               </ScrollView>
               <TouchableOpacity
-                className="bg-white rounded-2xl p-2 flex-row items-center ml-3"
-                onPress={() => setViewMode('dropdown')}
+                className="bg-white rounded-xl p-1.5 flex-row items-center ml-3" // Cambiado de rounded-2xl p-2 a rounded-xl p-1.5
+                onPress={() => handleViewModeChange('dropdown')}
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -1548,7 +1632,7 @@ const ArticuloForm: React.FC = () => {
               >
                 <Ionicons
                   name="list-outline"
-                  size={18}
+                  size={16} // Reducido de 18 a 16
                   color={themes.inventory.headerColor}
                 />
                 <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
@@ -1562,17 +1646,18 @@ const ArticuloForm: React.FC = () => {
                 <TouchableOpacity
                   style={{
                     backgroundColor: 'rgba(255,255,255,0.1)',
-                    borderRadius: 8,
+                    borderRadius: 6, // Reducido de 8 a 6
                     borderWidth: 1,
                     borderColor: 'rgba(255,255,255,0.2)',
-                    padding: 12,
+                    padding: 10, // Reducido de 12 a 10
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flex: 1,
                     marginRight: 12
                   }}
-                  onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onPress={handleDropdownPress}
+                  ref={dropdownButtonRef}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Ionicons
@@ -1584,11 +1669,11 @@ const ArticuloForm: React.FC = () => {
                         { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
                         { id: "fotos", name: "Fotos", icon: "camera-outline" }
                       ].find(tab => tab.id === activeTab)?.icon as any || 'grid-outline'}
-                      size={18}
+                      size={16} // Reducido de 18 a 16
                       color="white"
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 6 }} // Reducido de 8 a 6
                     />
-                    <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>
+                    <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}> {/* Reducido de 16 a 14 */}
                       {[
                         { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                         { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
@@ -1599,11 +1684,11 @@ const ArticuloForm: React.FC = () => {
                       ].find(tab => tab.id === activeTab)?.name || 'Seleccionar sección'}
                     </Text>
                   </View>
-                  <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="white" />
+                  <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="white" /> {/* Reducido de 18 a 16 */}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="bg-white rounded-2xl p-2 flex-row items-center"
-                  onPress={() => setViewMode('chips')}
+                  className="bg-white rounded-xl p-1.5 flex-row items-center" // Cambiado de rounded-2xl p-2 a rounded-xl p-1.5
+                  onPress={() => handleViewModeChange('chips')}
                   style={{
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
@@ -1614,7 +1699,7 @@ const ArticuloForm: React.FC = () => {
                 >
                   <Ionicons
                     name="grid-outline"
-                    size={18}
+                    size={16} // Reducido de 18 a 16
                     color={themes.inventory.headerColor}
                   />
                   <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
@@ -1623,103 +1708,7 @@ const ArticuloForm: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              {isDropdownOpen && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    borderBottomLeftRadius: 12,
-                    borderBottomRightRadius: 12,
-                    borderLeftWidth: 1,
-                    borderRightWidth: 1,
-                    borderBottomWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    marginTop: 4,
-                    maxHeight: 300,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 8,
-                    elevation: 8,
-                    zIndex: 1000
-                  }}
-                >
-                  {[
-                    { id: "ficha", name: "Ficha", icon: "document-text-outline" },
-                    { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
-                    { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                    { id: "precios", name: "Precios", icon: "pricetag-outline" },
-                    { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
-                    { id: "fotos", name: "Fotos", icon: "camera-outline" }
-                  ].map((tab) => (
-                    <TouchableOpacity
-                      key={tab.id}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        padding: 16,
-                        borderBottomWidth: 1,
-                        borderBottomColor: 'rgba(0,0,0,0.05)',
-                        backgroundColor: activeTab === tab.id ? 'rgba(88,28,135,0.1)' : 'transparent'
-                      }}
-                      onPress={() => {
-                        setActiveTab(tab.id);
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          backgroundColor: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.05)',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 12
-                        }}
-                      >
-                        <Ionicons
-                          name={tab.icon as any}
-                          size={18}
-                          color={activeTab === tab.id ? 'white' : 'rgba(0,0,0,0.6)'}
-                        />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={{
-                            color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.8)',
-                            fontWeight: activeTab === tab.id ? '600' : '500',
-                            fontSize: 16
-                          }}
-                        >
-                          {tab.name}
-                        </Text>
-                      </View>
-                      {activeTab === tab.id && (
-                        <View
-                          style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 12,
-                            backgroundColor: themes.inventory.buttonColor,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <Ionicons
-                            name="checkmark"
-                            size={16}
-                            color="white"
-                          />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+
             </View>
           )}
         </View>
@@ -1969,13 +1958,9 @@ const ArticuloForm: React.FC = () => {
 
             {activeTab === "presentaciones" && (
               <>
-                <View className="mb-6">
-                  <Text className="text-lg font-medium text-gray-800 mb-4">
-                    Presentaciones
-                  </Text>
-                  
+                <View className="mb-6">                  
                   {/* Contador de presentaciones seleccionadas */}
-                  <View className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <View className="bg-gray-50 rounded-lg p-4 mb-2">
                     <Text className="text-sm font-medium text-gray-700">
                       {presentacionesSeleccionadas.size} de {presentacionesDataArticulo?.data?.length || 0} presentaciones seleccionadas
                     </Text>
@@ -2037,11 +2022,11 @@ const ArticuloForm: React.FC = () => {
                             </View>
 
                             {/* Switches de configuración */}
-                            <View className="space-y-2">
+                            <View className="space-y-1">
                               {/* Es Principal */}
-                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                              <View className="flex-row justify-between items-center py-1 px-2 bg-gray-50 rounded-md">
                                 <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700">
+                                  <Text className="text-xs font-medium text-gray-700">
                                     Es Principal
                                   </Text>
                                 </View>
@@ -2052,13 +2037,14 @@ const ArticuloForm: React.FC = () => {
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
                                   thumbColor="#f4f3f4"
+                                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
                               
                               {/* Usar en Ventas */}
-                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                              <View className="flex-row justify-between items-center py-1 px-2 bg-gray-50 rounded-md">
                                 <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700">
+                                  <Text className="text-xs font-medium text-gray-700">
                                     Usar en Ventas
                                   </Text>
                                 </View>
@@ -2069,13 +2055,14 @@ const ArticuloForm: React.FC = () => {
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
                                   thumbColor="#f4f3f4"
+                                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
                               
                               {/* Usar en Compras */}
-                              <View className="flex-row justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                              <View className="flex-row justify-between items-center py-1 px-2 bg-gray-50 rounded-md">
                                 <View className="flex-1">
-                                  <Text className="text-sm font-medium text-gray-700">
+                                  <Text className="text-xs font-medium text-gray-700">
                                     Usar en Compras
                                   </Text>
                                 </View>
@@ -2086,6 +2073,7 @@ const ArticuloForm: React.FC = () => {
                                   }
                                   trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
                                   thumbColor="#f4f3f4"
+                                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
                             </View>
@@ -2097,7 +2085,7 @@ const ArticuloForm: React.FC = () => {
                   })}
 
                   {(!presentacionesDataArticulo?.data || presentacionesDataArticulo.data.length === 0) && (
-                    <View className="bg-gray-50 rounded-lg p-8 text-center">
+                    <View className="bg-gray-50 rounded-lg p-8">
                       <Ionicons name="layers-outline" size={48} color="#9ca3af" />
                       <Text className="text-gray-500 mt-2 text-center">
                         No hay presentaciones disponibles
@@ -2731,40 +2719,7 @@ const ArticuloForm: React.FC = () => {
                     </View>
                   ))}
 
-                  {/* Existing Article Prices */}
-                  {isEditingMode && preciosArticuloData && preciosArticuloData.length > 0 && (
-                    <View className="mt-6">
-                      <Text className="text-base font-semibold text-gray-800 mb-2">Precios Actuales del Artículo</Text>
-                      <Text className="text-sm text-gray-600 mb-3">
-                        Estos precios se cargarán para edición al guardar esta sección.
-                      </Text>
-                      <ScrollView className="max-h-48">
-                        {preciosArticuloData.map((precio: any) => (
-                          <View key={precio.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
-                            <View className="flex-row justify-between items-start">
-                              <View className="flex-1">
-                                <Text className="font-medium">
-                                  {precio.nombreListaPrecio || "Lista de Precio"}
-                                </Text>
-                                <Text className="text-gray-600">
-                                  {precio.nombreMoneda || "Moneda"}
-                                </Text>
-                                <Text className="font-bold text-lg text-blue-700">
-                                  {Number(precio.monto).toFixed(2)}
-                                </Text>
-                                <Text className="text-sm text-gray-500">
-                                  {precio.fechaDesde} {precio.fechaHasta ? `- ${precio.fechaHasta}` : ""}
-                                </Text>
-                              </View>
-                              <View className="bg-blue-100 px-3 py-1 rounded-full">
-                                <Text className="text-blue-700 text-xs font-medium">Actual</Text>
-                              </View>
-                            </View>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
+                  
                 </View>
               </>
             )}
@@ -2772,7 +2727,7 @@ const ArticuloForm: React.FC = () => {
             {activeTab === "ubicaciones" && (
               <>
                 {/* Location Section */}
-                <View className="mb-6">
+                <View className="mt-4 mb-6">
                   <Text className="text-lg font-medium text-gray-800 mb-4">
                     Ubicaciones en Almacén
                   </Text>
@@ -2902,53 +2857,72 @@ const ArticuloForm: React.FC = () => {
                       </View>
                     </View>
                   ))}
-
-                  {/* Existing Article Locations */}
-                  {isEditingMode && ubicacionesArticuloData && ubicacionesArticuloData.length > 0 && (
-                    <View className="mt-6">
-                      <Text className="text-base font-semibold text-gray-800 mb-2">Ubicaciones Actuales del Artículo</Text>
-                      <Text className="text-sm text-gray-600 mb-3">
-                        Estas ubicaciones se cargarán para edición al guardar esta sección.
-                      </Text>
-                      <ScrollView className="max-h-48">
-                        {ubicacionesArticuloData.map((ubicacion: any) => (
-                          <View key={ubicacion.id} className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
-                            <View className="flex-row justify-between items-start">
-                              <View className="flex-1">
-                                <Text className="font-medium">
-                                  {ubicacion.nombreAlmacen || "Almacén"}
-                                </Text>
-                                <Text className="text-gray-600">
-                                  {ubicacion.ubicacion || "Sin ubicación específica"}
-                                </Text>
-                              </View>
-                              <View className="bg-green-100 px-3 py-1 rounded-full">
-                                <Text className="text-green-700 text-xs font-medium">Actual</Text>
-                              </View>
-                            </View>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
                 </View>
               </>
             )}
 
             {activeTab === "fotos" && (
               <>
-                {/* Photos Section with Improved Ordering */}
+                {/* Photos Section - Optimized */}
                 <View className="mb-6">
-                  <Text className="text-lg font-medium text-gray-800 mb-4">
-                    Fotos del Artículo
-                  </Text>
+                  <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-lg font-medium text-gray-800">
+                      Fotos
+                    </Text>
+                    <View className="flex-row items-center">
+                      {selectedImages.length > 1 && (
+                        <TouchableOpacity
+                          onPress={toggleOrderMode}
+                          className={`px-3 py-1 rounded-lg flex-row items-center mr-2 ${
+                            isOrderMode ? 'bg-blue-500' : 'bg-gray-200'
+                          }`}
+                        >
+                          <Ionicons
+                            name="swap-vertical"
+                            size={16}
+                            color={isOrderMode ? 'white' : '#6B7280'}
+                          />
+                          <Text className={`ml-1 text-sm font-medium ${
+                            isOrderMode ? 'text-white' : 'text-gray-700'
+                          }`}>
+                            {isOrderMode ? 'Cancelar' : 'Orden'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        onPress={() => setShowImagePickerModal(true)}
+                        className="px-3 py-1 rounded-lg bg-blue-500 flex-row items-center"
+                      >
+                        <Ionicons
+                          name="camera-outline"
+                          size={16}
+                          color="white"
+                        />
+                        <Text className="ml-1 text-sm font-medium text-white">
+                          Agregar
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                   
+                  {/* Instrucciones para modo ordenamiento */}
+                  {isOrderMode && selectedImages.length > 0 && (
+                    <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <View className="flex-row items-center">
+                        <Ionicons name="information-circle" size={16} color="#2563EB" />
+                        <Text className="text-blue-800 text-sm ml-2 flex-1">
+                          Toca las fotos en el orden que desees. La primera será la principal.
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
                   {selectedImages.length === 0 ? (
                     <>
                       {/* Empty state */}
                       <TouchableOpacity
                         onPress={() => setShowImagePickerModal(true)}
-                        className="w-full py-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
+                        className="w-full py-12 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center mb-4"
                       >
                         <Ionicons
                           name="camera-outline"
@@ -2972,112 +2946,149 @@ const ArticuloForm: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      {/* Instructions */}
-                      <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <View className="flex-row items-start">
-                          <Ionicons name="information-circle" size={20} color="#2563EB" className="mt-0.5" />
-                          <View className="ml-2 flex-1">
-                            <Text className="text-blue-800 font-medium text-sm">
-                              Ordenar Fotos
-                            </Text>
-                            <Text className="text-blue-700 text-xs mt-1">
-                              Toca el número para cambiar el orden. La foto #1 será la principal.
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Grid de imágenes existentes con ordenamiento */}
+                      {/* Grid de imágenes optimizado - 2 columnas */}
                       <View className="flex-row flex-wrap">
-                        {/* Add photo button */}
-                        <View className="w-[32%] mb-4 mr-[2%]">
-                          <TouchableOpacity
-                            onPress={() => setShowImagePickerModal(true)}
-                            className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg items-center justify-center"
-                          >
-                            <Ionicons
-                              name="camera-outline"
-                              size={24}
-                              color="#6B7280"
-                            />
-                            <Text className="text-gray-500 text-xs mt-1 text-center">
-                              Agregar{"\n"}Foto
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
                         {selectedImages.map((image, index) => {
                           const order = imageOrder[image.id] || 0;
                           const isPrincipal = order === 1;
+                          const isSelectedForDelete = selectedImageForDelete === index;
                           
                           return (
                             <View
                               key={image.id || `image-${index}`}
-                              className={`w-[32%] mb-4 ${
-                                (index + 1) % 3 === 2 ? "mr-[2%]" : ""
-                              }`}
+                              className="w-[48%] mb-4"
+                              style={{
+                                marginRight: index % 2 === 1 ? 0 : '4%'
+                              }}
                             >
-                              <View className="relative w-full aspect-square rounded-xl overflow-hidden">
-                                {/* Image */}
-                                <Image
-                                  source={{ uri: image.uri }}
-                                  className="w-full h-full"
-                                  contentFit="cover"
-                                />
-
-                                {/* Order Number Badge */}
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    const nextOrder = order === selectedImages.length ? 1 : order + 1;
-                                    setImageOrderNumber(image.id, nextOrder);
-                                  }}
-                                  className={`absolute top-2 left-2 w-8 h-8 rounded-full items-center justify-center shadow-lg z-10 ${
-                                    isPrincipal ? "bg-yellow-500" : "bg-blue-500"
-                                  }`}
-                                >
-                                  <Text className="text-white text-xs font-bold">
-                                    {order || '#'}
-                                  </Text>
-                                </TouchableOpacity>
-
-                                {/* Delete button */}
-                                <TouchableOpacity
-                                  onPress={() => removeImage(index)}
-                                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-lg z-10"
-                                >
-                                  <Ionicons
-                                    name="close"
-                                    size={16}
-                                    color="white"
+                              <TouchableOpacity
+                                onLongPress={() => handleImageLongPress(index)}
+                                onPress={() => {
+                                  if (isOrderMode) {
+                                    // En modo ordenamiento, asignar orden secuencial
+                                    handleOrderSelection(image.id);
+                                  }
+                                }}
+                                activeOpacity={0.8}
+                              >
+                                <View className={`relative w-full aspect-square rounded-xl overflow-hidden ${
+                                  isPrincipal ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
+                                } ${isSelectedForDelete ? 'ring-2 ring-red-500 ring-offset-2' : ''} ${
+                                  isOrderMode && !order ? 'ring-2 ring-blue-400 ring-offset-2' : ''
+                                }`}>
+                                  {/* Image */}
+                                  <Image
+                                    source={{ uri: image.uri }}
+                                    className="w-full h-full"
+                                    contentFit="cover"
                                   />
-                                </TouchableOpacity>
 
-                                {/* Principal indicator */}
-                                {isPrincipal && (
-                                  <View className="absolute bottom-2 left-2 bg-yellow-500 px-2 py-1 rounded-full">
-                                    <Text className="text-white text-xs font-bold">
-                                      PRINCIPAL
-                                    </Text>
-                                  </View>
-                                )}
-                              </View>
+                                  {/* Order Number Badge - Solo visible cuando no está en modo ordenamiento */}
+                                  {!isOrderMode && (
+                                    <View className={`absolute top-1 left-1 w-6 h-6 rounded-full items-center justify-center shadow-lg z-10 ${
+                                      isPrincipal ? "bg-yellow-500" : "bg-blue-500"
+                                    }`}>
+                                      <Text className="text-white text-xs font-bold">
+                                        {order || '#'}
+                                      </Text>
+                                    </View>
+                                  )}
+
+                                  {/* Principal indicator - Marco dorado en lugar de texto */}
+                                  {isPrincipal && (
+                                    <View className="absolute inset-0 border-2 border-yellow-400 rounded-xl" />
+                                  )}
+
+                                  {/* Indicador de orden en modo ordenamiento */}
+                                  {isOrderMode && order && (
+                                    <View className="absolute top-1 left-1 w-6 h-6 bg-green-500 rounded-full items-center justify-center shadow-lg z-10">
+                                      <Text className="text-white text-xs font-bold">
+                                        {order}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                              </TouchableOpacity>
                             </View>
                           );
                         })}
                       </View>
+
                     </>
                   )}
                 </View>
               </>
             )}
-          </View>
+
+            {/* Modal de confirmación de eliminación - Global */}
+            {showDeleteModal && (
+              <TouchableOpacity 
+                className="absolute inset-0 items-center justify-center z-50" 
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  bottom: 0,
+                  width: '100%',
+                  height: '100%'
+                }}
+                activeOpacity={1}
+                onPress={cancelDeleteImage}
+              >
+                <TouchableOpacity 
+                  activeOpacity={1}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View className="bg-white rounded-xl p-6 mx-6 max-w-sm" style={{ 
+                    elevation: 30,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 30
+                  }}>
+                    <View className="items-center mb-4">
+                      <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center mb-3">
+                        <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                      </View>
+                      <Text className="text-xl font-bold text-gray-800 text-center">
+                        ¿Eliminar foto?
+                      </Text>
+                      <Text className="text-gray-600 text-center mt-2">
+                        Esta acción no se puede deshacer.
+                      </Text>
+                    </View>
+                    <View className="flex-row space-x-3">
+                      <TouchableOpacity
+                        onPress={cancelDeleteImage}
+                        className="flex-1 bg-gray-100 py-3 rounded-lg"
+                      >
+                        <Text className="text-gray-700 text-center font-semibold">
+                          Cancelar
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={confirmDeleteImage}
+                        className="flex-1 bg-red-500 py-3 rounded-lg"
+                      >
+                        <Text className="text-white text-center font-semibold">
+                          Eliminar
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            )}
+            </View>
         </ScrollView>
 
         {/* Footer Buttons - Changed to Cancel/Save */}
-        <View className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg mb-2">
+        <View className="bg-white border-t border-gray-200 px-6 py-2 shadow-lg">
           <View className="flex-row space-x-4">
             {/* Cancel Button */}
             <TouchableOpacity
-              className="flex-1 bg-gray-100 py-4 rounded-xl flex-row justify-center items-center"
+              className="flex-1 bg-gray-100 py-2 rounded-xl flex-row justify-center items-center"
               onPress={() => {
               navigateBack();
             }}
@@ -3096,7 +3107,7 @@ const ArticuloForm: React.FC = () => {
             {/* Save Button */}
             <TouchableOpacity
               style={{ backgroundColor: themes.inventory.buttonColor }}
-              className={`flex-1 py-4 rounded-xl flex-row justify-center items-center shadow-sm ${
+              className={`flex-1 py-3 rounded-xl flex-row justify-center items-center shadow-sm ${
                 isSubmitting ? "opacity-70" : ""
               }`}
               onPress={() => {
@@ -3292,6 +3303,24 @@ const ArticuloForm: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Dropdown Overlay */}
+      <DropdownOverlay
+        isVisible={isDropdownOpen}
+        onClose={() => setIsDropdownOpen(false)}
+        options={[
+          { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+          { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+          { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+          { id: "precios", name: "Precios", icon: "pricetag-outline" },
+          { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" },
+          { id: "fotos", name: "Fotos", icon: "camera-outline" }
+        ]}
+        activeOption={activeTab}
+        onSelectOption={setActiveTab}
+        position={dropdownPosition}
+        theme={themes.inventory}
+      />
     </View>
   );
 };

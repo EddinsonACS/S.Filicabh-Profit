@@ -12,8 +12,6 @@ export default function RootLayout(): JSX.Element {
         name="ArticuloDetalle" 
         options={{ 
           headerShown: false,
-          presentation: 'fullScreenModal',
-          animationTypeForReplace: 'push',
           animation: 'slide_from_right'
         }} 
       />
@@ -21,8 +19,6 @@ export default function RootLayout(): JSX.Element {
         name="ArticuloForm" 
         options={{ 
           headerShown: false,
-          presentation: 'fullScreenModal',
-          animationTypeForReplace: 'push',
           animation: 'slide_from_right'
         }} 
       />

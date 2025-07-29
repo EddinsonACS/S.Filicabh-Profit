@@ -1,3 +1,4 @@
+import DropdownOverlay from '@/components/common/DropdownOverlay';
 import { themes } from '@/components/Entidades/shared/theme';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
@@ -7,7 +8,7 @@ import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
 import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -29,6 +30,8 @@ const ArticuloDetalle: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0, width: 0 });
+  const dropdownButtonRef = useRef<any>(null);
   
   const { 
     showDeleteSuccess,
@@ -110,6 +113,19 @@ const ArticuloDetalle: React.FC = () => {
         },
       ]
     );
+  };
+
+  const handleDropdownPress = () => {
+    if (dropdownButtonRef.current) {
+      dropdownButtonRef.current.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+        setDropdownPosition({
+          x: pageX,
+          y: pageY,
+          width: width
+        });
+        setIsDropdownOpen(!isDropdownOpen);
+      });
+    }
   };
 
   // Función para obtener campos de ficha básica
@@ -344,7 +360,7 @@ const ArticuloDetalle: React.FC = () => {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
         <View 
-          className="px-4 pt-12 pb-4 flex-row items-center"
+          className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.inventory.headerColor }}
         >
           <TouchableOpacity
@@ -382,7 +398,7 @@ const ArticuloDetalle: React.FC = () => {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
         <View 
-          className="px-4 pt-12 pb-4 flex-row items-center"
+          className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.inventory.headerColor }}
         >
           <TouchableOpacity
@@ -422,7 +438,7 @@ const ArticuloDetalle: React.FC = () => {
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header optimized */}
       <View 
-        className="px-4 pt-12 pb-4 flex-row items-center justify-between shadow-sm"
+        className="px-4 pt-4 pb-4 flex-row items-center justify-between shadow-sm"
         style={{ backgroundColor: themes.inventory.headerColor }}
       >
         <View className="flex-row items-center flex-1 mr-4">
@@ -595,8 +611,8 @@ const ArticuloDetalle: React.FC = () => {
           </View>
           
           {/* Main Info */}
-          <View className="p-6">
-            <Text className="text-2xl font-bold text-gray-900 mb-2">
+          <View className="p-4 ml-4">
+            <Text className="text-xl font-bold text-gray-900">
               {articulo.nombre}
             </Text>
           </View>
@@ -606,27 +622,18 @@ const ArticuloDetalle: React.FC = () => {
         {/* Detailed Information with Tabs */}
         {articulo && !isLoading && (
           <View className="bg-white mx-4 rounded-xl shadow-sm overflow-hidden">
-            {/* Tab Header */}
+            {/* Tab Header - Optimized and Compact */}
             <View 
-              className="px-6 py-4"
+              className="px-4 py-3"
               style={{ backgroundColor: themes.inventory.headerColor }}
             >
-              <View className="flex-row items-center justify-between mb-3">
-                <Text 
-                  className="text-lg font-semibold"
-                  style={{ color: themes.inventory.headerTextColor }}
-                >
-                  Información Completa
-                </Text>
-              </View>
-              
               {/* Tab Navigation - Chips or Dropdown Style */}
               {viewMode === 'chips' ? (
-                <View className="flex-row items-center justify-between px-4">
+                <View className="flex-row items-center justify-between">
                   <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: 8 }}
+                    contentContainerStyle={{ paddingVertical: 4 }}
                     style={{ flex: 1 }}
                   >
                     {[
@@ -639,10 +646,10 @@ const ArticuloDetalle: React.FC = () => {
                       <TouchableOpacity
                         key={tab.id}
                         style={{
-                          marginRight: index < 4 ? 12 : 0,
-                          paddingHorizontal: 16,
-                          paddingVertical: 8,
-                          borderRadius: 8,
+                          marginRight: index < 4 ? 8 : 0,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 6,
                           flexDirection: 'row',
                           alignItems: 'center',
                           backgroundColor: activeDetailTab === tab.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
@@ -653,15 +660,15 @@ const ArticuloDetalle: React.FC = () => {
                       >
                         <Ionicons
                           name={tab.icon as any}
-                          size={16}
+                          size={14}
                           color={activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)'}
-                          style={{ marginRight: 6 }}
+                          style={{ marginRight: 4 }}
                         />
                         <Text
                           style={{
                             color: activeDetailTab === tab.id ? 'white' : 'rgba(255,255,255,0.7)',
                             fontWeight: activeDetailTab === tab.id ? '600' : 'normal',
-                            fontSize: 14
+                            fontSize: 12
                           }}
                         >
                           {tab.name}
@@ -670,19 +677,19 @@ const ArticuloDetalle: React.FC = () => {
                     ))}
                   </ScrollView>
                   <TouchableOpacity
-                    className="bg-white rounded-2xl p-2 flex-row items-center ml-3"
+                    className="bg-white rounded-xl p-1.5 flex-row items-center ml-2"
                     onPress={() => setViewMode('dropdown')}
                     style={{
                       shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
+                      shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3
+                      shadowRadius: 2,
+                      elevation: 2
                     }}
                   >
                     <Ionicons
                       name="list-outline"
-                      size={18}
+                      size={16}
                       color={themes.inventory.headerColor}
                     />
                     <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
@@ -691,22 +698,23 @@ const ArticuloDetalle: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View className="px-4 relative">
+                <View className="relative">
                   <View className="flex-row items-center justify-between">
                     <TouchableOpacity
                       style={{
                         backgroundColor: 'rgba(255,255,255,0.1)',
-                        borderRadius: 8,
+                        borderRadius: 6,
                         borderWidth: 1,
                         borderColor: 'rgba(255,255,255,0.2)',
-                        padding: 12,
+                        padding: 8,
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flex: 1,
-                        marginRight: 12
+                        marginRight: 8
                       }}
-                      onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                      onPress={handleDropdownPress}
+                      ref={dropdownButtonRef}
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Ionicons
@@ -717,11 +725,11 @@ const ArticuloDetalle: React.FC = () => {
                             { id: "precios", name: "Precios", icon: "pricetag-outline" },
                             { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
                           ].find(tab => tab.id === activeDetailTab)?.icon as any || 'grid-outline'}
-                          size={18}
+                          size={16}
                           color="white"
-                          style={{ marginRight: 8 }}
+                          style={{ marginRight: 6 }}
                         />
-                        <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>
+                        <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}>
                           {[
                             { id: "ficha", name: "Ficha", icon: "document-text-outline" },
                             { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
@@ -731,22 +739,22 @@ const ArticuloDetalle: React.FC = () => {
                           ].find(tab => tab.id === activeDetailTab)?.name || 'Seleccionar sección'}
                         </Text>
                       </View>
-                      <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={18} color="white" />
+                      <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="white" />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      className="bg-white rounded-2xl p-2 flex-row items-center"
+                      className="bg-white rounded-xl p-1.5 flex-row items-center"
                       onPress={() => setViewMode('chips')}
                       style={{
                         shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 2 },
+                        shadowOffset: { width: 0, height: 1 },
                         shadowOpacity: 0.1,
-                        shadowRadius: 4,
-                        elevation: 3
+                        shadowRadius: 2,
+                        elevation: 2
                       }}
                     >
                       <Ionicons
                         name="grid-outline"
-                        size={18}
+                        size={16}
                         color={themes.inventory.headerColor}
                       />
                       <Text style={{ color: themes.inventory.headerColor }} className="ml-1 text-xs">
@@ -755,102 +763,7 @@ const ArticuloDetalle: React.FC = () => {
                     </TouchableOpacity>
                   </View>
 
-                  {isDropdownOpen && (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        borderBottomLeftRadius: 12,
-                        borderBottomRightRadius: 12,
-                        borderLeftWidth: 1,
-                        borderRightWidth: 1,
-                        borderBottomWidth: 1,
-                        borderColor: 'rgba(255,255,255,0.3)',
-                        marginTop: 4,
-                        maxHeight: 300,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 8,
-                        zIndex: 1000
-                      }}
-                    >
-                      {[
-                        { id: "ficha", name: "Ficha", icon: "document-text-outline" },
-                        { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
-                        { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
-                        { id: "precios", name: "Precios", icon: "pricetag-outline" },
-                        { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
-                      ].map((tab) => (
-                        <TouchableOpacity
-                          key={tab.id}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            padding: 16,
-                            borderBottomWidth: 1,
-                            borderBottomColor: 'rgba(0,0,0,0.05)',
-                            backgroundColor: activeDetailTab === tab.id ? 'rgba(88,28,135,0.1)' : 'transparent'
-                          }}
-                          onPress={() => {
-                            setActiveDetailTab(tab.id);
-                            setIsDropdownOpen(false);
-                          }}
-                        >
-                          <View
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 20,
-                              backgroundColor: activeDetailTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.05)',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              marginRight: 12
-                            }}
-                          >
-                            <Ionicons
-                              name={tab.icon as any}
-                              size={18}
-                              color={activeDetailTab === tab.id ? 'white' : 'rgba(0,0,0,0.6)'}
-                            />
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text
-                              style={{
-                                color: activeDetailTab === tab.id ? themes.inventory.buttonColor : 'rgba(0,0,0,0.8)',
-                                fontWeight: activeDetailTab === tab.id ? '600' : '500',
-                                fontSize: 16
-                              }}
-                            >
-                              {tab.name}
-                            </Text>
-                          </View>
-                          {activeDetailTab === tab.id && (
-                            <View
-                              style={{
-                                width: 24,
-                                height: 24,
-                                borderRadius: 12,
-                                backgroundColor: themes.inventory.buttonColor,
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              <Ionicons
-                                name="checkmark"
-                                size={16}
-                                color="white"
-                              />
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
+
                 </View>
               )}
             </View>
@@ -891,6 +804,24 @@ const ArticuloDetalle: React.FC = () => {
         {/* Bottom spacing */}
         <View className="h-6" />
       </ScrollView>
+
+      {/* Dropdown Overlay */}
+      <DropdownOverlay
+        isVisible={isDropdownOpen}
+        onClose={() => setIsDropdownOpen(false)}
+        options={[
+          { id: "ficha", name: "Ficha", icon: "document-text-outline" },
+          { id: "presentaciones", name: "Presentación", icon: "layers-outline" },
+          { id: "detalles", name: "Detalle", icon: "information-circle-outline" },
+          { id: "precios", name: "Precios", icon: "pricetag-outline" },
+          { id: "ubicaciones", name: "Ubicaciones", icon: "location-outline" }
+        ]}
+        activeOption={activeDetailTab}
+        onSelectOption={setActiveDetailTab}
+        position={dropdownPosition}
+        theme={themes.inventory}
+      />
+
 
       {/* Image Viewer Modal with Zoom */}
       <Modal
