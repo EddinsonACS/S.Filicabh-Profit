@@ -36,17 +36,17 @@ import { BackHandler, View } from 'react-native';
 const PAGE_SIZE = 10;
 
 const CATEGORIES = [
+  { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
   { id: 'almacen', label: 'Almacén', icon: 'business' as const },
+  { id: 'presentacion', label: 'Presentación', icon: 'scale' as const },
   { id: 'categoria', label: 'Categoría', icon: 'list' as const },
-  { id: 'color', label: 'Color', icon: 'color-palette' as const },
   { id: 'grupo', label: 'Grupo', icon: 'people' as const },
+  { id: 'seccion', label: 'Sección', icon: 'layers' as const },
   { id: 'origen', label: 'Origen', icon: 'globe' as const },
+  { id: 'color', label: 'Color', icon: 'color-palette' as const },
   { id: 'talla', label: 'Talla', icon: 'resize' as const },
   { id: 'tipodearticulo', label: 'Tipo de Artículo', icon: 'cube-outline' as const },
   { id: 'tipodeimpuesto', label: 'Tipo de Impuesto', icon: 'calculator' as const },
-  { id: 'seccion', label: 'Sección', icon: 'layers' as const },
-  { id: 'presentacion', label: 'Presentación', icon: 'scale' as const },
-  { id: 'articulo', label: 'Artículo', icon: 'cube' as const }
 ];
 
 const CATEGORY_TITLES = {
@@ -71,11 +71,11 @@ const EntInventario: React.FC = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { category } = useLocalSearchParams<{ category?: string }>();
-  const { 
-    showCreateSuccess, 
-    showUpdateSuccess, 
+  const {
+    showCreateSuccess,
+    showUpdateSuccess,
     showDeleteSuccess,
-    showError 
+    showError
   } = useNotificationContext();
   const {
     useGetAlmacenList,
@@ -158,13 +158,13 @@ const EntInventario: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('almacen');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('articulo');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
-  
+
   // Filter state
   const [filterState, setFilterState] = useState<FilterState>({
     sortBy: 'fechaRegistro',
@@ -211,15 +211,15 @@ const EntInventario: React.FC = () => {
   const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
   const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
   const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(currentPage, PAGE_SIZE);
-  
+
   // Lista de precios (solo se carga cuando selectedCategory es 'articulo')
   const { data: articuloListaPreciosData } = useGetArticuloListaDePrecioList(1, 1000);
   // Articulo hooks
-  const { 
-    useGetArticuloList, 
-    useCreateArticulo, 
-    useUpdateArticulo, 
-    useDeleteArticulo 
+  const {
+    useGetArticuloList,
+    useCreateArticulo,
+    useUpdateArticulo,
+    useDeleteArticulo
   } = useArticulo();
   const createArticuloMutation = useCreateArticulo();
   const updateArticuloMutation = useUpdateArticulo();
@@ -232,11 +232,11 @@ const EntInventario: React.FC = () => {
   const { data: tiposArticuloDataArticulo } = useGetTipoDeArticuloList(1, 1000);
   const { data: impuestosDataArticulo } = useGetTipoDeImpuestoList(1, 1000);
   const { data: presentacionesDataArticulo } = useGetPresentacionList(1, 1000);
-  
+
   const createAlmacenMutation = useCreateAlmacen();
   const updateAlmacenMutation = useUpdateAlmacen();
   const deleteAlmacenMutation = useDeleteAlmacen();
-  
+
   const createCategoriaMutation = useCreateCategoria();
   const updateCategoriaMutation = useUpdateCategoria();
   const deleteCategoriaMutation = useDeleteCategoria();
@@ -345,10 +345,10 @@ const EntInventario: React.FC = () => {
   useEffect(() => {
     const processData = (data: any) => {
       if (!data) return;
-      
+
       const totalPages = data.totalPaginas;
       setHasMore(currentPage < totalPages);
-      
+
       if (currentPage === 1) {
         setAccumulatedItems(data.data || []);
       } else {
@@ -356,15 +356,15 @@ const EntInventario: React.FC = () => {
           if (!data.data || data.data.length === 0) {
             return prev;
           }
-          
+
           const existingIds = new Map(prev.map((item: any) => [item.id, true]));
-          
+
           const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
-          
+
           if (newItems.length === 0) {
             return prev;
           }
-          
+
           return [...prev, ...newItems];
         });
       }
@@ -409,8 +409,8 @@ const EntInventario: React.FC = () => {
         break;
     }
   }, [
-    almacenData, categoriaData, grupoData, seccionData, presentacionData, 
-    tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData, 
+    almacenData, categoriaData, grupoData, seccionData, presentacionData,
+    tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData,
     articuloData,
     currentPage, selectedCategory, PAGE_SIZE
   ]);
@@ -441,17 +441,17 @@ const EntInventario: React.FC = () => {
     return () => backHandlerSubscription.remove();
   }, [formModalVisible, detailModalVisible, navigation]);
 
-  const isLoading = selectedCategory === 'almacen' ? isLoadingAlmacen : 
-                    selectedCategory === 'categoria' ? isLoadingCategoria :
-                    selectedCategory === 'grupo' ? isLoadingGrupo :
-                    selectedCategory === 'seccion' ? isLoadingSeccion :
-                    selectedCategory === 'presentacion' ? isLoadingPresentacion :
-                    selectedCategory === 'talla' ? isLoadingTalla :
-                    selectedCategory === 'color' ? isLoadingColor :
-                    selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
-                    selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo :
+  const isLoading = selectedCategory === 'almacen' ? isLoadingAlmacen :
+    selectedCategory === 'categoria' ? isLoadingCategoria :
+      selectedCategory === 'grupo' ? isLoadingGrupo :
+        selectedCategory === 'seccion' ? isLoadingSeccion :
+          selectedCategory === 'presentacion' ? isLoadingPresentacion :
+            selectedCategory === 'talla' ? isLoadingTalla :
+              selectedCategory === 'color' ? isLoadingColor :
+                selectedCategory === 'tipodeimpuesto' ? isLoadingTipoDeImpuesto :
+                  selectedCategory === 'tipodearticulo' ? isLoadingTipoDeArticulo :
                     selectedCategory === 'origen' ? isLoadingOrigen :
-                    selectedCategory === 'articulo' ? isLoadingArticulo : false;
+                      selectedCategory === 'articulo' ? isLoadingArticulo : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -472,7 +472,7 @@ const EntInventario: React.FC = () => {
       setRefreshing(true);
       setCurrentPage(1);
       setHasMore(true);
-      
+
       // Invalidate the query to force a refetch
       await queryClient.invalidateQueries({
         queryKey: [selectedCategory]
@@ -493,7 +493,7 @@ const EntInventario: React.FC = () => {
         setCurrentPage(1);
         setHasMore(true);
         showCreateSuccess(`el ${entityName.toLowerCase()}`);
-        
+
         // For Articulo, return the full created item, otherwise return true
         if (selectedCategory === 'articulo') {
           resolve(createdItem);
@@ -744,17 +744,17 @@ const EntInventario: React.FC = () => {
     const baseFields = [
       { label: 'ID', value: String(item.id) },
       { label: 'Fecha de Registro', value: item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : '' },
-      { label:'Fecha de Modificación',value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A'},
+      { label: 'Fecha de Modificación', value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A' },
     ];
 
     const additionalFields = Object.entries(item)
-      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1','idColor','idGrupo','idImpuesto','idTalla','idTipoArticulo','idTipoImpuesto','presentaciones','fotos',''].includes(key))
+      .filter(([key]) => !['id', 'fechaRegistro', 'fechaModificacion', 'otrosF1', 'otrosN1', 'otrosN2', 'otrosC1', 'otrosC2', 'otrosC3', 'otrosC4', 'otrosT1', 'idColor', 'idGrupo', 'idImpuesto', 'idTalla', 'idTipoArticulo', 'idTipoImpuesto', 'presentaciones', 'fotos', ''].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
         value: value === null || value === undefined ? 'N/A' : typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value)
       }));
-        
-        return [...baseFields,...additionalFields];
+
+    return [...baseFields, ...additionalFields];
   };
 
   const showItemDetails = (item: any) => {
@@ -837,32 +837,32 @@ const EntInventario: React.FC = () => {
         activeFiltersCount={getActiveFiltersCount()}
       />
 
-       <View className="flex-1">
-          {isLoading && currentPage === 1 ? (
-            <DynamicLoadingState color={themes.inventory.buttonColor} />
-          ) : (
-            <DynamicItemList
-              items={filteredItems}
-              handleDelete={handleDelete}
-              showItemDetails={showItemDetails}
-              openEditModal={openEditModal}
-              onLoadMore={handleLoadMore}
-              onRefresh={handleRefresh}
-              refreshing={refreshing}
-              selectedCategory={selectedCategory}
-              hasMore={hasMore}
-              renderItem={renderItem}
-              emptyStateComponent={
-                <DynamicEmptyState
-                  icon="document-text-outline"
-                  title={`No hay ${CATEGORY_TITLES[selectedCategory].toLowerCase()}s en la lista`}
-                  subtitle="Agrega un nuevo elemento para comenzar"
-                />
-              }
-              keyExtractor={(item) => item.id.toString()}
-            />
-          )}
-        </View>
+      <View className="flex-1">
+        {isLoading && currentPage === 1 ? (
+          <DynamicLoadingState color={themes.inventory.buttonColor} />
+        ) : (
+          <DynamicItemList
+            items={filteredItems}
+            handleDelete={handleDelete}
+            showItemDetails={showItemDetails}
+            openEditModal={openEditModal}
+            onLoadMore={handleLoadMore}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            selectedCategory={selectedCategory}
+            hasMore={hasMore}
+            renderItem={renderItem}
+            emptyStateComponent={
+              <DynamicEmptyState
+                icon="document-text-outline"
+                title={`No hay ${CATEGORY_TITLES[selectedCategory].toLowerCase()}s en la lista`}
+                subtitle="Agrega un nuevo elemento para comenzar"
+              />
+            }
+            keyExtractor={(item) => item.id.toString()}
+          />
+        )}
+      </View>
 
       {selectedCategory === 'articulo' ? (
         <FormCompleteProcess

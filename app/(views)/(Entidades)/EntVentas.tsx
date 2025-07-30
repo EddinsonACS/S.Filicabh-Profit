@@ -72,20 +72,20 @@ interface EntityWithSuspendido extends BaseEntity {
 const PAGE_SIZE = 10;
 
 const CATEGORIES = [
+  { id: 'figuracomercial', label: 'Figura Comercial', icon: 'people' as const },
   { id: 'acuerdodepago', label: 'Acuerdo de Pago', icon: 'document-text' as const },
+  { id: 'vendedor', label: 'Vendedor', icon: 'person-outline' as const },
   { id: 'ciudad', label: 'Ciudad', icon: 'business' as const },
   { id: 'region', label: 'Región', icon: 'map' as const },
-  { id: 'pais', label: 'País', icon: 'globe' as const },
+  { id: 'rubro', label: 'Rubro', icon: 'albums' as const },
+  { id: 'sector', label: 'Sector', icon: 'layers' as const },
+  { id: 'listadeprecio', label: 'Lista de Precio', icon: 'pricetag' as const },
+  { id: 'moneda', label: 'Moneda', icon: 'cash' as const },
   { id: 'formadeentrega', label: 'Forma de Entrega', icon: 'car' as const },
+  { id: 'pais', label: 'País', icon: 'globe' as const },
+  { id: 'tasadecambio', label: 'Tasa de Cambio', icon: 'swap-horizontal' as const },
   { id: 'tipopersona', label: 'Tipo de Persona', icon: 'person' as const },
   { id: 'tipovendedor', label: 'Tipo de Vendedor', icon: 'briefcase' as const },
-  { id: 'vendedor', label: 'Vendedor', icon: 'person-outline' as const },
-  { id: 'moneda', label: 'Moneda', icon: 'cash' as const },
-  { id: 'tasadecambio', label: 'Tasa de Cambio', icon: 'swap-horizontal' as const },
-  { id: 'listadeprecio', label: 'Lista de Precio', icon: 'pricetag' as const },
-  { id: 'sector', label: 'Sector', icon: 'layers' as const },
-  { id: 'rubro', label: 'Rubro', icon: 'albums' as const },
-  { id: 'figuracomercial', label: 'Figura Comercial', icon: 'people' as const } // Added icon: 'people' as a placeholder, adjust if needed
 ];
 
 const CATEGORY_TITLES = {
@@ -771,7 +771,7 @@ const EntVentas: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const { category } = useLocalSearchParams<{ category?: string }>();
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>(
-    (category && CATEGORIES.find(cat => cat.id === category)) ? category as CategoryId : 'acuerdodepago'
+    (category && CATEGORIES.find(cat => cat.id === category)) ? category as CategoryId : 'figuracomercial'
   );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -780,7 +780,7 @@ const EntVentas: React.FC = () => {
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
-  
+
   // Filter state
   const [filterState, setFilterState] = useState<FilterState>({
     sortBy: 'fechaRegistro',
@@ -1469,7 +1469,7 @@ const EntVentas: React.FC = () => {
       router.push(`/(views)/(Entidades)/FiguraComercialDetalle?id=${item.id}`);
       return;
     }
-    
+
     setCurrentItem(item);
     setDetailModalVisible(true);
   };
@@ -1480,7 +1480,7 @@ const EntVentas: React.FC = () => {
       router.push(`/(views)/(Entidades)/FiguraComercialForm?id=${item.id}&isEditing=true`);
       return;
     }
-    
+
     setCurrentItem(item);
     setIsEditing(true);
     setFormModalVisible(true);
@@ -1531,7 +1531,7 @@ const EntVentas: React.FC = () => {
             router.push('/(views)/(Entidades)/FiguraComercialForm');
             return;
           }
-          
+
           setCurrentItem(null);
           setIsEditing(false);
           setFormModalVisible(true);
@@ -1584,11 +1584,11 @@ const EntVentas: React.FC = () => {
       <DynamicFormModal
         key={`${selectedCategory}-${isEditing ? currentItem?.id || 'edit' : 'create'}`}
         visible={formModalVisible}
-        onClose={() => { 
-          setFormModalVisible(false); 
-          setBackendFormError(null); 
-          setCurrentItem(null); 
-          setIsEditing(false); 
+        onClose={() => {
+          setFormModalVisible(false);
+          setBackendFormError(null);
+          setCurrentItem(null);
+          setIsEditing(false);
         }}
         isEditing={isEditing}
         currentItem={currentItem}

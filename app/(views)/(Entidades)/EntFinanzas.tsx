@@ -23,14 +23,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
-import { boolean } from 'zod';
 
 const PAGE_SIZE = 10;
 
 const CATEGORIES = [
-  { id: 'banco', label: 'Banco', icon: 'business' as const },
   { id: 'caja', label: 'Caja', icon: 'cash' as const },
   { id: 'cuentaBancaria', label: 'Cuenta Bancaria', icon: 'card' as const },
+  { id: 'banco', label: 'Banco', icon: 'business' as const },
 ];
 
 const CATEGORY_TITLES = {
@@ -65,15 +64,15 @@ const EntFinanzas: React.FC = () => {
     useDeleteCuentaBancaria
   } = useCuentaBancaria();
 
-  const {useGetMonedaList} = useMoneda();
+  const { useGetMonedaList } = useMoneda();
 
   // Usar el nuevo sistema de notificaciones
-  const { 
-    showCreateSuccess, 
-    showUpdateSuccess, 
+  const {
+    showCreateSuccess,
+    showUpdateSuccess,
     showDeleteSuccess,
     showError,
-    showLoadError, 
+    showLoadError,
   } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -84,14 +83,14 @@ const EntFinanzas: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('banco');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('caja');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
-  
+
   // Filter state
   const [filterState, setFilterState] = useState<FilterState>({
     sortBy: 'fechaRegistro',
@@ -160,7 +159,7 @@ const EntFinanzas: React.FC = () => {
   // Preparar los campos del formulario según la categoría seleccionada
   const getFormFields = useCallback(() => {
     const fields = FORM_FIELDS_FINANZAS[selectedCategory];
-    
+
     if (selectedCategory === 'caja' && monedasData?.data) {
       return fields.map(field => {
         if (field.name === 'idMoneda') {
@@ -172,7 +171,7 @@ const EntFinanzas: React.FC = () => {
         return field;
       });
     }
-    
+
     if (selectedCategory === 'cuentaBancaria') {
       return fields.map(field => {
         // Agregar opciones de banco
@@ -199,7 +198,7 @@ const EntFinanzas: React.FC = () => {
         return field;
       });
     }
-    
+
     return fields;
   }, [selectedCategory, monedasData, bancosData]);
 
@@ -214,10 +213,10 @@ const EntFinanzas: React.FC = () => {
   useEffect(() => {
     const processData = (data: any) => {
       if (!data) return;
-      
+
       const totalPages = data.totalPaginas || Math.ceil(data.totalRegistros / PAGE_SIZE);
       setHasMore(currentPage < totalPages);
-      
+
       if (currentPage === 1) {
         setAccumulatedItems(data.data || []);
       } else {
@@ -225,20 +224,20 @@ const EntFinanzas: React.FC = () => {
           if (!data.data || data.data.length === 0) {
             return prev;
           }
-          
+
           const existingIds = new Map(prev.map((item: any) => [item.id, true]));
-          
+
           const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
-          
+
           if (newItems.length === 0) {
             return prev;
           }
-          
+
           return [...prev, ...newItems];
         });
       }
     };
-    
+
     if (selectedCategory === 'banco' && bancoData) {
       processData(bancoData);
     } else if (selectedCategory === 'caja' && cajaData) {
@@ -275,9 +274,9 @@ const EntFinanzas: React.FC = () => {
     return () => backHandlerSubscription.remove();
   }, [formModalVisible, detailModalVisible, navigation]);
 
-  const isLoading = selectedCategory === 'banco' ? isLoadingBanco : 
-                    selectedCategory === 'caja' ? isLoadingCaja :
-                    selectedCategory === 'cuentaBancaria' ? isLoadingCuentaBancaria : false;
+  const isLoading = selectedCategory === 'banco' ? isLoadingBanco :
+    selectedCategory === 'caja' ? isLoadingCaja :
+      selectedCategory === 'cuentaBancaria' ? isLoadingCuentaBancaria : false;
 
   const items = useMemo(() => {
     return accumulatedItems;
@@ -298,7 +297,7 @@ const EntFinanzas: React.FC = () => {
       setRefreshing(true);
       setCurrentPage(1);
       setHasMore(true);
-      
+
       // Invalidate the query to force a refetch
       await queryClient.invalidateQueries({
         queryKey: [selectedCategory]
@@ -457,17 +456,17 @@ const EntFinanzas: React.FC = () => {
     const baseFields = [
       { label: 'ID', value: String(item.id) },
       { label: 'Fecha de Registro', value: item.fechaRegistro ? new Date(item.fechaRegistro).toLocaleDateString() : '' },
-      { label:'Fecha de Modificación',value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A'},
+      { label: 'Fecha de Modificación', value: item.fechaModificacion ? new Date(item.fechaModificacion).toLocaleDateString() : 'N/A' },
     ];
 
     const additionalFields = Object.entries(item)
-      .filter(([key]) => !['id','fechaRegistro','fechaModificacion','otrosF1','otrosN1','otrosN2','otrosC1','otrosC2','otrosC3','otrosC4','otrosT1'].includes(key))
+      .filter(([key]) => !['id', 'fechaRegistro', 'fechaModificacion', 'otrosF1', 'otrosN1', 'otrosN2', 'otrosC1', 'otrosC2', 'otrosC3', 'otrosC4', 'otrosT1'].includes(key))
       .map(([key, value]) => ({
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
         value: value === null || value === undefined ? 'N/A' : typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value)
       }));
-        
-      return [...baseFields,...additionalFields];
+
+    return [...baseFields, ...additionalFields];
   };
 
   const showItemDetails = (item: any) => {
@@ -536,31 +535,31 @@ const EntFinanzas: React.FC = () => {
       />
 
       <View className="flex-1">
-          {isLoading && currentPage === 1 ? (
-            <DynamicLoadingState color={themes.inventory.buttonColor} />
-          ) : (
-            <DynamicItemList
-              items={filteredItems}
-              handleDelete={handleDelete}
-              showItemDetails={showItemDetails}
-              openEditModal={openEditModal}
-              onLoadMore={handleLoadMore}
-              onRefresh={handleRefresh}
-              refreshing={refreshing}
-              selectedCategory={selectedCategory}
-              hasMore={hasMore}
-              renderItem={renderItem}
-              emptyStateComponent={
-                <DynamicEmptyState
-                  icon="document-text-outline"
-                  title={`No hay ${CATEGORY_TITLES[selectedCategory].toLowerCase()}s en la lista`}
-                  subtitle="Agrega un nuevo elemento para comenzar"
-                />
-              }
-              keyExtractor={(item) => item.id.toString()}
-            />
-          )}
-        </View>
+        {isLoading && currentPage === 1 ? (
+          <DynamicLoadingState color={themes.inventory.buttonColor} />
+        ) : (
+          <DynamicItemList
+            items={filteredItems}
+            handleDelete={handleDelete}
+            showItemDetails={showItemDetails}
+            openEditModal={openEditModal}
+            onLoadMore={handleLoadMore}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            selectedCategory={selectedCategory}
+            hasMore={hasMore}
+            renderItem={renderItem}
+            emptyStateComponent={
+              <DynamicEmptyState
+                icon="document-text-outline"
+                title={`No hay ${CATEGORY_TITLES[selectedCategory].toLowerCase()}s en la lista`}
+                subtitle="Agrega un nuevo elemento para comenzar"
+              />
+            }
+            keyExtractor={(item) => item.id.toString()}
+          />
+        )}
+      </View>
 
       <DynamicFormModal
         visible={formModalVisible}
@@ -593,9 +592,9 @@ const EntFinanzas: React.FC = () => {
         currentItem={currentItem}
         openEditModal={openEditModal}
         handleDelete={handleDelete}
-        mainTitleField={{ 
-          label: selectedCategory === 'cuentaBancaria' ? 'Número de Cuenta' : 'Nombre', 
-          value: selectedCategory === 'cuentaBancaria' ? currentItem?.nroCuenta || '' : currentItem?.nombre || '' 
+        mainTitleField={{
+          label: selectedCategory === 'cuentaBancaria' ? 'Número de Cuenta' : 'Nombre',
+          value: selectedCategory === 'cuentaBancaria' ? currentItem?.nroCuenta || '' : currentItem?.nombre || ''
         }}
         badges={[
           {

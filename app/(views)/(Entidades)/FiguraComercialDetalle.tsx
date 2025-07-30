@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { usePais } from '@/hooks/Ventas/usePais';
+import { useCiudad } from '@/hooks/Ventas/useCiudad';
 
 const FiguraComercialDetalle: React.FC = () => {
   const router = useRouter();
@@ -23,19 +25,23 @@ const FiguraComercialDetalle: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0, width: 0 });
   const dropdownButtonRef = useRef<any>(null);
-  
-  const { 
+
+  const {
     showDeleteSuccess,
-    showError 
+    showError
   } = useNotificationContext();
-  
+
   const {
     useGetFiguraComercialItem,
     useDeleteFiguraComercial
   } = useFiguraComercial();
 
+  const { useGetCiudadList } = useCiudad()
+
   const { data: figuraComercial, isLoading, refetch } = useGetFiguraComercialItem(Number(id));
   const deleteFiguraMutation = useDeleteFiguraComercial();
+
+  const { data: listCuidadData } = useGetCiudadList(1, 1000)
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -127,6 +133,7 @@ const FiguraComercialDetalle: React.FC = () => {
         { label: 'Descripción', value: figuraComercial?.descripcionFiguraComercial || 'N/A' },
         { label: 'País', value: figuraComercial?.paisNombre || 'N/A' },
         { label: 'Ciudad', value: figuraComercial?.ciudadNombre || 'N/A' },
+        { label: 'Region', value: listCuidadData?.data?.find((p) => p.id == figuraComercial.idCiudad)?.regionNombre || 'N/A' },
         { label: 'Rubro', value: figuraComercial?.rubroNombre || 'N/A' },
         { label: 'Sector', value: figuraComercial?.sectorNombre || 'N/A' },
         { label: 'Vendedor', value: figuraComercial?.vendedorNombre || 'N/A' },
@@ -191,18 +198,18 @@ const FiguraComercialDetalle: React.FC = () => {
   };
 
   // Función helper para validar y sanear campos
-  const validateAndSanitizeFields = (fields: any[]): Array<{label: string, value: string}> => {
+  const validateAndSanitizeFields = (fields: any[]): Array<{ label: string, value: string }> => {
     if (!Array.isArray(fields)) {
       console.warn('Fields is not an array:', fields);
       return [];
     }
-    
+
     return fields
       .filter((field) => {
-        return field && 
-               typeof field === 'object' && 
-               (field.label !== undefined && field.label !== null) &&
-               (field.value !== undefined && field.value !== null);
+        return field &&
+          typeof field === 'object' &&
+          (field.label !== undefined && field.label !== null) &&
+          (field.value !== undefined && field.value !== null);
       })
       .map((field) => ({
         label: String(field.label || 'Campo desconocido'),
@@ -214,7 +221,7 @@ const FiguraComercialDetalle: React.FC = () => {
   const getActiveTabFields = () => {
     try {
       let rawFields = [];
-      
+
       switch (activeDetailTab) {
         case 'ficha':
           rawFields = getFichaFields();
@@ -226,7 +233,7 @@ const FiguraComercialDetalle: React.FC = () => {
           rawFields = getFichaFields();
           break;
       }
-      
+
       return validateAndSanitizeFields(rawFields);
     } catch (error) {
       console.error('Error getting active tab fields:', error);
@@ -237,7 +244,7 @@ const FiguraComercialDetalle: React.FC = () => {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
-        <View 
+        <View
           className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.sales.headerColor }}
         >
@@ -247,20 +254,20 @@ const FiguraComercialDetalle: React.FC = () => {
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={themes.sales.headerTextColor} 
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={themes.sales.headerTextColor}
             />
           </TouchableOpacity>
-          <Text 
+          <Text
             className="text-lg font-bold flex-1"
             style={{ color: themes.sales.headerTextColor }}
           >
             Cargando...
           </Text>
         </View>
-        
+
         <View className="flex-1 justify-center items-center">
           <View className="bg-white rounded-xl p-8 mx-4 items-center shadow-sm">
             <Ionicons name="refresh" size={48} color={themes.sales.buttonColor} />
@@ -275,7 +282,7 @@ const FiguraComercialDetalle: React.FC = () => {
   if (!figuraComercial) {
     return (
       <View style={{ flex: 1 }} className="bg-gray-50">
-        <View 
+        <View
           className="px-4 pt-4 pb-4 flex-row items-center"
           style={{ backgroundColor: themes.sales.headerColor }}
         >
@@ -285,20 +292,20 @@ const FiguraComercialDetalle: React.FC = () => {
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={themes.sales.headerTextColor} 
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={themes.sales.headerTextColor}
             />
           </TouchableOpacity>
-          <Text 
+          <Text
             className="text-lg font-bold flex-1"
             style={{ color: themes.sales.headerTextColor }}
           >
             Error
           </Text>
         </View>
-        
+
         <View className="flex-1 justify-center items-center">
           <View className="bg-white rounded-xl p-8 mx-4 items-center shadow-sm">
             <Ionicons name="alert-circle" size={48} color="#EF4444" />
@@ -313,7 +320,7 @@ const FiguraComercialDetalle: React.FC = () => {
   return (
     <View style={{ flex: 1 }} className="bg-gray-50">
       {/* Header optimized */}
-      <View 
+      <View
         className="px-4 pt-6 pb-4 flex-row items-center justify-between shadow-sm"
         style={{ backgroundColor: themes.sales.headerColor, minHeight: 80, zIndex: 1000 }}
       >
@@ -324,13 +331,13 @@ const FiguraComercialDetalle: React.FC = () => {
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="arrow-back" 
-              size={24} 
-              color={themes.sales.headerTextColor} 
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={themes.sales.headerTextColor}
             />
           </TouchableOpacity>
-          <Text 
+          <Text
             className="text-lg font-bold flex-1"
             style={{ color: themes.sales.headerTextColor }}
             numberOfLines={1}
@@ -339,34 +346,34 @@ const FiguraComercialDetalle: React.FC = () => {
             {figuraComercial.nombre}
           </Text>
         </View>
-        
+
         <View className="flex-row space-x-2">
           <TouchableOpacity
             onPress={handleEdit}
             className="p-3 rounded-full bg-white/10"
           >
-            <Ionicons 
-              name="pencil" 
-              size={20} 
-              color={themes.sales.headerTextColor} 
+            <Ionicons
+              name="pencil"
+              size={20}
+              color={themes.sales.headerTextColor}
             />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={handleDelete}
             className="p-3 rounded-full bg-red-500/90"
           >
-            <Ionicons 
-              name="trash" 
-              size={20} 
-              color="white" 
+            <Ionicons
+              name="trash"
+              size={20}
+              color="white"
             />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         className="flex-1 -mt-2"
         contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
@@ -389,7 +396,7 @@ const FiguraComercialDetalle: React.FC = () => {
               </View>
             </View>
           )}
-          
+
           {/* Main Info */}
           <View className="p-4">
             <Text className="text-xl font-bold text-gray-900">
@@ -410,15 +417,15 @@ const FiguraComercialDetalle: React.FC = () => {
         {figuraComercial && !isLoading && (
           <View className="bg-white mx-4 rounded-xl shadow-sm overflow-hidden">
             {/* Tab Header - Exactamente como ArticuloDetalle */}
-            <View 
+            <View
               className="px-4 py-3"
               style={{ backgroundColor: themes.sales.headerColor }}
             >
               {/* Tab Navigation - Chips or Dropdown Style */}
               {viewMode === 'chips' ? (
                 <View className="flex-row items-center justify-between">
-                  <ScrollView 
-                    horizontal 
+                  <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: 4 }}
                     style={{ flex: 1 }}
@@ -543,13 +550,13 @@ const FiguraComercialDetalle: React.FC = () => {
                 </View>
               )}
             </View>
-            
+
             {/* Tab Content */}
             <View className="p-6">
               <View className="space-y-4">
                 {(() => {
                   const fields = getActiveTabFields();
-                  
+
                   if (!fields || fields.length === 0) {
                     return (
                       <View className="py-8 items-center">
@@ -560,7 +567,7 @@ const FiguraComercialDetalle: React.FC = () => {
                       </View>
                     );
                   }
-                  
+
                   return fields.map((field, index) => (
                     <View key={`field-${activeDetailTab}-${index}`} className="flex-row justify-between items-start">
                       <Text className="text-sm text-gray-600 flex-1 mr-4 leading-relaxed">
@@ -576,7 +583,7 @@ const FiguraComercialDetalle: React.FC = () => {
             </View>
           </View>
         )}
-        
+
         {/* Bottom spacing */}
         <View className="h-6" />
       </ScrollView>
