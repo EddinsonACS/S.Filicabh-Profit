@@ -133,7 +133,6 @@ const FiguraComercialDetalle: React.FC = () => {
         { label: 'Descripción', value: figuraComercial?.descripcionFiguraComercial || 'N/A' },
         { label: 'País', value: figuraComercial?.paisNombre || 'N/A' },
         { label: 'Ciudad', value: figuraComercial?.ciudadNombre || 'N/A' },
-        { label: 'Region', value: listCuidadData?.data?.find((p) => p.id == figuraComercial.idCiudad)?.regionNombre || 'N/A' },
         { label: 'Rubro', value: figuraComercial?.rubroNombre || 'N/A' },
         { label: 'Sector', value: figuraComercial?.sectorNombre || 'N/A' },
         { label: 'Vendedor', value: figuraComercial?.vendedorNombre || 'N/A' },
