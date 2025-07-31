@@ -162,6 +162,12 @@ const ArticuloForm: React.FC = () => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Estados para control de cambios no guardados
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<{[key: string]: boolean}>({});
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+  const [pendingTabChange, setPendingTabChange] = useState<string | null>(null);
+  const [initialFormData, setInitialFormData] = useState<any>(null);
+
 
   const {
     showCreateSuccess,
@@ -395,12 +401,16 @@ const ArticuloForm: React.FC = () => {
     reset,
     setValue,
     getValues,
+    watch,
   } = useForm<ArticuloFormData>({
     resolver: zodResolver(
       inventorySchema['articulo'] // En modo edición, todos los campos son opcionales
     ),
     defaultValues: isEditingMode ? (currentItem as ArticuloFormData) : DEFAULT_VALUES_INVENTORY['articulo'],
   });
+
+  // Observar cambios en los campos del formulario
+  const watchedValues = watch();
 
   // Log para debuggear errores de validación
   useEffect(() => {
@@ -412,6 +422,14 @@ const ArticuloForm: React.FC = () => {
   useEffect(() => {
     if (isEditingMode && currentItem) {
       reset(currentItem as ArticuloFormData);
+      // Guardar estado inicial para detectar cambios
+      setInitialFormData({
+        ...currentItem,
+        presentaciones: articuloPresentacionesData?.data || [],
+        precios: listasPreciosDataArticulo?.data || [],
+        ubicaciones: ubicacionesDataArticulo?.data || [],
+        fotos: articuloFotosData?.data || []
+      });
       // Las presentaciones se cargan en un useEffect separado usando articuloPresentacionesData
       // Inicializar otros campos numéricos
       [
@@ -430,7 +448,16 @@ const ArticuloForm: React.FC = () => {
         }
       });
     } else {
-      reset(DEFAULT_VALUES_INVENTORY['articulo'] as ArticuloFormData);
+      const defaultData = DEFAULT_VALUES_INVENTORY['articulo'] as ArticuloFormData;
+      reset(defaultData);
+      // Guardar estado inicial para modo creación
+      setInitialFormData({
+        ...defaultData,
+        presentaciones: [],
+        precios: [],
+        ubicaciones: [],
+        fotos: []
+      });
       setSelectedImages([]);
       setPrincipalImageIndex(-1);
       setListasPrecios([]);
@@ -440,6 +467,8 @@ const ArticuloForm: React.FC = () => {
       setCreatedArticleId(null);
       setImageOrder({});
     }
+    // Resetear cambios no guardados al cambiar de artículo
+    setHasUnsavedChanges({});
   }, [isEditingMode, currentItem, reset, setValue]);
 
   // Efecto separado para cargar presentaciones existentes cuando se carga articuloPresentacionesData
@@ -562,6 +591,17 @@ const ArticuloForm: React.FC = () => {
       }
     }
   }, [isEditingMode, currentItem, ubicacionesDataArticulo]);
+
+  // Efecto para detectar cambios automáticamente
+  useEffect(() => {
+    if (initialFormData) {
+      const hasChanges = hasChangesInCurrentTab();
+      setHasUnsavedChanges(prev => ({
+        ...prev,
+        [activeTab]: hasChanges
+      }));
+    }
+  }, [activeTab, watchedValues, presentacionesConfig, presentacionesSeleccionadas, listasPrecios, ubicaciones, selectedImages, imageOrder]);
 
   // Función para procesar y actualizar fotos existentes
   const processFotosExistentes = useCallback(() => {
@@ -1492,6 +1532,7 @@ const ArticuloForm: React.FC = () => {
           } else {
             // En modo creación, mostrar modal de éxito
             console.log('🎉 Mostrando modal de éxito para creación...');
+            markTabAsSaved('ficha');
             setShowSuccessModal(true);
           }
         }
@@ -1520,6 +1561,7 @@ const ArticuloForm: React.FC = () => {
               } else {
                 console.log('🎉 Mostrando mensaje de creación de presentaciones...');
                 showCreateSuccess('las presentaciones');
+                markTabAsSaved('presentaciones');
                 setShowSuccessModal(true);
               }
             }
@@ -1558,12 +1600,14 @@ const ArticuloForm: React.FC = () => {
             if (isEditingMode) {
               // En modo edición, mostrar notificación de éxito
               showUpdateSuccess('los detalles del artículo');
+              markTabAsSaved('detalles');
               // Opcional: navegar a la siguiente pestaña después de un breve delay
               setTimeout(() => {
                 setActiveTab("precios");
               }, 1500);
             } else {
               showCreateSuccess('los detalles del artículo');
+              markTabAsSaved('detalles');
               setShowSuccessModal(true);
             }
           }
@@ -1584,12 +1628,14 @@ const ArticuloForm: React.FC = () => {
           if (isEditingMode) {
             // En modo edición, mostrar notificación de éxito
             showUpdateSuccess('los precios');
+            markTabAsSaved('precios');
             // Opcional: navegar a la siguiente pestaña después de un breve delay
             setTimeout(() => {
               setActiveTab("ubicaciones");
             }, 1500);
           } else {
             showCreateSuccess('los precios');
+            markTabAsSaved('precios');
             setShowSuccessModal(true);
           }
         }
@@ -1610,12 +1656,14 @@ const ArticuloForm: React.FC = () => {
           if (isEditingMode) {
             // En modo edición, mostrar notificación de éxito
             showUpdateSuccess('las ubicaciones');
+            markTabAsSaved('ubicaciones');
             // Opcional: navegar a la siguiente pestaña después de un breve delay
             setTimeout(() => {
               setActiveTab("fotos");
             }, 1500);
           } else {
             showCreateSuccess('las ubicaciones');
+            markTabAsSaved('ubicaciones');
             setShowSuccessModal(true);
           }
         }
@@ -1632,9 +1680,11 @@ const ArticuloForm: React.FC = () => {
         if (success) {
           if (isEditingMode) {
             // En modo edición, navegar directamente sin mostrar notificación
+            markTabAsSaved('fotos');
             navigateBack();
           } else {
             showCreateSuccess('las fotos');
+            markTabAsSaved('fotos');
             setTimeout(() => {
               navigateBack();
             }, 1500);
@@ -1650,6 +1700,146 @@ const ArticuloForm: React.FC = () => {
 
   const handleSelectPress = (fieldName: string) => {
     setOpenSelect(openSelect === fieldName ? null : fieldName);
+  };
+
+  // Función para detectar cambios en el tab actual
+  const hasChangesInCurrentTab = () => {
+    if (!initialFormData) return false;
+
+    const currentFormData = getValues();
+    
+    switch (activeTab) {
+      case "ficha":
+        const fichaFields = ['nombre', 'codigoArticulo', 'codigoModelo', 'codigoBarra', 'descripcion', 'idTipoArticulo', 'idGrupo', 'idImpuesto', 'manejaLote', 'manejaSerial', 'suspendido'];
+        return fichaFields.some(field => {
+          const currentValue = (currentFormData as any)[field];
+          const initialValue = initialFormData[field];
+          return JSON.stringify(currentValue) !== JSON.stringify(initialValue);
+        });
+      
+      case "presentaciones":
+        return JSON.stringify(presentacionesConfig) !== JSON.stringify({}) || 
+               JSON.stringify([...presentacionesSeleccionadas]) !== JSON.stringify([]);
+      
+      case "detalles":
+        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla'];
+        return detalleFields.some(field => {
+          const currentValue = (currentFormData as any)[field];
+          const initialValue = initialFormData[field];
+          return JSON.stringify(currentValue) !== JSON.stringify(initialValue);
+        });
+      
+      case "precios":
+        return JSON.stringify(listasPrecios) !== JSON.stringify(initialFormData.precios || []);
+      
+      case "ubicaciones":
+        return JSON.stringify(ubicaciones) !== JSON.stringify(initialFormData.ubicaciones || []);
+      
+      case "fotos":
+        return JSON.stringify(selectedImages) !== JSON.stringify(initialFormData.fotos || []) ||
+               JSON.stringify(imageOrder) !== JSON.stringify({});
+      
+      default:
+        return false;
+    }
+  };
+
+  // Función para cancelar cambios del tab actual
+  const cancelCurrentTabChanges = () => {
+    if (!initialFormData) return;
+
+    switch (activeTab) {
+      case "ficha":
+        const fichaFields = ['nombre', 'codigoArticulo', 'codigoModelo', 'codigoBarra', 'descripcion', 'idTipoArticulo', 'idGrupo', 'idImpuesto', 'manejaLote', 'manejaSerial', 'suspendido'];
+        fichaFields.forEach(field => {
+          if (initialFormData[field] !== undefined) {
+            setValue(field as keyof ArticuloFormData, initialFormData[field]);
+          }
+        });
+        break;
+      
+      case "presentaciones":
+        setPresentacionesConfig({});
+        setPresentacionesSeleccionadas(new Set());
+        break;
+      
+      case "detalles":
+        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla'];
+        detalleFields.forEach(field => {
+          if (initialFormData[field] !== undefined) {
+            setValue(field as keyof ArticuloFormData, initialFormData[field]);
+          }
+        });
+        break;
+      
+      case "precios":
+        setListasPrecios(initialFormData.precios || []);
+        setSelectedListaPrecio("");
+        setSelectedMoneda("");
+        setPrecioInputs({ monto: "", fechaDesde: "", fechaHasta: "" });
+        break;
+      
+      case "ubicaciones":
+        setUbicaciones(initialFormData.ubicaciones || []);
+        setSelectedAlmacen("");
+        setUbicacionInput("");
+        break;
+      
+      case "fotos":
+        setSelectedImages(initialFormData.fotos || []);
+        setImageOrder({});
+        setPrincipalImageIndex(-1);
+        break;
+    }
+
+    // Actualizar estado de cambios no guardados
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      [activeTab]: false
+    }));
+  };
+
+  // Función para cambiar de tab con verificación de cambios
+  const handleTabChange = (newTab: string) => {
+    // Verificar bloqueos existentes
+    if (!isEditingMode && !createdArticleId && newTab !== "ficha") {
+      return;
+    }
+
+    // Verificar cambios no guardados
+    if (hasChangesInCurrentTab()) {
+      setPendingTabChange(newTab);
+      setShowUnsavedChangesModal(true);
+      return;
+    }
+
+    // Cambiar tab sin problemas
+    setActiveTab(newTab);
+  };
+
+  // Función para marcar tab como guardado exitosamente
+  const markTabAsSaved = (tabName: string) => {
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      [tabName]: false
+    }));
+    
+    // Actualizar estado inicial con los datos actuales
+    if (tabName === 'ficha') {
+      const currentData = getValues();
+      setInitialFormData(prev => ({ ...prev, ...currentData }));
+    } else if (tabName === 'presentaciones') {
+      setInitialFormData(prev => ({ 
+        ...prev, 
+        presentaciones: [...presentacionesSeleccionadas].map(id => ({ id }))
+      }));
+    } else if (tabName === 'precios') {
+      setInitialFormData(prev => ({ ...prev, precios: [...listasPrecios] }));
+    } else if (tabName === 'ubicaciones') {
+      setInitialFormData(prev => ({ ...prev, ubicaciones: [...ubicaciones] }));
+    } else if (tabName === 'fotos') {
+      setInitialFormData(prev => ({ ...prev, fotos: [...selectedImages] }));
+    }
   };
 
   // Define fields for each tab with proper required marking
@@ -1809,13 +1999,7 @@ const ArticuloForm: React.FC = () => {
                       // Agregar opacidad para tabs deshabilitados
                       opacity: (!isEditingMode && !createdArticleId && tab.id !== "ficha") ? 0.5 : 1
                     }}
-                    onPress={() => {
-                      // En modo creación, solo permitir cambiar de tab si el artículo ya fue creado exitosamente
-                      if (!isEditingMode && !createdArticleId && tab.id !== "ficha") {
-                        return; // Bloquear cambio de tab
-                      }
-                      setActiveTab(tab.id);
-                    }}
+                    onPress={() => handleTabChange(tab.id)}
                   >
                     <Ionicons
                       name={tab.icon as any}
@@ -1823,15 +2007,26 @@ const ArticuloForm: React.FC = () => {
                       color={activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)'}
                       style={{ marginRight: 4 }} // Reducido de 6 a 4
                     />
-                    <Text
-                      style={{
-                        color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
-                        fontWeight: activeTab === tab.id ? '600' : 'normal',
-                        fontSize: 12 // Reducido de 14 a 12
-                      }}
-                    >
-                      {tab.name}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text
+                        style={{
+                          color: activeTab === tab.id ? themes.inventory.buttonColor : 'rgba(255,255,255,0.8)',
+                          fontWeight: activeTab === tab.id ? '600' : 'normal',
+                          fontSize: 12 // Reducido de 14 a 12
+                        }}
+                      >
+                        {tab.name}
+                      </Text>
+                      {hasUnsavedChanges[tab.id] && (
+                        <View style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: '#EF4444',
+                          marginLeft: 4
+                        }} />
+                      )}
+                    </View>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -3493,15 +3688,15 @@ const ArticuloForm: React.FC = () => {
                   setShowSuccessModal(false);
                   // Navegar a la siguiente pestaña según el tab actual
                   if (activeTab === "ficha") {
-                    setActiveTab("presentaciones");
+                    handleTabChange("presentaciones");
                   } else if (activeTab === "presentaciones") {
-                    setActiveTab("detalles");
+                    handleTabChange("detalles");
                   } else if (activeTab === "detalles") {
-                    setActiveTab("precios");
+                    handleTabChange("precios");
                   } else if (activeTab === "precios") {
-                    setActiveTab("ubicaciones");
+                    handleTabChange("ubicaciones");
                   } else if (activeTab === "ubicaciones") {
-                    setActiveTab("fotos");
+                    handleTabChange("fotos");
                   } else {
                     // Si estamos en fotos o cualquier otro tab, salir
                     navigateBack();
@@ -3515,6 +3710,83 @@ const ArticuloForm: React.FC = () => {
                   className="text-center font-medium"
                 >
                   Sí, Continuar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para cambios no guardados */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showUnsavedChangesModal}
+        onRequestClose={() => setShowUnsavedChangesModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center">
+          <View className="bg-white rounded-2xl p-6 mx-6 w-80">
+            <View className="items-center mb-6">
+              <View className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center mb-4">
+                <Ionicons name="warning" size={32} color="#F59E0B" />
+              </View>
+              <Text className="text-xl font-bold text-center text-gray-800">
+                ¡Cambios No Guardados!
+              </Text>
+              <Text className="text-sm text-gray-600 text-center mt-2">
+                Tienes cambios sin guardar en la sección actual. ¿Qué deseas hacer?
+              </Text>
+            </View>
+
+            <View className="space-y-3">
+              {/* Actualizar */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowUnsavedChangesModal(false);
+                  setPendingTabChange(null);
+                  // Ejecutar guardado del tab actual
+                  handleSubmit(onSubmit)();
+                }}
+                style={{ backgroundColor: themes.inventory.buttonColor }}
+                className="py-3 rounded-lg"
+              >
+                <Text
+                  style={{ color: themes.inventory.buttonTextColor }}
+                  className="text-center font-medium"
+                >
+                  Actualizar
+                </Text>
+              </TouchableOpacity>
+
+              {/* Cancelar cambios */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowUnsavedChangesModal(false);
+                  // Cancelar cambios del tab actual
+                  cancelCurrentTabChanges();
+                  // Cambiar al tab pendiente si existe
+                  if (pendingTabChange) {
+                    setActiveTab(pendingTabChange);
+                    setPendingTabChange(null);
+                  }
+                }}
+                className="bg-red-500 py-3 rounded-lg"
+              >
+                <Text className="text-center text-white font-medium">
+                  Cancelar Cambios
+                </Text>
+              </TouchableOpacity>
+
+              {/* Permanecer en tab actual */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowUnsavedChangesModal(false);
+                  setPendingTabChange(null);
+                }}
+                className="bg-gray-100 py-3 rounded-lg"
+              >
+                <Text className="text-center text-gray-700 font-medium">
+                  Seguir Editando
                 </Text>
               </TouchableOpacity>
             </View>
@@ -3597,13 +3869,7 @@ const ArticuloForm: React.FC = () => {
           { id: "fotos", name: "Fotos", icon: "camera-outline" }
         ]}
         activeOption={activeTab}
-        onSelectOption={(tabId) => {
-          // En modo creación, solo permitir cambiar de tab si el artículo ya fue creado exitosamente
-          if (!isEditingMode && !createdArticleId && tabId !== "ficha") {
-            return; // Bloquear cambio de tab
-          }
-          setActiveTab(tabId);
-        }}
+        onSelectOption={(tabId) => handleTabChange(tabId)}
         position={dropdownPosition}
         theme={themes.inventory}
       />
