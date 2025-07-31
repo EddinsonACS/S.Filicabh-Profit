@@ -1805,9 +1805,17 @@ const ArticuloForm: React.FC = () => {
                       shadowOffset: activeTab === tab.id ? { width: 0, height: 2 } : { width: 0, height: 0 },
                       shadowOpacity: activeTab === tab.id ? 0.1 : 0,
                       shadowRadius: activeTab === tab.id ? 4 : 0,
-                      elevation: activeTab === tab.id ? 3 : 0
+                      elevation: activeTab === tab.id ? 3 : 0,
+                      // Agregar opacidad para tabs deshabilitados
+                      opacity: (!isEditingMode && !createdArticleId && tab.id !== "ficha") ? 0.5 : 1
                     }}
-                    onPress={() => setActiveTab(tab.id)}
+                    onPress={() => {
+                      // En modo creación, solo permitir cambiar de tab si el artículo ya fue creado exitosamente
+                      if (!isEditingMode && !createdArticleId && tab.id !== "ficha") {
+                        return; // Bloquear cambio de tab
+                      }
+                      setActiveTab(tab.id);
+                    }}
                   >
                     <Ionicons
                       name={tab.icon as any}
@@ -3589,7 +3597,13 @@ const ArticuloForm: React.FC = () => {
           { id: "fotos", name: "Fotos", icon: "camera-outline" }
         ]}
         activeOption={activeTab}
-        onSelectOption={setActiveTab}
+        onSelectOption={(tabId) => {
+          // En modo creación, solo permitir cambiar de tab si el artículo ya fue creado exitosamente
+          if (!isEditingMode && !createdArticleId && tabId !== "ficha") {
+            return; // Bloquear cambio de tab
+          }
+          setActiveTab(tabId);
+        }}
         position={dropdownPosition}
         theme={themes.inventory}
       />
