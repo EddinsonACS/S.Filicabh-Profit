@@ -8,8 +8,8 @@ import { useArticuloPresentaciones } from '@/hooks/Inventario/useArticuloPresent
 import { useArticuloUbicacion } from '@/hooks/Inventario/useArticuloUbicacion';
 import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
 import {
     Alert,
     Dimensions,
@@ -66,6 +66,14 @@ const ArticuloDetalle: React.FC = () => {
   const { data: articuloUbicacion } = useGetArticuloUbicacionList(1, 100);
   const { data: articuloPresentaciones } = useGetArticuloPresentacionesList(1, 100);
   const { data: presentacionesData } = useGetPresentacionList(1, 100);
+
+  // Refrescar automáticamente al volver a la pantalla (por ejemplo, después de editar)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('📱 ArticuloDetalle enfocado, refrescando datos...');
+      refetch();
+    }, [refetch])
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);

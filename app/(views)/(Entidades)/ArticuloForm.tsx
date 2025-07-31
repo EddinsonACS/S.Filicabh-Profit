@@ -17,6 +17,7 @@ import { useListaDePrecio } from "@/hooks/Ventas/useListaDePrecio";
 import { useMoneda } from "@/hooks/Ventas/useMoneda";
 import { DEFAULT_VALUES_INVENTORY } from "@/utils/const/defaultValues";
 import { FORM_FIELDS_INVENTORY } from "@/utils/const/formFields";
+import { queryClient } from "@/utils/libs/queryClient";
 import { InventoryFormData, inventorySchema } from "@/utils/schemas/inventorySchema";
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,7 +57,7 @@ interface PrecioInputs {
 }
 
 interface PresentacionConfig {
-  equivalencia: number;
+  equivalencia: number | string;
   usarEnVentas: boolean;
   usarEnCompras: boolean;
   esPrincipal: boolean;
@@ -149,6 +150,8 @@ const ArticuloForm: React.FC = () => {
   // Estados para presentaciones
   const [presentacionesConfig, setPresentacionesConfig] = useState<Record<number, PresentacionConfig>>({});
   const [presentacionesSeleccionadas, setPresentacionesSeleccionadas] = useState<Set<number>>(new Set());
+  const [presentacionesExpandidas, setPresentacionesExpandidas] = useState<Set<number>>(new Set());
+  const [searchPresentaciones, setSearchPresentaciones] = useState<string>('');
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [backendFormError, setBackendFormError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -281,28 +284,59 @@ const ArticuloForm: React.FC = () => {
         };
       }
 
-      // Si se está marcando como principal, desmarcar todas las demás
+      // Si se está marcando como principal, desmarcar todas las demás y ajustar equivalencias
       if (field === 'esPrincipal' && value === true) {
         Object.keys(newConfig).forEach(id => {
           if (Number(id) !== presentacionId) {
             newConfig[Number(id)].esPrincipal = false;
+            // No cambiar la equivalencia de las demás presentaciones
           }
         });
+        // La presentación principal siempre debe tener equivalencia = 1
+        newConfig[presentacionId] = {
+          ...newConfig[presentacionId],
+          esPrincipal: true,
+          equivalencia: 1
+        };
+        return newConfig;
       }
 
-      // Actualizar el campo específico
+      // Si se está actualizando el campo equivalencia
       if (field === "equivalencia") {
-        // Siempre forzar equivalencia a 1
-        newConfig[presentacionId] = {
-          ...newConfig[presentacionId],
-          [field]: 1
-        };
-      } else {
-        newConfig[presentacionId] = {
-          ...newConfig[presentacionId],
-          [field]: value
-        };
+        // Si es la presentación principal, forzar equivalencia a 1
+        if (newConfig[presentacionId].esPrincipal) {
+          newConfig[presentacionId] = {
+            ...newConfig[presentacionId],
+            equivalencia: 1
+          };
+        } else {
+          // Para presentaciones no principales, permitir cualquier valor incluso vacío
+          let processedValue;
+          if (typeof value === 'string') {
+            if (value === '') {
+              // Permitir campo vacío temporalmente para poder borrar
+              processedValue = '';
+            } else {
+              // Convertir a número si tiene contenido
+              processedValue = parseFloat(value) || 1;
+            }
+          } else {
+            processedValue = Number(value) || 1;
+          }
+          
+          newConfig[presentacionId] = {
+            ...newConfig[presentacionId],
+            equivalencia: processedValue
+          };
+        }
+        return newConfig;
       }
+
+      // Para otros campos, actualizar normalmente
+      newConfig[presentacionId] = {
+        ...newConfig[presentacionId],
+        [field]: value
+      };
 
       return newConfig;
     });
@@ -312,21 +346,47 @@ const ArticuloForm: React.FC = () => {
     setPresentacionesSeleccionadas((prev) => {
       const newSelection = new Set(prev);
       if (newSelection.has(presentacionId)) {
-        // Deseleccionar: remover de selección y configuración
+        // Deseleccionar: remover de selección, configuración y expansión
         newSelection.delete(presentacionId);
         setPresentacionesConfig(current => {
           const newConfig = { ...current };
           delete newConfig[presentacionId];
           return newConfig;
         });
+        setPresentacionesExpandidas(current => {
+          const newExpanded = new Set(current);
+          newExpanded.delete(presentacionId);
+          return newExpanded;
+        });
       } else {
-        // Seleccionar: agregar a selección y crear configuración por defecto
+        // Seleccionar: agregar a selección, crear configuración por defecto y expandir automáticamente
         newSelection.add(presentacionId);
         updatePresentacionConfig(presentacionId, "equivalencia", 1);
+        setPresentacionesExpandidas(current => {
+          const newExpanded = new Set(current);
+          newExpanded.add(presentacionId);
+          return newExpanded;
+        });
       }
       return newSelection;
     });
   };
+
+  const togglePresentacionExpansion = (presentacionId: number) => {
+    setPresentacionesExpandidas((prev) => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(presentacionId)) {
+        newExpanded.delete(presentacionId);
+      } else {
+        newExpanded.add(presentacionId);
+      }
+      return newExpanded;
+    });
+  };
+
+  const filteredPresentaciones = presentacionesDataArticulo?.data?.filter((presentacion: any) =>
+    presentacion.nombre.toLowerCase().includes(searchPresentaciones.toLowerCase())
+  ) || [];
 
   const {
     control,
@@ -503,8 +563,8 @@ const ArticuloForm: React.FC = () => {
     }
   }, [isEditingMode, currentItem, ubicacionesDataArticulo]);
 
-  // Efecto para cargar fotos existentes cuando se carga articuloFotosData
-  useEffect(() => {
+  // Función para procesar y actualizar fotos existentes
+  const processFotosExistentes = useCallback(() => {
     if (isEditingMode && currentItem && articuloFotosData?.data) {
       console.log('🔄 Cargando fotos existentes para edición...');
 
@@ -551,10 +611,21 @@ const ArticuloForm: React.FC = () => {
         console.log('📸 Orden de imágenes:', ordenImagenes);
         console.log('📸 Índice principal:', principalIndex);
 
-        // Actualizar estados
-        setSelectedImages(fotosFormateadas);
-        setImageOrder(ordenImagenes);
-        setPrincipalImageIndex(principalIndex >= 0 ? principalIndex : -1);
+        // Actualizar estados solo si hay cambios
+        setSelectedImages(prev => {
+          const newImages = JSON.stringify(fotosFormateadas);
+          const oldImages = JSON.stringify(prev);
+          return newImages !== oldImages ? fotosFormateadas : prev;
+        });
+        setImageOrder(prev => {
+          const newOrder = JSON.stringify(ordenImagenes);
+          const oldOrder = JSON.stringify(prev);
+          return newOrder !== oldOrder ? ordenImagenes : prev;
+        });
+        setPrincipalImageIndex(prev => {
+          const newIndex = principalIndex >= 0 ? principalIndex : -1;
+          return newIndex !== prev ? newIndex : prev;
+        });
       } else {
         // Si no hay fotos, limpiar estados
         setSelectedImages([]);
@@ -563,6 +634,11 @@ const ArticuloForm: React.FC = () => {
       }
     }
   }, [isEditingMode, currentItem, articuloFotosData]);
+
+  // Efecto para cargar fotos existentes cuando se carga articuloFotosData
+  useEffect(() => {
+    processFotosExistentes();
+  }, [processFotosExistentes]);
 
   // Helper functions for form fields formatting
   const getFormattedValueByType = (
@@ -822,10 +898,13 @@ const ArticuloForm: React.FC = () => {
     if (isOrderMode) {
       // Salir del modo ordenamiento
       setIsOrderMode(false);
+      console.log('📸 Saliendo del modo ordenamiento');
     } else {
-      // Entrar al modo ordenamiento - limpiar todos los órdenes
+      // Entrar al modo ordenamiento - limpiar todos los órdenes para empezar de nuevo
+      console.log('📸 Entrando al modo ordenamiento - limpiando órdenes existentes');
       const newImageOrder: { [key: number]: number } = {};
       setImageOrder(newImageOrder);
+      setPrincipalImageIndex(-1); // También limpiar imagen principal
       setIsOrderMode(true);
     }
   };
@@ -834,8 +913,53 @@ const ArticuloForm: React.FC = () => {
   const handleOrderSelection = (imageId: number) => {
     if (!isOrderMode) return;
 
-    // Obtener el siguiente orden disponible
-    const nextOrder = Object.keys(imageOrder).length + 1;
+    // Verificar si esta imagen ya tiene un orden asignado
+    const currentOrder = imageOrder[imageId];
+    
+    if (currentOrder) {
+      // Si ya tiene orden, permitir quitarlo (funcionalidad de toggle)
+      console.log(`📸 Removiendo orden ${currentOrder} de imagen ${imageId}`);
+      
+      // Crear nuevo orden sin esta imagen
+      const newOrder = { ...imageOrder };
+      delete newOrder[imageId];
+      
+      // Reajustar los órdenes de las imágenes que tenían orden mayor
+      Object.keys(newOrder).forEach(id => {
+        if (newOrder[Number(id)] > currentOrder) {
+          newOrder[Number(id)]--;
+        }
+      });
+      
+      setImageOrder(newOrder);
+      
+      // Si era la imagen principal (orden 1), quitar la principal
+      if (currentOrder === 1) {
+        setPrincipalImageIndex(-1);
+        
+        // Si hay otra imagen con orden 1 después del reajuste, hacerla principal
+        const newPrincipalImageId = Object.keys(newOrder).find(id => newOrder[Number(id)] === 1);
+        if (newPrincipalImageId) {
+          const newPrincipalIndex = selectedImages.findIndex(img => img.id === Number(newPrincipalImageId));
+          if (newPrincipalIndex !== -1) {
+            setPrincipalImageIndex(newPrincipalIndex);
+          }
+        }
+      }
+      
+      return;
+    }
+
+    // Obtener el siguiente orden disponible (solo si la imagen no tiene orden)
+    const existingOrders = Object.values(imageOrder);
+    const nextOrder = existingOrders.length + 1;
+    
+    // Verificar que no exceda el número total de imágenes
+    if (nextOrder > selectedImages.length) {
+      console.log(`📸 No se puede asignar orden ${nextOrder}, máximo permitido: ${selectedImages.length}`);
+      return;
+    }
+
     setImageOrderNumber(imageId, nextOrder);
 
     // Si es la primera foto seleccionada, hacerla principal
@@ -943,11 +1067,16 @@ const ArticuloForm: React.FC = () => {
       // Solo procesar si hay fotos que agregar/actualizar
       if (selectedImages.length === 0) {
         console.log('📸 No hay fotos para procesar');
+        // Invalidar queries para forzar actualización
+        await queryClient.invalidateQueries({ queryKey: ['articulo', 'item', articleId] });
+        await queryClient.invalidateQueries({ queryKey: ['articulofoto'] });
         return true;
       }
 
       console.log(`📸 Procesando ${selectedImages.length} fotos...`);
 
+      const resultados = [];
+      
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
         const order = imageOrder[image.id] || i + 1; // Usar image.id como clave
@@ -976,10 +1105,11 @@ const ArticuloForm: React.FC = () => {
         };
 
         try {
+          let resultado;
           if (image.existente && image.fotoId) {
             // Actualizar foto existente usando PUT /api/articulofoto/{id}
             console.log(`🔄 Actualizando foto existente ID: ${image.fotoId}`);
-            await updateFotoMutation.mutateAsync({
+            resultado = await updateFotoMutation.mutateAsync({
               id: image.fotoId,
               params: fotoParams
             });
@@ -987,14 +1117,25 @@ const ArticuloForm: React.FC = () => {
           } else {
             // Crear nueva foto usando POST /api/articulofoto
             console.log(`🆕 Creando nueva foto`);
-            await createFotoMutation.mutateAsync(fotoParams);
+            resultado = await createFotoMutation.mutateAsync(fotoParams);
             console.log(`✅ Foto ${i + 1} creada exitosamente`);
           }
+          resultados.push(resultado);
         } catch (error) {
           console.error(`❌ Error procesando foto ${i + 1}:`, error);
           // Continuar con las demás fotos
         }
       }
+
+      // Forzar invalidación de queries inmediata después de procesar todas las fotos
+      await queryClient.invalidateQueries({ queryKey: ['articulo', 'item', articleId] });
+      await queryClient.invalidateQueries({ queryKey: ['articulofoto'] });
+      
+      // Refetch inmediato para actualizar el estado
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['articulo', 'item', articleId] });
+        queryClient.refetchQueries({ queryKey: ['articulofoto', 'list'] });
+      }, 500);
 
       return true;
     } catch (error) {
@@ -2021,52 +2162,93 @@ const ArticuloForm: React.FC = () => {
             {activeTab === "presentaciones" && (
               <>
                 <View className="mb-6">
-                  {/* Contador de presentaciones seleccionadas */}
-                  <View className="bg-gray-50 rounded-lg p-4 mb-2">
-                    <Text className="text-sm font-medium text-gray-700">
-                      {presentacionesSeleccionadas.size} de {presentacionesDataArticulo?.data?.length || 0} presentaciones seleccionadas
+                  {/* Buscador de presentaciones */}
+                  <View className="mb-4">
+                    <Text className="text-sm font-medium text-gray-700 mb-2">
+                      Buscar presentaciones
+                    </Text>
+                    <View className="flex-row items-center bg-white rounded-lg border border-gray-200 px-3 py-2">
+                      <Ionicons name="search-outline" size={20} color="#9ca3af" />
+                      <TextInput
+                        value={searchPresentaciones}
+                        onChangeText={setSearchPresentaciones}
+                        placeholder="Escriba para buscar presentaciones..."
+                        className="flex-1 ml-2 text-gray-700"
+                        style={{ fontSize: 14 }}
+                      />
+                      {searchPresentaciones.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchPresentaciones('')}>
+                          <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    
+                    {/* Contador de presentaciones seleccionadas - justo debajo del buscador */}
+                    <Text className="text-xs text-gray-500 mt-2">
+                      {presentacionesSeleccionadas.size} de {filteredPresentaciones.length} presentaciones seleccionadas
+                      {searchPresentaciones && ` (filtradas de ${presentacionesDataArticulo?.data?.length || 0})`}
                     </Text>
                   </View>
 
-                  {/* Lista de todas las presentaciones disponibles */}
-                  {presentacionesDataArticulo?.data?.map((presentacion) => {
+                  {/* Lista de presentaciones filtradas */}
+                  {filteredPresentaciones.map((presentacion) => {
                     const isSelected = presentacionesSeleccionadas.has(presentacion.id);
                     const config = presentacionesConfig[presentacion.id];
 
+                    const isExpanded = presentacionesExpandidas.has(presentacion.id);
+
                     return (
-                      <TouchableOpacity
+                      <View
                         key={presentacion.id}
-                        onPress={() => togglePresentacionSelection(presentacion.id)}
-                        className="bg-white border rounded-lg p-3 mb-3"
+                        className="bg-white border rounded-lg mb-3"
                         style={{
                           borderColor: isSelected ? themes.inventory.buttonColor : "#e5e7eb",
                           backgroundColor: isSelected ? `${themes.inventory.buttonColor}10` : "white"
                         }}
                       >
-                        {/* Header con checkbox y nombre */}
-                        <View className="flex-row items-center mb-2">
-                          <View
-                            className="w-5 h-5 rounded border-2 items-center justify-center mr-3"
-                            style={{
-                              backgroundColor: isSelected ? themes.inventory.buttonColor : "white",
-                              borderColor: isSelected ? themes.inventory.buttonColor : "#d1d5db"
-                            }}
+                        {/* Header con checkbox, nombre y chevron */}
+                        <View className="flex-row items-center p-3">
+                          <TouchableOpacity
+                            onPress={() => togglePresentacionSelection(presentacion.id)}
+                            className="flex-row items-center flex-1"
                           >
-                            {isSelected && (
-                              <Ionicons name="checkmark" size={14} color="white" />
-                            )}
-                          </View>
+                            <View
+                              className="w-5 h-5 rounded border-2 items-center justify-center mr-3"
+                              style={{
+                                backgroundColor: isSelected ? themes.inventory.buttonColor : "white",
+                                borderColor: isSelected ? themes.inventory.buttonColor : "#d1d5db"
+                              }}
+                            >
+                              {isSelected && (
+                                <Ionicons name="checkmark" size={14} color="white" />
+                              )}
+                            </View>
 
-                          <View className="flex-1">
-                            <Text className="font-semibold text-gray-800 text-base">
-                              {presentacion.nombre}
-                            </Text>
-                          </View>
+                            <View className="flex-1">
+                              <Text className="font-semibold text-gray-800 text-base">
+                                {presentacion.nombre}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+
+                          {/* Chevron para expandir/contraer - solo visible si está seleccionada */}
+                          {isSelected && (
+                            <TouchableOpacity
+                              onPress={() => togglePresentacionExpansion(presentacion.id)}
+                              className="p-2 rounded-md bg-gray-100"
+                            >
+                              <Ionicons
+                                name={isExpanded ? "chevron-up" : "chevron-down"}
+                                size={20}
+                                color="#6b7280"
+                              />
+                            </TouchableOpacity>
+                          )}
                         </View>
 
-                        {/* Campos de configuración - solo visibles si está seleccionada */}
-                        {isSelected && config && (
-                          <View className="space-y-3 border-t border-gray-200 pt-3">
+                        {/* Campos de configuración - solo visibles si está seleccionada Y expandida */}
+                        {isSelected && config && isExpanded && (
+                          <View className="space-y-3 border-t border-gray-200 pt-3 px-3 pb-3">
                             {/* Switches de configuración */}
                             <View className="space-y-1">
                               {/* Es Principal */}
@@ -2122,14 +2304,48 @@ const ArticuloForm: React.FC = () => {
                                   style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                                 />
                               </View>
+
+                              {/* Equivalencia */}
+                              <View className="py-1 px-2 bg-gray-50 rounded-md">
+                                <View className="flex-row justify-between items-center mb-2">
+                                  <Text className="text-xs font-medium text-gray-700">
+                                    Equivalencia
+                                  </Text>
+                                </View>
+                                <TextInput
+                                  value={config.equivalencia === '' ? '' : String(config.equivalencia)}
+                                  onChangeText={(text) => {
+                                    if (!config.esPrincipal) {
+                                      // Permitir campo vacío para poder borrar y escribir nuevo número
+                                      const cleanText = text.replace(/[^0-9.]/g, ''); // Solo números y punto decimal
+                                      updatePresentacionConfig(presentacion.id, "equivalencia", cleanText);
+                                    }
+                                  }}
+                                  placeholder="Ingrese equivalencia"
+                                  keyboardType="numeric"
+                                  editable={!config.esPrincipal}
+                                  selectTextOnFocus={true}
+                                  clearButtonMode="while-editing"
+                                  className={`px-3 py-2 bg-white rounded-md border text-sm ${
+                                    config.esPrincipal 
+                                      ? 'border-gray-200 bg-gray-100 text-gray-500' 
+                                      : 'border-gray-300 text-gray-700'
+                                  }`}
+                                  style={{
+                                    fontSize: 12,
+                                    opacity: config.esPrincipal ? 0.6 : 1
+                                  }}
+                                />
+                              </View>
                             </View>
                           </View>
                         )}
 
-                      </TouchableOpacity>
+                      </View>
                     );
                   })}
 
+                  {/* Mensaje cuando no hay presentaciones disponibles */}
                   {(!presentacionesDataArticulo?.data || presentacionesDataArticulo.data.length === 0) && (
                     <View className="bg-gray-50 rounded-lg p-8">
                       <Ionicons name="layers-outline" size={48} color="#9ca3af" />
@@ -2138,6 +2354,19 @@ const ArticuloForm: React.FC = () => {
                       </Text>
                       <Text className="text-gray-400 text-sm text-center mt-1">
                         Primero debe crear presentaciones en el catálogo
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Mensaje cuando la búsqueda no arroja resultados */}
+                  {presentacionesDataArticulo?.data && presentacionesDataArticulo.data.length > 0 && filteredPresentaciones.length === 0 && (
+                    <View className="bg-gray-50 rounded-lg p-8">
+                      <Ionicons name="search-outline" size={48} color="#9ca3af" />
+                      <Text className="text-gray-500 mt-2 text-center">
+                        No se encontraron presentaciones
+                      </Text>
+                      <Text className="text-gray-400 text-sm text-center mt-1">
+                        Intente con otros términos de búsqueda
                       </Text>
                     </View>
                   )}
@@ -2942,12 +3171,24 @@ const ArticuloForm: React.FC = () => {
                   {/* Instrucciones para modo ordenamiento */}
                   {isOrderMode && selectedImages.length > 0 && (
                     <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                      <View className="flex-row items-center">
-                        <Ionicons name="information-circle" size={16} color="#2563EB" />
-                        <Text className="text-blue-800 text-sm ml-2 flex-1">
-                          Toca las fotos en el orden que desees. La primera será la principal.
-                        </Text>
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center flex-1">
+                          <Ionicons name="information-circle" size={16} color="#2563EB" />
+                          <Text className="text-blue-800 text-sm ml-2 flex-1">
+                            Toca las fotos en el orden que desees. La primera será la principal.
+                          </Text>
+                        </View>
+                        <View className="bg-blue-100 px-2 py-1 rounded-full ml-2">
+                          <Text className="text-blue-800 text-xs font-semibold">
+                            {Object.keys(imageOrder).length}/{selectedImages.length}
+                          </Text>
+                        </View>
                       </View>
+                      {Object.keys(imageOrder).length > 0 && (
+                        <Text className="text-blue-600 text-xs mt-2">
+                          Toca una foto ya ordenada para quitar su número
+                        </Text>
+                      )}
                     </View>
                   )}
 

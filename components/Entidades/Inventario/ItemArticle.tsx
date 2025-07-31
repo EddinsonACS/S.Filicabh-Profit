@@ -385,7 +385,7 @@ const ItemArticulo: React.FC<{
   dataTipoArticulo: TipoDeArticulo[];
   dataTipoImpuesto: TipoDeImpuesto[];
   articuloListaPrecios?: ArticuloListaPrecio[]; // Lista opcional pasada desde el componente padre
-}> = ({
+}> = React.memo(({
   item,
   onPress,
   dataGrupo,
@@ -394,13 +394,11 @@ const ItemArticulo: React.FC<{
   dataTipoImpuesto,
   articuloListaPrecios = [],
 }) => {
-  // Obtener el precio más reciente del artículo
-  // Si no se pasa la lista desde el padre, usar el hook (menos eficiente)
-  const { useGetArticuloListaDePrecioList } = useArticuloListaDePrecio();
-  const { data: articuloListaPreciosData } = useGetArticuloListaDePrecioList(1, 1000);
-  
-  const preciosData = articuloListaPrecios.length > 0 ? articuloListaPrecios : (articuloListaPreciosData?.data || []);
-  const { price, symbol } = getLatestPrice(preciosData, item.id);
+  // Usar solo la lista pasada desde el padre para evitar hooks innecesarios
+  const { price, symbol } = React.useMemo(() => 
+    getLatestPrice(articuloListaPrecios, item.id), 
+    [articuloListaPrecios, item.id]
+  );
   return (
     <View className="bg-white rounded-lg mt-2 shadow-sm border border-gray-200 overflow-hidden">
       <TouchableOpacity
@@ -490,7 +488,7 @@ const ItemArticulo: React.FC<{
       </TouchableOpacity>
     </View>
   );
-};
+});
 
 const ItemSeccion: React.FC<{
   item: Seccion;

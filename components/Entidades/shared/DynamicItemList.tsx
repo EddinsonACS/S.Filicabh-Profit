@@ -22,7 +22,7 @@ interface DynamicItemListProps<T> {
   keyExtractor: (item: T) => string;
 }
 
-const DynamicItemList = <T,>({
+const DynamicItemList = React.memo(<T,>({
   items,
   showItemDetails,
   onLoadMore,
@@ -34,7 +34,7 @@ const DynamicItemList = <T,>({
   emptyStateComponent,
   keyExtractor
 }: DynamicItemListProps<T>) => {
-  const renderFooter = () => {
+  const renderFooter = React.useCallback(() => {
     if (!hasMore) return null;
     return (
       <View className="py-4 items-center">
@@ -43,7 +43,7 @@ const DynamicItemList = <T,>({
           </View>
       </View>
     );
-  };
+  }, [hasMore]);
 
   return (
     <FlatList
@@ -51,7 +51,7 @@ const DynamicItemList = <T,>({
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       onEndReached={onLoadMore}
-      onEndReachedThreshold={0.5}
+      onEndReachedThreshold={0.1}
       ListFooterComponent={renderFooter}
       ListEmptyComponent={emptyStateComponent}
       contentContainerStyle={{ 
@@ -69,8 +69,13 @@ const DynamicItemList = <T,>({
           />
         ) : undefined
       }
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      initialNumToRender={10}
+      getItemLayout={undefined}
     />
   );
-};
+}) as <T>(props: DynamicItemListProps<T>) => React.ReactElement;
 
 export default DynamicItemList; 

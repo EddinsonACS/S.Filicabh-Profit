@@ -140,9 +140,28 @@ export const useArticuloFoto = () => {
         console.error('Error en useCreateArticuloFoto - onError:');
         console.error('Error:', error);
       },
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: ['articulofoto', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
+      onSuccess: (data, variables) => {
+        // Invalidar todas las queries relacionadas
+        queryClient.invalidateQueries({ queryKey: ['articulofoto'] });
+        queryClient.invalidateQueries({ queryKey: ['articulo'] });
+        
+        // Invalidar específicamente el artículo individual
+        queryClient.invalidateQueries({ queryKey: ['articulo', 'item', variables.idArticulo] });
+        
+        // Actualización optimista: agregar la nueva foto al cache existente
+        queryClient.setQueryData(
+          ['articulofoto', 'list', 1, 1000],
+          (oldData: any) => {
+            if (oldData && oldData.data) {
+              return {
+                ...oldData,
+                data: [data, ...oldData.data],
+                totalRegistros: oldData.totalRegistros + 1
+              };
+            }
+            return oldData;
+          }
+        );
       },
     });
   };
@@ -218,10 +237,30 @@ export const useArticuloFoto = () => {
           throw error;
         }
       },
-      onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ['articulofoto', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['articulofoto', 'item', variables.id] });
-        queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
+      onSuccess: (data, variables) => {
+        // Invalidar todas las queries relacionadas
+        queryClient.invalidateQueries({ queryKey: ['articulofoto'] });
+        queryClient.invalidateQueries({ queryKey: ['articulo'] });
+        
+        // Invalidar específicamente el artículo individual
+        queryClient.invalidateQueries({ queryKey: ['articulo', 'item', variables.params.idArticulo] });
+        
+        // Actualización optimista: actualizar la foto en el cache
+        queryClient.setQueryData(
+          ['articulofoto', 'list', 1, 1000],
+          (oldData: any) => {
+            if (oldData && oldData.data) {
+              const updatedData = oldData.data.map((foto: any) => 
+                foto.id === variables.id ? { ...foto, ...data } : foto
+              );
+              return {
+                ...oldData,
+                data: updatedData
+              };
+            }
+            return oldData;
+          }
+        );
       },
       onError: (error) => {
         console.error('Error updating articulo foto:', error);
@@ -232,9 +271,26 @@ export const useArticuloFoto = () => {
   const useDeleteArticuloFoto = () => {
     return useMutation({
       mutationFn: (id: number) => apiArticuloFoto.delete(endpoints.inventory.articulofoto.delete(id)),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['articulofoto', 'list'] });
-        queryClient.invalidateQueries({ queryKey: ['articulo', 'list'] });
+      onSuccess: (_, deletedId) => {
+        // Invalidar todas las queries relacionadas
+        queryClient.invalidateQueries({ queryKey: ['articulofoto'] });
+        queryClient.invalidateQueries({ queryKey: ['articulo'] });
+        
+        // Actualización optimista: remover la foto del cache
+        queryClient.setQueryData(
+          ['articulofoto', 'list', 1, 1000],
+          (oldData: any) => {
+            if (oldData && oldData.data) {
+              const filteredData = oldData.data.filter((foto: any) => foto.id !== deletedId);
+              return {
+                ...oldData,
+                data: filteredData,
+                totalRegistros: Math.max(0, oldData.totalRegistros - 1)
+              };
+            }
+            return oldData;
+          }
+        );
       },
       onError: (error) => {
         console.error('Error deleting articulo foto:', error);

@@ -1,16 +1,15 @@
 import { ItemArticle } from '@/components/Entidades/Inventario/ItemArticle';
 import DynamicCategorySelector from '@/components/Entidades/shared/DynamicCategorySelector';
 import DynamicEmptyState from '@/components/Entidades/shared/DynamicEmptyState';
+import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
 import DynamicFormModal from '@/components/Entidades/shared/DynamicFormModal';
-import FormCompleteProcess from '@/components/Entidades/shared/FormCompleteProcess';
 import DynamicHeader from '@/components/Entidades/shared/DynamicHeader';
 import DynamicItemList from '@/components/Entidades/shared/DynamicItemList';
 import DynamicItemModal, { DynamicItemModalRef } from '@/components/Entidades/shared/DynamicItemModal';
 import DynamicLoadingState from '@/components/Entidades/shared/DynamicLoadingState';
 import DynamicSearchBar from '@/components/Entidades/shared/DynamicSearchBar';
-import DynamicFilterBar, { FilterState } from '@/components/Entidades/shared/DynamicFilterBar';
+import FormCompleteProcess from '@/components/Entidades/shared/FormCompleteProcess';
 import { themes } from '@/components/Entidades/shared/theme';
-import { applyFilters } from '@/utils/helpers/filterUtils';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { useAlmacen } from '@/hooks/Inventario/useAlmacen';
 import { useArticulo } from '@/hooks/Inventario/useArticulo';
@@ -19,21 +18,22 @@ import { useCategoria } from '@/hooks/Inventario/useCategoria';
 import { useColor } from '@/hooks/Inventario/useColor';
 import { useGrupo } from '@/hooks/Inventario/useGrupo';
 import { useOrigen } from '@/hooks/Inventario/useOrigen';
+import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { useSeccion } from '@/hooks/Inventario/useSeccion';
 import { useTalla } from '@/hooks/Inventario/useTalla';
 import { useTipoDeArticulo } from '@/hooks/Inventario/useTipoDeArticulo';
 import { useTipoDeImpuesto } from '@/hooks/Inventario/useTipoDeImpuesto';
-import { usePresentacion } from '@/hooks/Inventario/usePresentacion';
 import { DEFAULT_VALUES_INVENTORY } from '@/utils/const/defaultValues';
 import { FORM_FIELDS_INVENTORY } from '@/utils/const/formFields';
+import { applyFilters } from '@/utils/helpers/filterUtils';
 import { inventorySchema } from '@/utils/schemas/inventorySchema';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const CATEGORIES = [
   { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
@@ -162,6 +162,7 @@ const EntInventario: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const itemModalRef = useRef<DynamicItemModalRef>(null);
 
@@ -336,15 +337,18 @@ const EntInventario: React.FC = () => {
   useEffect(() => {
     if (category && category !== selectedCategory) {
       setSelectedCategory(category as CategoryId);
-    } else if (!category && selectedCategory !== 'almacen') {
+    } else if (!category && selectedCategory !== 'articulo') {
       // Reset to default if no category parameter
-      setSelectedCategory('almacen');
+      setSelectedCategory('articulo');
     }
   }, [category]); // Remove selectedCategory from dependencies to avoid infinite loop
 
   useEffect(() => {
     const processData = (data: any) => {
-      if (!data) return;
+      if (!data) {
+        setIsLoadingMore(false);
+        return;
+      }
 
       const totalPages = data.totalPaginas;
       setHasMore(currentPage < totalPages);
@@ -354,17 +358,19 @@ const EntInventario: React.FC = () => {
       } else {
         setAccumulatedItems(prev => {
           if (!data.data || data.data.length === 0) {
+            setIsLoadingMore(false);
             return prev;
           }
 
-          const existingIds = new Map(prev.map((item: any) => [item.id, true]));
-
+          const existingIds = new Set(prev.map((item: any) => item.id));
           const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
 
           if (newItems.length === 0) {
+            setIsLoadingMore(false);
             return prev;
           }
 
+          setIsLoadingMore(false);
           return [...prev, ...newItems];
         });
       }
@@ -462,10 +468,11 @@ const EntInventario: React.FC = () => {
   }, [items, filterState, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoading) {
+    if (hasMore && !isLoading && !isLoadingMore && filteredItems.length > 0) {
+      setIsLoadingMore(true);
       setCurrentPage(prev => prev + 1);
     }
-  }, [hasMore, isLoading]);
+  }, [hasMore, isLoading, isLoadingMore, filteredItems.length]);
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -757,16 +764,16 @@ const EntInventario: React.FC = () => {
     return [...baseFields, ...additionalFields];
   };
 
-  const showItemDetails = (item: any) => {
+  const showItemDetails = useCallback((item: any) => {
     if (selectedCategory === 'articulo') {
       router.push(`/(views)/(Entidades)/ArticuloDetalle?id=${item.id}`);
     } else {
       setCurrentItem(item);
       setDetailModalVisible(true);
     }
-  };
+  }, [selectedCategory, router]);
 
-  const openEditModal = (item: any) => {
+  const openEditModal = useCallback((item: any) => {
     if (selectedCategory === 'articulo') {
       router.push(`/(views)/(Entidades)/ArticuloForm?id=${item.id}&isEditing=true`);
     } else {
@@ -775,9 +782,9 @@ const EntInventario: React.FC = () => {
       setIsEditing(true);
       setFormModalVisible(true);
     }
-  };
+  }, [selectedCategory, router]);
 
-  const renderItem = ({ item }: { item: any }) => {
+  const renderItem = useCallback(({ item }: { item: any }) => {
     return (
       <ItemArticle
         dataCategory={categoriasData?.data || []}
@@ -792,7 +799,7 @@ const EntInventario: React.FC = () => {
         onPress={showItemDetails}
       />
     );
-  };
+  }, [categoriasData?.data, gruposData?.data, coloresDataArticulo?.data, tallasDataArticulo?.data, tiposArticuloDataArticulo?.data, impuestosDataArticulo?.data, articuloListaPreciosData?.data, selectedCategory, showItemDetails]);
 
   return (
     <View className="flex-1 bg-gray-50">

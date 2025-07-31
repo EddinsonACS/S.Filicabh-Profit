@@ -39,12 +39,16 @@ export const useArticuloPresentaciones = () => {
         if (!formData.idArticulo || !formData.idPresentacion) {
           throw new Error('El ID de artículo y presentación son requeridos');
         }
+        
+        // Si es la presentación principal, forzar equivalencia a 1
+        const equivalencia = formData.esPrincipal ? 1 : (formData.equivalencia || 1);
+        
         const data: Omit<ArticuloPresentaciones, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           ...formData,
           idArticulo: formData.idArticulo,
           idPresentacion: formData.idPresentacion,
           esPrincipal: formData.esPrincipal || false,
-          equivalencia: formData.equivalencia || 1,
+          equivalencia: equivalencia,
           usarEnVentas: formData.usarEnVentas || true,
           usarEnCompras: formData.usarEnCompras || true,
           otrosF1: new Date().toISOString(),
@@ -75,9 +79,14 @@ export const useArticuloPresentaciones = () => {
         if (!formData.idArticulo || !formData.idPresentacion) {
           throw new Error('El ID de artículo y presentación son requeridos');
         }
+        
+        // Si es la presentación principal, forzar equivalencia a 1
+        const equivalencia = formData.esPrincipal ? 1 : (formData.equivalencia || 1);
+        
         const data: Partial<ArticuloPresentaciones> = {
           ...formData,
           id,
+          equivalencia: equivalencia,
           usuario: formData.usuario || 0,
           equipo: formData.equipo || 'mobile'
         };
