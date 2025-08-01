@@ -422,13 +422,17 @@ const ArticuloForm: React.FC = () => {
   useEffect(() => {
     if (isEditingMode && currentItem) {
       reset(currentItem as ArticuloFormData);
-      // Guardar estado inicial para detectar cambios
+      // Guardar estado inicial para detectar cambios - incluir estados actuales
       setInitialFormData({
         ...currentItem,
         presentaciones: articuloPresentacionesData?.data || [],
         precios: listasPreciosDataArticulo?.data || [],
         ubicaciones: ubicacionesDataArticulo?.data || [],
-        fotos: articuloFotosData?.data || []
+        fotos: articuloFotosData?.data || [],
+        // Estados iniciales de configuración
+        presentacionesConfig: {},
+        presentacionesSeleccionadas: [],
+        imageOrder: {}
       });
       // Las presentaciones se cargan en un useEffect separado usando articuloPresentacionesData
       // Inicializar otros campos numéricos
@@ -469,6 +473,18 @@ const ArticuloForm: React.FC = () => {
     }
     // Resetear cambios no guardados al cambiar de artículo
     setHasUnsavedChanges({});
+    
+    // Si estamos en modo creación, inicializar estado inicial vacío
+    if (!isEditingMode) {
+      setInitialFormData({
+        presentacionesConfig: {},
+        presentacionesSeleccionadas: [],
+        precios: [],
+        ubicaciones: [],
+        fotos: [],
+        imageOrder: {}
+      });
+    }
   }, [isEditingMode, currentItem, reset, setValue]);
 
   // Efecto separado para cargar presentaciones existentes cuando se carga articuloPresentacionesData
@@ -508,10 +524,24 @@ const ArticuloForm: React.FC = () => {
         // Actualizar estados
         setPresentacionesSeleccionadas(idsSeleccionados);
         setPresentacionesConfig(config);
+        
+        // Actualizar estado inicial después de cargar presentaciones existentes
+        setInitialFormData(prev => ({
+          ...prev,
+          presentacionesConfig: { ...config },
+          presentacionesSeleccionadas: [...idsSeleccionados]
+        }));
       } else {
         // Si no hay presentaciones, limpiar estados
         setPresentacionesSeleccionadas(new Set());
         setPresentacionesConfig({});
+        
+        // Actualizar estado inicial con valores vacíos
+        setInitialFormData(prev => ({
+          ...prev,
+          presentacionesConfig: {},
+          presentacionesSeleccionadas: []
+        }));
       }
     }
   }, [isEditingMode, currentItem, articuloPresentacionesData]);
@@ -555,9 +585,21 @@ const ArticuloForm: React.FC = () => {
 
         console.log('💰 Precios formateados:', preciosFormateados);
         setListasPrecios(preciosFormateados);
+        
+        // Actualizar estado inicial después de cargar precios existentes
+        setInitialFormData(prev => ({
+          ...prev,
+          precios: [...preciosFormateados]
+        }));
       } else {
         // Si no hay precios, limpiar estado
         setListasPrecios([]);
+        
+        // Actualizar estado inicial con array vacío
+        setInitialFormData(prev => ({
+          ...prev,
+          precios: []
+        }));
       }
     }
   }, [isEditingMode, currentItem, listasPreciosDataArticulo]);
@@ -585,23 +627,46 @@ const ArticuloForm: React.FC = () => {
 
         console.log('📍 Ubicaciones formateadas:', ubicacionesFormateadas);
         setUbicaciones(ubicacionesFormateadas);
+        
+        // Actualizar estado inicial después de cargar ubicaciones existentes
+        setInitialFormData(prev => ({
+          ...prev,
+          ubicaciones: [...ubicacionesFormateadas]
+        }));
       } else {
         // Si no hay ubicaciones, limpiar estado
         setUbicaciones([]);
+        
+        // Actualizar estado inicial con array vacío
+        setInitialFormData(prev => ({
+          ...prev,
+          ubicaciones: []
+        }));
       }
     }
   }, [isEditingMode, currentItem, ubicacionesDataArticulo]);
 
-  // Efecto para detectar cambios automáticamente
+  // Efecto para detectar cambios automáticamente con debounce
   useEffect(() => {
-    if (initialFormData) {
+    if (!initialFormData) return;
+    
+    // Debounce para evitar ejecuciones excesivas
+    const timeoutId = setTimeout(() => {
       const hasChanges = hasChangesInCurrentTab();
-      setHasUnsavedChanges(prev => ({
-        ...prev,
-        [activeTab]: hasChanges
-      }));
-    }
-  }, [activeTab, watchedValues, presentacionesConfig, presentacionesSeleccionadas, listasPrecios, ubicaciones, selectedImages, imageOrder]);
+      setHasUnsavedChanges(prev => {
+        // Solo actualizar si hay cambio real en el estado
+        if (prev[activeTab] !== hasChanges) {
+          return {
+            ...prev,
+            [activeTab]: hasChanges
+          };
+        }
+        return prev;
+      });
+    }, 300); // 300ms de debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, watchedValues, presentacionesConfig, presentacionesSeleccionadas, listasPrecios, ubicaciones, selectedImages, imageOrder, initialFormData]);
 
   // Función para procesar y actualizar fotos existentes
   const processFotosExistentes = useCallback(() => {
@@ -666,11 +731,25 @@ const ArticuloForm: React.FC = () => {
           const newIndex = principalIndex >= 0 ? principalIndex : -1;
           return newIndex !== prev ? newIndex : prev;
         });
+        
+        // Actualizar estado inicial después de cargar fotos existentes
+        setInitialFormData(prev => ({
+          ...prev,
+          fotos: [...fotosFormateadas],
+          imageOrder: { ...ordenImagenes }
+        }));
       } else {
         // Si no hay fotos, limpiar estados
         setSelectedImages([]);
         setImageOrder({});
         setPrincipalImageIndex(-1);
+        
+        // Actualizar estado inicial con arrays vacíos
+        setInitialFormData(prev => ({
+          ...prev,
+          fotos: [],
+          imageOrder: {}
+        }));
       }
     }
   }, [isEditingMode, currentItem, articuloFotosData]);
@@ -1714,30 +1793,71 @@ const ArticuloForm: React.FC = () => {
         return fichaFields.some(field => {
           const currentValue = (currentFormData as any)[field];
           const initialValue = initialFormData[field];
-          return JSON.stringify(currentValue) !== JSON.stringify(initialValue);
+          // Normalizar valores undefined/null para comparación
+          const normalizedCurrent = currentValue ?? '';
+          const normalizedInitial = initialValue ?? '';
+          return JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
         });
       
       case "presentaciones":
-        return JSON.stringify(presentacionesConfig) !== JSON.stringify({}) || 
-               JSON.stringify([...presentacionesSeleccionadas]) !== JSON.stringify([]);
+        // Obtener configuración inicial de presentaciones del estado inicial
+        const initialPresentacionesConfig = initialFormData.presentacionesConfig || {};
+        const initialPresentacionesSeleccionadas = new Set(initialFormData.presentacionesSeleccionadas || []);
+        
+        // Comparar configuraciones de presentaciones
+        const configChanged = JSON.stringify(presentacionesConfig) !== JSON.stringify(initialPresentacionesConfig);
+        const selectionChanged = JSON.stringify([...presentacionesSeleccionadas].sort()) !== JSON.stringify([...initialPresentacionesSeleccionadas].sort());
+        
+        return configChanged || selectionChanged;
       
       case "detalles":
-        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla'];
+        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla', 'descripcionGarantia'];
         return detalleFields.some(field => {
           const currentValue = (currentFormData as any)[field];
           const initialValue = initialFormData[field];
-          return JSON.stringify(currentValue) !== JSON.stringify(initialValue);
+          // Normalizar valores undefined/null/0 para comparación
+          const normalizedCurrent = currentValue ?? (field.includes('punto') || ['peso', 'volumen', 'metroCubico', 'pie'].includes(field) ? 0 : '');
+          const normalizedInitial = initialValue ?? (field.includes('punto') || ['peso', 'volumen', 'metroCubico', 'pie'].includes(field) ? 0 : '');
+          return JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
         });
       
       case "precios":
-        return JSON.stringify(listasPrecios) !== JSON.stringify(initialFormData.precios || []);
+        const initialPrecios = initialFormData.precios || [];
+        // Comparar arrays de precios normalizando los campos de fecha
+        const currentPreciosNormalized = listasPrecios.map(precio => ({
+          ...precio,
+          fechaDesde: precio.fechaDesde || '',
+          fechaHasta: precio.fechaHasta || ''
+        }));
+        const initialPreciosNormalized = initialPrecios.map((precio: any) => ({
+          ...precio,
+          fechaDesde: precio.fechaDesde || '',
+          fechaHasta: precio.fechaHasta || ''
+        }));
+        return JSON.stringify(currentPreciosNormalized) !== JSON.stringify(initialPreciosNormalized);
       
       case "ubicaciones":
-        return JSON.stringify(ubicaciones) !== JSON.stringify(initialFormData.ubicaciones || []);
+        const initialUbicaciones = initialFormData.ubicaciones || [];
+        return JSON.stringify(ubicaciones) !== JSON.stringify(initialUbicaciones);
       
       case "fotos":
-        return JSON.stringify(selectedImages) !== JSON.stringify(initialFormData.fotos || []) ||
-               JSON.stringify(imageOrder) !== JSON.stringify({});
+        const initialFotos = initialFormData.fotos || [];
+        const initialImageOrder = initialFormData.imageOrder || {};
+        
+        // Comparar imágenes seleccionadas y su orden
+        const fotosChanged = JSON.stringify(selectedImages.map(img => ({ 
+          id: img.id, 
+          uri: img.uri, 
+          esPrincipal: img.esPrincipal 
+        }))) !== JSON.stringify(initialFotos.map((foto: any) => ({ 
+          id: foto.id, 
+          uri: foto.uri, 
+          esPrincipal: foto.esPrincipal 
+        })));
+        
+        const orderChanged = JSON.stringify(imageOrder) !== JSON.stringify(initialImageOrder);
+        
+        return fotosChanged || orderChanged;
       
       default:
         return false;
@@ -1759,12 +1879,16 @@ const ArticuloForm: React.FC = () => {
         break;
       
       case "presentaciones":
-        setPresentacionesConfig({});
-        setPresentacionesSeleccionadas(new Set());
+        // Restablecer al estado inicial
+        const initialPresentacionesConfig = initialFormData.presentacionesConfig || {};
+        const initialPresentacionesSeleccionadas = new Set(initialFormData.presentacionesSeleccionadas || []);
+        
+        setPresentacionesConfig({ ...initialPresentacionesConfig });
+        setPresentacionesSeleccionadas(new Set(initialPresentacionesSeleccionadas));
         break;
       
       case "detalles":
-        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla'];
+        const detalleFields = ['peso', 'volumen', 'metroCubico', 'pie', 'puntoMinimo', 'puntoMaximo', 'poseeGarantia', 'manejaPuntoMinimo', 'manejaPuntoMaximo', 'idColor', 'idTalla', 'descripcionGarantia'];
         detalleFields.forEach(field => {
           if (initialFormData[field] !== undefined) {
             setValue(field as keyof ArticuloFormData, initialFormData[field]);
@@ -1773,22 +1897,24 @@ const ArticuloForm: React.FC = () => {
         break;
       
       case "precios":
-        setListasPrecios(initialFormData.precios || []);
+        setListasPrecios([...(initialFormData.precios || [])]);
         setSelectedListaPrecio("");
         setSelectedMoneda("");
         setPrecioInputs({ monto: "", fechaDesde: "", fechaHasta: "" });
         break;
       
       case "ubicaciones":
-        setUbicaciones(initialFormData.ubicaciones || []);
+        setUbicaciones([...(initialFormData.ubicaciones || [])]);
         setSelectedAlmacen("");
         setUbicacionInput("");
         break;
       
       case "fotos":
-        setSelectedImages(initialFormData.fotos || []);
-        setImageOrder({});
-        setPrincipalImageIndex(-1);
+        setSelectedImages([...(initialFormData.fotos || [])]);
+        setImageOrder({ ...(initialFormData.imageOrder || {}) });
+        // Recalcular imagen principal
+        const principalIndex = (initialFormData.fotos || []).findIndex((foto: any) => foto.esPrincipal);
+        setPrincipalImageIndex(principalIndex >= 0 ? principalIndex : -1);
         break;
     }
 
@@ -1831,14 +1957,20 @@ const ArticuloForm: React.FC = () => {
     } else if (tabName === 'presentaciones') {
       setInitialFormData(prev => ({ 
         ...prev, 
-        presentaciones: [...presentacionesSeleccionadas].map(id => ({ id }))
+        presentaciones: [...presentacionesSeleccionadas].map(id => ({ id })),
+        presentacionesConfig: { ...presentacionesConfig },
+        presentacionesSeleccionadas: [...presentacionesSeleccionadas]
       }));
     } else if (tabName === 'precios') {
       setInitialFormData(prev => ({ ...prev, precios: [...listasPrecios] }));
     } else if (tabName === 'ubicaciones') {
       setInitialFormData(prev => ({ ...prev, ubicaciones: [...ubicaciones] }));
     } else if (tabName === 'fotos') {
-      setInitialFormData(prev => ({ ...prev, fotos: [...selectedImages] }));
+      setInitialFormData(prev => ({ 
+        ...prev, 
+        fotos: [...selectedImages],
+        imageOrder: { ...imageOrder }
+      }));
     }
   };
 
