@@ -13,6 +13,9 @@ export const useArticulo = () => {
       queryKey: ["articulo", "list", page, size],
       queryFn: () =>
         apiArticulo.getList(endpoints.inventory.articulo.list, page, size),
+      staleTime: 30000, // 30 seconds - reduce unnecessary refetches
+      gcTime: 300000, // 5 minutes - keep cache longer
+      refetchOnWindowFocus: false, // Avoid refetch on focus
       onSettled: (
         _: ListDataResponse<Articulo> | undefined,
         error: Error | null,

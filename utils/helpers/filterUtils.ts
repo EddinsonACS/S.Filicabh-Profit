@@ -18,7 +18,7 @@ export const applyFilters = <T extends EntityWithDates>(
   // Apply search filter
   if (searchQuery.trim()) {
     filteredItems = filteredItems.filter(item => {
-      const searchableFields = ['nombre', 'codigo', 'nroCuenta', 'rif', 'nit', 'email'];
+      const searchableFields = ['nombre', 'codigo', 'nroCuenta', 'rif', 'nit', 'email', 'referencia', 'codigoBarras'];
       return searchableFields.some(field => {
         const value = item[field];
         return value && typeof value === 'string' 
@@ -55,7 +55,7 @@ export const applyFilters = <T extends EntityWithDates>(
     }
   }
 
-  // Apply sorting (including newest/oldest date filters)
+  // ALWAYS APPLY SORTING - including default fechaModificacion desc
   filteredItems.sort((a, b) => {
     let sortBy = filterState.sortBy;
     let sortOrder = filterState.sortOrder;

@@ -70,9 +70,10 @@ const DynamicItemList = React.memo(<T,>({
         ) : undefined
       }
       removeClippedSubviews={true}
-      maxToRenderPerBatch={10}
-      windowSize={10}
-      initialNumToRender={10}
+      maxToRenderPerBatch={15}
+      windowSize={15}
+      initialNumToRender={15}
+      updateCellsBatchingPeriod={50}
       getItemLayout={undefined}
     />
   );

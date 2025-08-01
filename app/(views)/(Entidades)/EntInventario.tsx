@@ -33,7 +33,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 1000; // Load all items at once
 
 const CATEGORIES = [
   { id: 'articulo', label: 'Artículo', icon: 'cube' as const },
@@ -168,7 +168,7 @@ const EntInventario: React.FC = () => {
 
   // Filter state
   const [filterState, setFilterState] = useState<FilterState>({
-    sortBy: 'fechaRegistro',
+    sortBy: 'fechaModificacion',
     sortOrder: 'desc',
     status: 'all',
     dateFilter: 'all'
@@ -177,7 +177,7 @@ const EntInventario: React.FC = () => {
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    if (filterState.sortBy !== 'fechaRegistro' || filterState.sortOrder !== 'desc') count++;
+    if (filterState.sortBy !== 'fechaModificacion' || filterState.sortOrder !== 'desc') count++;
     if (filterState.status !== 'all') count++;
     if (filterState.dateFilter !== 'all') count++;
     return count;
@@ -201,17 +201,17 @@ const EntInventario: React.FC = () => {
     return () => backHandler.remove();
   }, [formModalVisible]);
 
-  // React Query hooks
-  const { data: almacenData, isLoading: isLoadingAlmacen } = useGetAlmacenList(currentPage, PAGE_SIZE);
-  const { data: categoriaData, isLoading: isLoadingCategoria } = useGetCategoriaList(currentPage, PAGE_SIZE);
-  const { data: grupoData, isLoading: isLoadingGrupo } = useGetGrupoList(currentPage, PAGE_SIZE);
-  const { data: seccionData, isLoading: isLoadingSeccion } = useGetSeccionList(currentPage, PAGE_SIZE);
-  const { data: presentacionData, isLoading: isLoadingPresentacion } = useGetPresentacionList(currentPage, PAGE_SIZE);
-  const { data: tallaData, isLoading: isLoadingTalla } = useGetTallaList(currentPage, PAGE_SIZE);
-  const { data: colorData, isLoading: isLoadingColor } = useGetColorList(currentPage, PAGE_SIZE);
-  const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(currentPage, PAGE_SIZE);
-  const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(currentPage, PAGE_SIZE);
-  const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(currentPage, PAGE_SIZE);
+  // React Query hooks - Always load page 1 with all items
+  const { data: almacenData, isLoading: isLoadingAlmacen } = useGetAlmacenList(1, PAGE_SIZE);
+  const { data: categoriaData, isLoading: isLoadingCategoria } = useGetCategoriaList(1, PAGE_SIZE);
+  const { data: grupoData, isLoading: isLoadingGrupo } = useGetGrupoList(1, PAGE_SIZE);
+  const { data: seccionData, isLoading: isLoadingSeccion } = useGetSeccionList(1, PAGE_SIZE);
+  const { data: presentacionData, isLoading: isLoadingPresentacion } = useGetPresentacionList(1, PAGE_SIZE);
+  const { data: tallaData, isLoading: isLoadingTalla } = useGetTallaList(1, PAGE_SIZE);
+  const { data: colorData, isLoading: isLoadingColor } = useGetColorList(1, PAGE_SIZE);
+  const { data: tipoDeImpuestoData, isLoading: isLoadingTipoDeImpuesto } = useGetTipoDeImpuestoList(1, PAGE_SIZE);
+  const { data: tipoDeArticuloData, isLoading: isLoadingTipoDeArticulo } = useGetTipoDeArticuloList(1, PAGE_SIZE);
+  const { data: origenData, isLoading: isLoadingOrigen } = useGetOrigenList(1, PAGE_SIZE);
 
   // Lista de precios (solo se carga cuando selectedCategory es 'articulo')
   const { data: articuloListaPreciosData } = useGetArticuloListaDePrecioList(1, 1000);
@@ -225,7 +225,7 @@ const EntInventario: React.FC = () => {
   const createArticuloMutation = useCreateArticulo();
   const updateArticuloMutation = useUpdateArticulo();
   const deleteArticuloMutation = useDeleteArticulo();
-  const { data: articuloData, isLoading: isLoadingArticulo } = useGetArticuloList(currentPage, PAGE_SIZE);
+  const { data: articuloData, isLoading: isLoadingArticulo } = useGetArticuloList(1, PAGE_SIZE);
   // Listas para selects de articulo
   const { data: gruposDataArticulo } = useGetGrupoList(1, 1000);
   const { data: coloresDataArticulo } = useGetColorList(1, 1000);
@@ -345,35 +345,24 @@ const EntInventario: React.FC = () => {
 
   useEffect(() => {
     const processData = (data: any) => {
+      console.log('📊 ProcessData called:', { 
+        selectedCategory, 
+        dataExists: !!data, 
+        dataLength: data?.data?.length
+      });
+      
       if (!data) {
-        setIsLoadingMore(false);
         return;
       }
 
-      const totalPages = data.totalPaginas;
-      setHasMore(currentPage < totalPages);
-
-      if (currentPage === 1) {
-        setAccumulatedItems(data.data || []);
-      } else {
-        setAccumulatedItems(prev => {
-          if (!data.data || data.data.length === 0) {
-            setIsLoadingMore(false);
-            return prev;
-          }
-
-          const existingIds = new Set(prev.map((item: any) => item.id));
-          const newItems = data.data.filter((item: any) => !existingIds.has(item.id));
-
-          if (newItems.length === 0) {
-            setIsLoadingMore(false);
-            return prev;
-          }
-
-          setIsLoadingMore(false);
-          return [...prev, ...newItems];
-        });
-      }
+      // SIMPLE: Just set all the data from backend, no pagination logic
+      const allItems = data.data || [];
+      console.log('📊 Setting ALL items from backend:', allItems.length);
+      console.log('📊 First 5 items:', allItems.slice(0, 5).map(item => ({ id: item.id, nombre: item.nombre, fechaRegistro: item.fechaRegistro, fechaModificacion: item.fechaModificacion })));
+      
+      setAccumulatedItems(allItems);
+      setHasMore(false); // No more pages needed
+      setIsLoadingMore(false);
     };
 
 
@@ -418,7 +407,7 @@ const EntInventario: React.FC = () => {
     almacenData, categoriaData, grupoData, seccionData, presentacionData,
     tallaData, colorData, tipoDeImpuestoData, tipoDeArticuloData, origenData,
     articuloData,
-    currentPage, selectedCategory, PAGE_SIZE
+    selectedCategory
   ]);
 
   const navigateToModules = () => {
@@ -464,21 +453,27 @@ const EntInventario: React.FC = () => {
   }, [accumulatedItems]);
 
   const filteredItems = useMemo(() => {
-    return applyFilters(items, filterState, searchQuery);
+    console.log('🔍 Raw items count:', items.length);
+    console.log('🔍 First 3 items:', items.slice(0, 3).map(item => ({ id: item.id, nombre: item.nombre, fechaRegistro: item.fechaRegistro, fechaModificacion: item.fechaModificacion })));
+    
+    // ALWAYS APPLY FILTERS - with fechaModificacion desc as default behavior
+    console.log('🔍 APPLYING FILTERS - Default: fechaModificacion desc');
+    const filtered = applyFilters(items, filterState, searchQuery);
+    console.log('🔍 Filtered items count:', filtered.length);
+    console.log('🔍 Current filter state:', filterState);
+    
+    return filtered;
   }, [items, filterState, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoading && !isLoadingMore && filteredItems.length > 0) {
-      setIsLoadingMore(true);
-      setCurrentPage(prev => prev + 1);
-    }
-  }, [hasMore, isLoading, isLoadingMore, filteredItems.length]);
+    // NO MORE PAGINATION - disabled
+    console.log('📊 LoadMore disabled - all items loaded at once');
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     try {
       setRefreshing(true);
-      setCurrentPage(1);
-      setHasMore(true);
+      setAccumulatedItems([]);
 
       // Invalidate the query to force a refetch
       await queryClient.invalidateQueries({
@@ -495,10 +490,15 @@ const EntInventario: React.FC = () => {
   const handleCreate = async (formData: any): Promise<boolean | any> => {
     setBackendFormError(null);
     return new Promise((resolve) => {
-      const commonOnSuccess = (createdItem: any, entityName: string) => {
-        setAccumulatedItems(prev => [createdItem, ...prev]);
-        setCurrentPage(1);
-        setHasMore(true);
+      const commonOnSuccess = async (createdItem: any, entityName: string) => {
+        // Clear items and force refresh to get updated list with new item
+        setAccumulatedItems([]);
+        
+        // Force refresh data to get updated list with new item
+        await queryClient.invalidateQueries({
+          queryKey: [selectedCategory]
+        });
+        
         showCreateSuccess(`el ${entityName.toLowerCase()}`);
 
         // For Articulo, return the full created item, otherwise return true
