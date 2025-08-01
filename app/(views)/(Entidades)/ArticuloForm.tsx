@@ -164,8 +164,6 @@ const ArticuloForm: React.FC = () => {
 
   // Estados para control de cambios no guardados
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<{[key: string]: boolean}>({});
-  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
-  const [pendingTabChange, setPendingTabChange] = useState<string | null>(null);
   const [initialFormData, setInitialFormData] = useState<any>(null);
 
 
@@ -1934,8 +1932,20 @@ const ArticuloForm: React.FC = () => {
 
     // Verificar cambios no guardados
     if (hasChangesInCurrentTab()) {
-      setPendingTabChange(newTab);
-      setShowUnsavedChangesModal(true);
+      // Mostrar mensaje informativo en lugar de modal
+      const tabNames: { [key: string]: string } = {
+        ficha: 'Ficha',
+        presentaciones: 'Presentaciones', 
+        detalles: 'Detalles',
+        precios: 'Precios',
+        ubicaciones: 'Ubicaciones',
+        fotos: 'Fotos'
+      };
+      
+      showError(
+        'Cambios sin guardar',
+        `Tienes cambios sin guardar en la sección "${tabNames[activeTab]}". Debes actualizar o descartar los cambios antes de cambiar a "${tabNames[newTab]}".`
+      );
       return;
     }
 
@@ -2067,6 +2077,26 @@ const ArticuloForm: React.FC = () => {
         <View className="flex-row items-center mb-2">
           <TouchableOpacity
             onPress={() => {
+              // Verificar si hay cambios en cualquier tab
+              const hasAnyChanges = Object.values(hasUnsavedChanges).some(hasChanges => hasChanges);
+              
+              if (hasAnyChanges) {
+                const currentTabName = {
+                  ficha: 'Ficha',
+                  presentaciones: 'Presentaciones', 
+                  detalles: 'Detalles',
+                  precios: 'Precios',
+                  ubicaciones: 'Ubicaciones',
+                  fotos: 'Fotos'
+                }[activeTab] || 'la sección actual';
+                
+                showError(
+                  'Cambios sin guardar',
+                  `Tienes cambios sin guardar en "${currentTabName}". Debes actualizar o descartar los cambios antes de salir.`
+                );
+                return;
+              }
+              
               navigateBack();
             }}
             className="mr-3 p-2 rounded-full bg-white/10"
@@ -3695,28 +3725,47 @@ const ArticuloForm: React.FC = () => {
           <View className="flex-row space-x-4">
             {/* Cancel Button */}
             <TouchableOpacity
-              className="flex-1 bg-gray-100 py-2 rounded-xl flex-row justify-center items-center"
+              className={`flex-1 py-2 rounded-xl flex-row justify-center items-center ${
+                hasUnsavedChanges[activeTab] 
+                  ? "bg-red-100" 
+                  : "bg-gray-100"
+              }`}
               onPress={() => {
-                navigateBack();
+                if (hasUnsavedChanges[activeTab]) {
+                  // Cancelar cambios del tab actual
+                  cancelCurrentTabChanges();
+                } else {
+                  // Si no hay cambios, navegar de vuelta
+                  navigateBack();
+                }
               }}
               disabled={isSubmitting}
             >
               <Ionicons
-                name="close-outline"
+                name={hasUnsavedChanges[activeTab] ? "refresh-outline" : "close-outline"}
                 size={20}
-                color="#6B7280"
+                color={hasUnsavedChanges[activeTab] ? "#EF4444" : "#6B7280"}
               />
-              <Text className="text-gray-700 font-semibold ml-2">
-                Cancelar
+              <Text className={`font-semibold ml-2 ${
+                hasUnsavedChanges[activeTab] ? "text-red-600" : "text-gray-700"
+              }`}>
+                {hasUnsavedChanges[activeTab] ? "Descartar" : "Cancelar"}
               </Text>
             </TouchableOpacity>
 
             {/* Save Button */}
             <TouchableOpacity
-              style={{ backgroundColor: themes.inventory.buttonColor }}
-              className={`flex-1 py-3 rounded-xl flex-row justify-center items-center shadow-sm ${isSubmitting ? "opacity-70" : ""
-                }`}
+              style={{ 
+                backgroundColor: hasUnsavedChanges[activeTab] 
+                  ? themes.inventory.buttonColor 
+                  : '#D1D5DB' 
+              }}
+              className={`flex-1 py-3 rounded-xl flex-row justify-center items-center shadow-sm ${
+                isSubmitting ? "opacity-70" : ""
+              } ${!hasUnsavedChanges[activeTab] ? "opacity-50" : ""}`}
               onPress={() => {
+                if (!hasUnsavedChanges[activeTab]) return;
+                
                 console.log('🔘 Botón presionado. ActiveTab:', activeTab, 'isEditingMode:', isEditingMode);
                 console.log('📊 Errores actuales:', errors);
                 if (activeTab === "ficha") {
@@ -3732,13 +3781,13 @@ const ArticuloForm: React.FC = () => {
                   onSubmit({});
                 }
               }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasUnsavedChanges[activeTab]}
             >
               {isSubmitting ? (
                 <Ionicons
                   name="refresh"
                   size={20}
-                  color={themes.inventory.buttonTextColor}
+                  color={hasUnsavedChanges[activeTab] ? themes.inventory.buttonTextColor : '#9CA3AF'}
                   style={{
                     transform: [{ rotate: isSubmitting ? '360deg' : '0deg' }]
                   }}
@@ -3747,11 +3796,13 @@ const ArticuloForm: React.FC = () => {
                 <Ionicons
                   name="save-outline"
                   size={20}
-                  color={themes.inventory.buttonTextColor}
+                  color={hasUnsavedChanges[activeTab] ? themes.inventory.buttonTextColor : '#9CA3AF'}
                 />
               )}
               <Text
-                style={{ color: themes.inventory.buttonTextColor }}
+                style={{ 
+                  color: hasUnsavedChanges[activeTab] ? themes.inventory.buttonTextColor : '#9CA3AF' 
+                }}
                 className="font-semibold ml-2"
               >
                 {isSubmitting
@@ -3849,82 +3900,6 @@ const ArticuloForm: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Modal para cambios no guardados */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={showUnsavedChangesModal}
-        onRequestClose={() => setShowUnsavedChangesModal(false)}
-      >
-        <View className="flex-1 bg-black/50 justify-center items-center">
-          <View className="bg-white rounded-2xl p-6 mx-6 w-80">
-            <View className="items-center mb-6">
-              <View className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center mb-4">
-                <Ionicons name="warning" size={32} color="#F59E0B" />
-              </View>
-              <Text className="text-xl font-bold text-center text-gray-800">
-                ¡Cambios No Guardados!
-              </Text>
-              <Text className="text-sm text-gray-600 text-center mt-2">
-                Tienes cambios sin guardar en la sección actual. ¿Qué deseas hacer?
-              </Text>
-            </View>
-
-            <View className="space-y-3">
-              {/* Actualizar */}
-              <TouchableOpacity
-                onPress={() => {
-                  setShowUnsavedChangesModal(false);
-                  setPendingTabChange(null);
-                  // Ejecutar guardado del tab actual
-                  handleSubmit(onSubmit)();
-                }}
-                style={{ backgroundColor: themes.inventory.buttonColor }}
-                className="py-3 rounded-lg"
-              >
-                <Text
-                  style={{ color: themes.inventory.buttonTextColor }}
-                  className="text-center font-medium"
-                >
-                  Actualizar
-                </Text>
-              </TouchableOpacity>
-
-              {/* Cancelar cambios */}
-              <TouchableOpacity
-                onPress={() => {
-                  setShowUnsavedChangesModal(false);
-                  // Cancelar cambios del tab actual
-                  cancelCurrentTabChanges();
-                  // Cambiar al tab pendiente si existe
-                  if (pendingTabChange) {
-                    setActiveTab(pendingTabChange);
-                    setPendingTabChange(null);
-                  }
-                }}
-                className="bg-red-500 py-3 rounded-lg"
-              >
-                <Text className="text-center text-white font-medium">
-                  Cancelar Cambios
-                </Text>
-              </TouchableOpacity>
-
-              {/* Permanecer en tab actual */}
-              <TouchableOpacity
-                onPress={() => {
-                  setShowUnsavedChangesModal(false);
-                  setPendingTabChange(null);
-                }}
-                className="bg-gray-100 py-3 rounded-lg"
-              >
-                <Text className="text-center text-gray-700 font-medium">
-                  Seguir Editando
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Image Picker Modal */}
       <Modal
