@@ -25,12 +25,14 @@ export const useNotifications = () => {
     const getSectionColor = useCallback((): string => {
         // Usar directamente la función del colorManager que ya maneja todas las subsecciones correctamente
         const color = getCurrentSectionColor(pathname);
+        const section = getCurrentSection(pathname);
         
         // Debug temporal para verificar detección de rutas
         console.log('🎨 NotificationColor Debug:', {
             pathname,
             detectedColor: color,
-            section: getCurrentSection(pathname)
+            section: section,
+            isArticuloRoute: pathname.includes("Articulo")
         });
         
         return color;
@@ -80,9 +82,9 @@ export const useNotifications = () => {
     }, [addNotification, getSectionColor]);
 
     const showError = useCallback((title: string, message: string, duration?: number) => {
-        // Los errores mantienen su color rojo, no usan color de sección
-        addNotification('error', title, message, duration || 5000);
-    }, [addNotification]);
+        // Los errores ahora usan el color de la sección activa
+        addNotification('error', title, message, duration || 5000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showWarning = useCallback((title: string, message: string, duration?: number) => {
         addNotification('warning', title, message, duration || 4000, getSectionColor());
@@ -94,36 +96,51 @@ export const useNotifications = () => {
 
     // Métodos específicos para operaciones CRUD comunes con mejor UX
     const showCreateSuccess = useCallback((entityName: string) => {
+        // No mostrar notificaciones de crear en ArticuloForm y ArticuloDetalle
+        const currentPath = pathname;
+        if (currentPath.includes("ArticuloForm") || currentPath.includes("ArticuloDetalle")) {
+            return;
+        }
         addNotification('success', '¡Creado!', `${entityName} se ha creado correctamente.`, 3000, getSectionColor());
-    }, [addNotification, getSectionColor]);
+    }, [addNotification, getSectionColor, pathname]);
 
     const showUpdateSuccess = useCallback((entityName: string) => {
+        // No mostrar notificaciones de actualizar en ArticuloForm y ArticuloDetalle
+        const currentPath = pathname;
+        if (currentPath.includes("ArticuloForm") || currentPath.includes("ArticuloDetalle")) {
+            return;
+        }
         addNotification('success', '¡Actualizado!', `${entityName} se ha actualizado correctamente.`, 3000, getSectionColor());
-    }, [addNotification, getSectionColor]);
+    }, [addNotification, getSectionColor, pathname]);
 
     const showDeleteSuccess = useCallback((entityName: string) => {
+        // No mostrar notificaciones de eliminar en ArticuloForm y ArticuloDetalle
+        const currentPath = pathname;
+        if (currentPath.includes("ArticuloForm") || currentPath.includes("ArticuloDetalle")) {
+            return;
+        }
         addNotification('success', '¡Eliminado!', `${entityName} se ha eliminado correctamente.`, 3000, getSectionColor());
-    }, [addNotification, getSectionColor]);
+    }, [addNotification, getSectionColor, pathname]);
 
     const showCreateError = useCallback((entityName: string) => {
-        // Los errores mantienen su color rojo
-        addNotification('error', 'Error al crear', `No se pudo crear ${entityName}. Por favor, intente nuevamente.`, 5000);
-    }, [addNotification]);
+        // Los errores ahora usan el color de la sección activa
+        addNotification('error', 'Error al crear', `No se pudo crear ${entityName}. Por favor, intente nuevamente.`, 5000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showUpdateError = useCallback((entityName: string) => {
-        // Los errores mantienen su color rojo
-        addNotification('error', 'Error al actualizar', `No se pudo actualizar ${entityName}. Por favor, intente nuevamente.`, 5000);
-    }, [addNotification]);
+        // Los errores ahora usan el color de la sección activa
+        addNotification('error', 'Error al actualizar', `No se pudo actualizar ${entityName}. Por favor, intente nuevamente.`, 5000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showDeleteError = useCallback((entityName: string) => {
-        // Los errores mantienen su color rojo
-        addNotification('error', 'Error al eliminar', `No se pudo eliminar ${entityName}. Por favor, intente nuevamente.`, 5000);
-    }, [addNotification]);
+        // Los errores ahora usan el color de la sección activa
+        addNotification('error', 'Error al eliminar', `No se pudo eliminar ${entityName}. Por favor, intente nuevamente.`, 5000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     const showLoadError = useCallback((entityName: string) => {
-        // Los errores mantienen su color rojo
-        addNotification('error', 'Error al cargar', `No se pudo cargar ${entityName}. Por favor, intente nuevamente.`, 5000);
-    }, [addNotification]);
+        // Los errores ahora usan el color de la sección activa
+        addNotification('error', 'Error al cargar', `No se pudo cargar ${entityName}. Por favor, intente nuevamente.`, 5000, getSectionColor());
+    }, [addNotification, getSectionColor]);
 
     // Método para mostrar confirmación personalizada usando el color de sección
     const showConfirmation = useCallback((

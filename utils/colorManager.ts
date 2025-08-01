@@ -48,7 +48,9 @@ export const getCurrentSection = (currentPath: string): SectionType => {
       currentPath.includes("EntVentas") ||
       currentPath.includes("sales") ||
       currentPath.includes("/entities/sales") ||
-      currentPath.includes("ventas")
+      currentPath.includes("ventas") ||
+      currentPath.includes("FiguraComercial") ||
+      currentPath.includes("Vendedor")
     ) {
       return "sales";
     }
@@ -56,7 +58,10 @@ export const getCurrentSection = (currentPath: string): SectionType => {
       currentPath.includes("EntInventario") ||
       currentPath.includes("inventory") ||
       currentPath.includes("/entities/inventory") ||
-      currentPath.includes("inventario")
+      currentPath.includes("inventario") ||
+      currentPath.includes("Articulo") ||
+      currentPath.includes("Categoria") ||
+      currentPath.includes("Almacen")
     ) {
       return "inventory";
     }
@@ -64,7 +69,10 @@ export const getCurrentSection = (currentPath: string): SectionType => {
       currentPath.includes("EntFinanzas") ||
       currentPath.includes("finance") ||
       currentPath.includes("/entities/finance") ||
-      currentPath.includes("finanzas")
+      currentPath.includes("finanzas") ||
+      currentPath.includes("Banco") ||
+      currentPath.includes("Caja") ||
+      currentPath.includes("CuentaBancaria")
     ) {
       return "finance";
     }

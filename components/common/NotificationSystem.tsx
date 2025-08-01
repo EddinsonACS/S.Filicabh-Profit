@@ -79,13 +79,13 @@ const Notification: React.FC<NotificationProps> = ({
                     iconBg: lightenColor(sectionColor, 0.2)
                 };
             case 'error':
-                const errorColor = '#ef4444';
+                // Los errores ahora usan el color de la sección en lugar del rojo fijo
                 return {
                     icon: 'close-circle' as const,
-                    bgColor: errorColor,
-                    lightBg: lightenColor(errorColor, 0.1),
-                    borderColor: darkenColor(errorColor, 10),
-                    iconBg: lightenColor(errorColor, 0.2)
+                    bgColor: sectionColor,
+                    lightBg: lightenColor(sectionColor, 0.1),
+                    borderColor: darkenColor(sectionColor, 10),
+                    iconBg: lightenColor(sectionColor, 0.2)
                 };
             case 'warning':
                 return {
