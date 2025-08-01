@@ -28,15 +28,15 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 
@@ -288,12 +288,11 @@ const ArticuloForm: React.FC = () => {
         };
       }
 
-      // Si se está marcando como principal, desmarcar todas las demás y ajustar equivalencias
+      // Si se está marcando como principal, desmarcar todas las demás
       if (field === 'esPrincipal' && value === true) {
         Object.keys(newConfig).forEach(id => {
           if (Number(id) !== presentacionId) {
             newConfig[Number(id)].esPrincipal = false;
-            // No cambiar la equivalencia de las demás presentaciones
           }
         });
         // La presentación principal siempre debe tener equivalencia = 1
@@ -307,32 +306,24 @@ const ArticuloForm: React.FC = () => {
 
       // Si se está actualizando el campo equivalencia
       if (field === "equivalencia") {
-        // Si es la presentación principal, forzar equivalencia a 1
-        if (newConfig[presentacionId].esPrincipal) {
-          newConfig[presentacionId] = {
-            ...newConfig[presentacionId],
-            equivalencia: 1
-          };
-        } else {
-          // Para presentaciones no principales, permitir cualquier valor incluso vacío
-          let processedValue;
-          if (typeof value === 'string') {
-            if (value === '') {
-              // Permitir campo vacío temporalmente para poder borrar
-              processedValue = '';
-            } else {
-              // Convertir a número si tiene contenido
-              processedValue = parseFloat(value) || 1;
-            }
+        // Para presentaciones no principales, permitir cualquier valor incluso vacío
+        let processedValue;
+        if (typeof value === 'string') {
+          if (value === '') {
+            // Permitir campo vacío temporalmente para poder borrar
+            processedValue = '';
           } else {
-            processedValue = Number(value) || 1;
+            // Convertir a número si tiene contenido
+            processedValue = parseFloat(value) || 1;
           }
-          
-          newConfig[presentacionId] = {
-            ...newConfig[presentacionId],
-            equivalencia: processedValue
-          };
+        } else {
+          processedValue = Number(value) || 1;
         }
+        
+        newConfig[presentacionId] = {
+          ...newConfig[presentacionId],
+          equivalencia: processedValue
+        };
         return newConfig;
       }
 
@@ -376,6 +367,44 @@ const ArticuloForm: React.FC = () => {
     });
   };
 
+  // Función helper para verificar si se puede mostrar el switch de "Es Principal"
+  const canShowPrincipalSwitch = (presentacionId: number) => {
+    // En modo creación, siempre mostrar
+    if (!isEditingMode) return true;
+    
+    // En modo edición, verificar si hay una presentación principal guardada
+    const presentacionPrincipalGuardada = articuloPresentacionesData?.data?.find(
+      (pres: any) => pres.esPrincipal
+    );
+    
+    // Si no hay principal guardada, mostrar switch
+    if (!presentacionPrincipalGuardada) return true;
+    
+    // Si esta presentación es la principal guardada, no mostrar switch (solo indicador)
+    if (presentacionPrincipalGuardada.idPresentacion === presentacionId) return false;
+    
+    // Si hay principal guardada pero esta presentación no está seleccionada, no mostrar switch
+    if (!presentacionesSeleccionadas.has(presentacionId)) return false;
+    
+    // Si la principal guardada fue deseleccionada, permitir mostrar switch
+    const principalGuardadaSeleccionada = presentacionesSeleccionadas.has(presentacionPrincipalGuardada.idPresentacion);
+    if (!principalGuardadaSeleccionada) return true;
+    
+    // En cualquier otro caso, no mostrar switch
+    return false;
+  };
+
+  // Función helper para verificar si una presentación es la principal guardada
+  const isPrincipalGuardada = (presentacionId: number) => {
+    if (!isEditingMode) return false;
+    
+    const presentacionPrincipalGuardada = articuloPresentacionesData?.data?.find(
+      (pres: any) => pres.esPrincipal
+    );
+    
+    return presentacionPrincipalGuardada?.idPresentacion === presentacionId;
+  };
+
   const togglePresentacionExpansion = (presentacionId: number) => {
     setPresentacionesExpandidas((prev) => {
       const newExpanded = new Set(prev);
@@ -391,6 +420,16 @@ const ArticuloForm: React.FC = () => {
   const filteredPresentaciones = presentacionesDataArticulo?.data?.filter((presentacion: any) =>
     presentacion.nombre.toLowerCase().includes(searchPresentaciones.toLowerCase())
   ) || [];
+
+  // Ordenar presentaciones: seleccionadas primero, luego las demás
+  const sortedPresentaciones = [...filteredPresentaciones].sort((a, b) => {
+    const aSelected = presentacionesSeleccionadas.has(a.id);
+    const bSelected = presentacionesSeleccionadas.has(b.id);
+    
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return 0;
+  });
 
   const {
     control,
@@ -1430,6 +1469,18 @@ const ArticuloForm: React.FC = () => {
 
         console.log(`📋 ${presentacionesExistentes.length} presentaciones existentes encontradas`);
 
+        // Validar que no se esté intentando cambiar una presentación principal existente
+        const presentacionPrincipalExistente = presentacionesExistentes.find(
+          (pres: any) => pres.esPrincipal
+        );
+
+        if (presentacionPrincipalExistente) {
+          const nuevaConfiguracion = presentacionesConfig[presentacionPrincipalExistente.idPresentacion];
+          if (nuevaConfiguracion && !nuevaConfiguracion.esPrincipal) {
+            throw new Error('No se puede cambiar el estado de presentación principal una vez guardada');
+          }
+        }
+
         for (const presentacionExistente of presentacionesExistentes) {
           try {
             console.log(`🗑️ Eliminando presentación ID: ${presentacionExistente.id}`);
@@ -1450,11 +1501,17 @@ const ArticuloForm: React.FC = () => {
         const config = presentacionesConfig[presentacionId];
         if (!config) continue; // Skip si no tiene configuración
 
+        // Manejar equivalencia: si está vacía o es 0, usar 1 por defecto
+        let equivalencia = Number(config.equivalencia);
+        if (equivalencia === 0 || isNaN(equivalencia)) {
+          equivalencia = 1;
+        }
+
         const presentacionData = {
           idArticulo: articleId,
           idPresentacion: presentacionId,
           esPrincipal: Boolean(config.esPrincipal),
-          equivalencia: Number(config.equivalencia) || 1,
+          equivalencia: equivalencia,
           usarEnVentas: Boolean(config.usarEnVentas),
           usarEnCompras: Boolean(config.usarEnCompras),
           otrosF1: new Date().toISOString(),
@@ -2550,13 +2607,13 @@ const ArticuloForm: React.FC = () => {
                     
                     {/* Contador de presentaciones seleccionadas - justo debajo del buscador */}
                     <Text className="text-xs text-gray-500 mt-2">
-                      {presentacionesSeleccionadas.size} de {filteredPresentaciones.length} presentaciones seleccionadas
+                      {presentacionesSeleccionadas.size} de {sortedPresentaciones.length} presentaciones seleccionadas
                       {searchPresentaciones && ` (filtradas de ${presentacionesDataArticulo?.data?.length || 0})`}
                     </Text>
                   </View>
 
-                  {/* Lista de presentaciones filtradas */}
-                  {filteredPresentaciones.map((presentacion) => {
+                  {/* Lista de presentaciones ordenadas (seleccionadas primero) */}
+                  {sortedPresentaciones.map((presentacion) => {
                     const isSelected = presentacionesSeleccionadas.has(presentacion.id);
                     const config = presentacionesConfig[presentacion.id];
 
@@ -2623,15 +2680,36 @@ const ArticuloForm: React.FC = () => {
                                     Es Principal
                                   </Text>
                                 </View>
-                                <Switch
-                                  value={config.esPrincipal}
-                                  onValueChange={(value) =>
-                                    updatePresentacionConfig(presentacion.id, "esPrincipal", value)
+                                {(() => {
+                                  // Si es la presentación principal guardada, solo mostrar indicador
+                                  if (isPrincipalGuardada(presentacion.id)) {
+                                    return (
+                                      <View className="px-2 py-1 bg-green-100 rounded-md">
+                                        <Text className="text-xs text-green-700 font-medium">
+                                          ✓ Principal
+                                        </Text>
+                                      </View>
+                                    );
                                   }
-                                  trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
-                                  thumbColor="#f4f3f4"
-                                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-                                />
+                                  
+                                  // Mostrar switch solo si se puede mostrar
+                                  if (canShowPrincipalSwitch(presentacion.id)) {
+                                    return (
+                                      <Switch
+                                        value={config.esPrincipal}
+                                        onValueChange={(value) => {
+                                          updatePresentacionConfig(presentacion.id, "esPrincipal", value);
+                                        }}
+                                        trackColor={{ false: "#d1d5db", true: themes.inventory.buttonColor }}
+                                        thumbColor="#f4f3f4"
+                                        style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                                      />
+                                    );
+                                  }
+                                  
+                                  // Si no se puede mostrar switch, no mostrar nada
+                                  return null;
+                                })()}
                               </View>
 
                               {/* Usar en Ventas */}
@@ -2680,25 +2758,18 @@ const ArticuloForm: React.FC = () => {
                                 <TextInput
                                   value={config.equivalencia === '' ? '' : String(config.equivalencia)}
                                   onChangeText={(text) => {
-                                    if (!config.esPrincipal) {
-                                      // Permitir campo vacío para poder borrar y escribir nuevo número
-                                      const cleanText = text.replace(/[^0-9.]/g, ''); // Solo números y punto decimal
-                                      updatePresentacionConfig(presentacion.id, "equivalencia", cleanText);
-                                    }
+                                    // Permitir edición siempre, pero validar al guardar
+                                    const cleanText = text.replace(/[^0-9.]/g, ''); // Solo números y punto decimal
+                                    updatePresentacionConfig(presentacion.id, "equivalencia", cleanText);
                                   }}
                                   placeholder="Ingrese equivalencia"
                                   keyboardType="numeric"
-                                  editable={!config.esPrincipal}
+                                  editable={true}
                                   selectTextOnFocus={true}
                                   clearButtonMode="while-editing"
-                                  className={`px-3 py-2 bg-white rounded-md border text-sm ${
-                                    config.esPrincipal 
-                                      ? 'border-gray-200 bg-gray-100 text-gray-500' 
-                                      : 'border-gray-300 text-gray-700'
-                                  }`}
+                                  className="px-3 py-2 bg-white rounded-md border border-gray-300 text-gray-700 text-sm"
                                   style={{
-                                    fontSize: 12,
-                                    opacity: config.esPrincipal ? 0.6 : 1
+                                    fontSize: 12
                                   }}
                                 />
                               </View>
@@ -2724,7 +2795,7 @@ const ArticuloForm: React.FC = () => {
                   )}
 
                   {/* Mensaje cuando la búsqueda no arroja resultados */}
-                  {presentacionesDataArticulo?.data && presentacionesDataArticulo.data.length > 0 && filteredPresentaciones.length === 0 && (
+                  {presentacionesDataArticulo?.data && presentacionesDataArticulo.data.length > 0 && sortedPresentaciones.length === 0 && (
                     <View className="bg-gray-50 rounded-lg p-8">
                       <Ionicons name="search-outline" size={48} color="#9ca3af" />
                       <Text className="text-gray-500 mt-2 text-center">

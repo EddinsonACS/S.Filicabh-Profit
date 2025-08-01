@@ -40,8 +40,17 @@ export const useArticuloPresentaciones = () => {
           throw new Error('El ID de artículo y presentación son requeridos');
         }
         
-        // Si es la presentación principal, forzar equivalencia a 1
-        const equivalencia = formData.esPrincipal ? 1 : (formData.equivalencia || 1);
+        // Manejar equivalencia: si está vacía o es 0, usar 1 por defecto
+        let equivalencia = formData.equivalencia;
+        if (equivalencia === '' || equivalencia === 0 || equivalencia === null || equivalencia === undefined) {
+          equivalencia = 1;
+        } else {
+          equivalencia = Number(equivalencia);
+          // Si el valor no es válido, usar 1 por defecto
+          if (isNaN(equivalencia)) {
+            equivalencia = 1;
+          }
+        }
         
         const data: Omit<ArticuloPresentaciones, 'id' | 'fechaRegistro' | 'usuarioRegistroNombre' | 'fechaModificacion' | 'usuarioModificacionNombre'> = {
           ...formData,
@@ -80,8 +89,17 @@ export const useArticuloPresentaciones = () => {
           throw new Error('El ID de artículo y presentación son requeridos');
         }
         
-        // Si es la presentación principal, forzar equivalencia a 1
-        const equivalencia = formData.esPrincipal ? 1 : (formData.equivalencia || 1);
+        // Manejar equivalencia: si está vacía o es 0, usar 1 por defecto
+        let equivalencia = formData.equivalencia;
+        if (equivalencia === '' || equivalencia === 0 || equivalencia === null || equivalencia === undefined) {
+          equivalencia = 1;
+        } else {
+          equivalencia = Number(equivalencia);
+          // Si el valor no es válido, usar 1 por defecto
+          if (isNaN(equivalencia)) {
+            equivalencia = 1;
+          }
+        }
         
         const data: Partial<ArticuloPresentaciones> = {
           ...formData,
