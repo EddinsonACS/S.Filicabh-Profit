@@ -11,17 +11,23 @@ export const useArticulo = () => {
   const useGetArticuloList = (page: number = 1, size: number = 10) => {
     return useQuery<ListDataResponse<Articulo>, Error>({
       queryKey: ["articulo", "list", page, size],
-      queryFn: () =>
-        apiArticulo.getList(endpoints.inventory.articulo.list, page, size),
+      queryFn: () => {
+        console.log('🔄 API Call - Fetching articulos from backend', { page, size });
+        return apiArticulo.getList(endpoints.inventory.articulo.list, page, size);
+      },
       staleTime: 30000, // 30 seconds - reduce unnecessary refetches
       gcTime: 300000, // 5 minutes - keep cache longer
       refetchOnWindowFocus: false, // Avoid refetch on focus
+      refetchOnMount: true, // Always refetch on mount
+      refetchOnReconnect: true, // Refetch when reconnecting
       onSettled: (
-        _: ListDataResponse<Articulo> | undefined,
+        data: ListDataResponse<Articulo> | undefined,
         error: Error | null,
       ) => {
         if (error) {
           console.error("Error fetching articulo list:", error);
+        } else if (data) {
+          console.log('🔄 API Response - Received articulos:', data.data?.length);
         }
       },
     } as UseQueryOptions<ListDataResponse<Articulo>, Error>);

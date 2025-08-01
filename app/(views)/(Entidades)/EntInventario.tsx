@@ -161,9 +161,17 @@ const EntInventario: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('articulo');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]);
+  const [accumulatedItems, setAccumulatedItems] = useState<any[]>([]); // All items from backend
+  const [displayedItemsCount, setDisplayedItemsCount] = useState<number>(10); // How many to show
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // Debug refreshing state
+  useEffect(() => {
+    console.log('🔄 Refreshing state changed:', refreshing);
+  }, [refreshing]);
+  
+  const ITEMS_PER_PAGE = 10; // Show 10 items at a time
   const itemModalRef = useRef<DynamicItemModalRef>(null);
 
   // Filter state
@@ -331,7 +339,13 @@ const EntInventario: React.FC = () => {
     setCurrentPage(1);
     setHasMore(true);
     setAccumulatedItems([]);
-  }, [selectedCategory]);
+    setDisplayedItemsCount(ITEMS_PER_PAGE); // Reset progressive pagination
+  }, [selectedCategory, ITEMS_PER_PAGE]);
+
+  // Reset progressive pagination when filters or search change
+  useEffect(() => {
+    setDisplayedItemsCount(ITEMS_PER_PAGE);
+  }, [filterState, searchQuery, ITEMS_PER_PAGE]);
 
   // Update selected category when URL parameter changes
   useEffect(() => {
@@ -448,55 +462,101 @@ const EntInventario: React.FC = () => {
                     selectedCategory === 'origen' ? isLoadingOrigen :
                       selectedCategory === 'articulo' ? isLoadingArticulo : false;
 
-  const items = useMemo(() => {
+  // All items from backend (used for search/filtering)
+  const allItems = useMemo(() => {
     return accumulatedItems;
   }, [accumulatedItems]);
 
-  const filteredItems = useMemo(() => {
-    console.log('🔍 Raw items count:', items.length);
-    console.log('🔍 First 3 items:', items.slice(0, 3).map(item => ({ id: item.id, nombre: item.nombre, fechaRegistro: item.fechaRegistro, fechaModificacion: item.fechaModificacion })));
+  // All filtered items (search/filter applied to ALL data)
+  const allFilteredItems = useMemo(() => {
+    console.log('🔍 All items count:', allItems.length);
+    console.log('🔍 First 3 items:', allItems.slice(0, 3).map(item => ({ id: item.id, nombre: item.nombre, fechaRegistro: item.fechaRegistro, fechaModificacion: item.fechaModificacion })));
     
-    // ALWAYS APPLY FILTERS - with fechaModificacion desc as default behavior
-    console.log('🔍 APPLYING FILTERS - Default: fechaModificacion desc');
-    const filtered = applyFilters(items, filterState, searchQuery);
-    console.log('🔍 Filtered items count:', filtered.length);
+    // ALWAYS APPLY FILTERS to ALL items - with fechaModificacion desc as default behavior
+    console.log('🔍 APPLYING FILTERS to ALL ITEMS - Default: fechaModificacion desc');
+    const filtered = applyFilters(allItems, filterState, searchQuery);
+    console.log('🔍 Total filtered items count:', filtered.length);
     console.log('🔍 Current filter state:', filterState);
     
     return filtered;
-  }, [items, filterState, searchQuery]);
+  }, [allItems, filterState, searchQuery]);
+
+  // Items to display (progressive pagination)
+  const displayedItems = useMemo(() => {
+    const itemsToShow = allFilteredItems.slice(0, displayedItemsCount);
+    console.log('📱 Displaying items:', itemsToShow.length, 'of', allFilteredItems.length);
+    return itemsToShow;
+  }, [allFilteredItems, displayedItemsCount]);
+
+  // Check if there are more items to show
+  const hasMoreToShow = useMemo(() => {
+    return displayedItemsCount < allFilteredItems.length;
+  }, [displayedItemsCount, allFilteredItems.length]);
 
   const handleLoadMore = useCallback(() => {
-    // NO MORE PAGINATION - disabled
-    console.log('📊 LoadMore disabled - all items loaded at once');
-  }, []);
+    if (hasMoreToShow && !isLoadingMore) {
+      console.log('📊 Loading more items...', 'Current:', displayedItemsCount, 'Adding:', ITEMS_PER_PAGE);
+      setIsLoadingMore(true);
+      
+      // Simulate a small delay for better UX
+      setTimeout(() => {
+        setDisplayedItemsCount(prev => prev + ITEMS_PER_PAGE);
+        setIsLoadingMore(false);
+      }, 300);
+    }
+  }, [hasMoreToShow, isLoadingMore, displayedItemsCount, ITEMS_PER_PAGE]);
 
   const handleRefresh = useCallback(async () => {
+    console.log('🔄 Starting refresh...');
     try {
       setRefreshing(true);
       setAccumulatedItems([]);
+      setDisplayedItemsCount(ITEMS_PER_PAGE); // Reset to show only first 10
+      setIsLoadingMore(false); // Reset loading state
 
-      // Invalidate the query to force a refetch
-      await queryClient.invalidateQueries({
-        queryKey: [selectedCategory]
+      // Invalidate and remove from cache to force fresh data from backend
+      console.log('🔄 Invalidating and removing queries for category:', selectedCategory);
+      
+      // Remove from cache completely with correct queryKey structure
+      queryClient.removeQueries({
+        queryKey: [selectedCategory, "list"]
       });
+      
+      // Invalidate to force refetch
+      await queryClient.invalidateQueries({
+        queryKey: [selectedCategory, "list"]
+      });
+      
+      // Wait a bit for cache cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Force explicit refetch from backend
+      await queryClient.refetchQueries({
+        queryKey: [selectedCategory, "list"],
+        type: 'active'
+      });
+      
+      console.log('🔄 Refresh completed successfully');
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error('🔄 Error refreshing data:', error);
       showError('Error', 'No se pudo actualizar los datos');
     } finally {
       setRefreshing(false);
+      console.log('🔄 Refresh state reset');
     }
-  }, [queryClient, selectedCategory]);
+  }, [queryClient, selectedCategory, ITEMS_PER_PAGE]);
 
   const handleCreate = async (formData: any): Promise<boolean | any> => {
     setBackendFormError(null);
     return new Promise((resolve) => {
       const commonOnSuccess = async (createdItem: any, entityName: string) => {
-        // Clear items and force refresh to get updated list with new item
+        // Clear items and reset progressive pagination
         setAccumulatedItems([]);
+        setDisplayedItemsCount(ITEMS_PER_PAGE);
         
         // Force refresh data to get updated list with new item
         await queryClient.invalidateQueries({
-          queryKey: [selectedCategory]
+          queryKey: [selectedCategory, "list"]
         });
         
         showCreateSuccess(`el ${entityName.toLowerCase()}`);
@@ -845,11 +905,11 @@ const EntInventario: React.FC = () => {
       />
 
       <View className="flex-1">
-        {isLoading && currentPage === 1 ? (
+        {(isLoading && allItems.length === 0) ? (
           <DynamicLoadingState color={themes.inventory.buttonColor} />
         ) : (
           <DynamicItemList
-            items={filteredItems}
+            items={displayedItems}
             handleDelete={handleDelete}
             showItemDetails={showItemDetails}
             openEditModal={openEditModal}
@@ -857,7 +917,7 @@ const EntInventario: React.FC = () => {
             onRefresh={handleRefresh}
             refreshing={refreshing}
             selectedCategory={selectedCategory}
-            hasMore={hasMore}
+            hasMore={hasMoreToShow}
             renderItem={renderItem}
             emptyStateComponent={
               <DynamicEmptyState

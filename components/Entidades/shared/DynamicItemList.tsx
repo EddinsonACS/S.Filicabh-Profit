@@ -34,6 +34,19 @@ const DynamicItemList = React.memo(<T,>({
   emptyStateComponent,
   keyExtractor
 }: DynamicItemListProps<T>) => {
+  
+  // Debug refresh functionality
+  React.useEffect(() => {
+    console.log('📱 DynamicItemList - refreshing:', refreshing, 'hasRefresh:', !!onRefresh);
+  }, [refreshing, onRefresh]);
+
+  const handleRefresh = React.useCallback(() => {
+    console.log('📱 DynamicItemList - handleRefresh called');
+    if (onRefresh) {
+      onRefresh();
+    }
+  }, [onRefresh]);
+
   const renderFooter = React.useCallback(() => {
     if (!hasMore) return null;
     return (
@@ -63,9 +76,13 @@ const DynamicItemList = React.memo(<T,>({
         onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#581c87']}
+            onRefresh={handleRefresh}
+            colors={['#581c87', '#7c3aed']}
             tintColor="#581c87"
+            progressBackgroundColor="#ffffff"
+            progressViewOffset={0}
+            title="Actualizando..."
+            titleColor="#581c87"
           />
         ) : undefined
       }
