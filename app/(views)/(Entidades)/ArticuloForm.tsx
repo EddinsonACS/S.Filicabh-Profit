@@ -165,6 +165,7 @@ const ArticuloForm: React.FC = () => {
   // Estados para control de cambios no guardados
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<{[key: string]: boolean}>({});
   const [initialFormData, setInitialFormData] = useState<any>(null);
+  const [isDiscardingChanges, setIsDiscardingChanges] = useState(false);
 
 
   const {
@@ -511,9 +512,11 @@ const ArticuloForm: React.FC = () => {
     // Resetear cambios no guardados al cambiar de artículo
     setHasUnsavedChanges({});
     
-    // Si estamos en modo creación, inicializar estado inicial vacío
+    // Si estamos en modo creación, inicializar estado inicial vacío pero manteniendo los defaultValues
     if (!isEditingMode) {
+      const defaultData = DEFAULT_VALUES_INVENTORY['articulo'] as ArticuloFormData;
       setInitialFormData({
+        ...defaultData,
         presentacionesConfig: {},
         presentacionesSeleccionadas: [],
         precios: [],
@@ -685,7 +688,7 @@ const ArticuloForm: React.FC = () => {
 
   // Efecto para detectar cambios automáticamente con debounce
   useEffect(() => {
-    if (!initialFormData) return;
+    if (!initialFormData || isDiscardingChanges) return;
     
     // Debounce para evitar ejecuciones excesivas
     const timeoutId = setTimeout(() => {
@@ -703,7 +706,7 @@ const ArticuloForm: React.FC = () => {
     }, 300); // 300ms de debounce
 
     return () => clearTimeout(timeoutId);
-  }, [activeTab, watchedValues, presentacionesConfig, presentacionesSeleccionadas, listasPrecios, ubicaciones, selectedImages, imageOrder, initialFormData]);
+  }, [activeTab, watchedValues, presentacionesConfig, presentacionesSeleccionadas, listasPrecios, ubicaciones, selectedImages, imageOrder, initialFormData, isDiscardingChanges]);
 
   // Función para procesar y actualizar fotos existentes
   const processFotosExistentes = useCallback(() => {
@@ -1851,7 +1854,18 @@ const ArticuloForm: React.FC = () => {
           // Normalizar valores undefined/null para comparación
           const normalizedCurrent = currentValue ?? '';
           const normalizedInitial = initialValue ?? '';
-          return JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
+          const hasChange = JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedInitial);
+          
+          // Log para debugging - solo en modo creación
+          if (!isEditingMode && hasChange) {
+            console.log(`🔍 Campo "${field}" cambió:`, {
+              current: normalizedCurrent,
+              initial: normalizedInitial,
+              hasChange
+            });
+          }
+          
+          return hasChange;
         });
       
       case "presentaciones":
@@ -1923,6 +1937,9 @@ const ArticuloForm: React.FC = () => {
   const cancelCurrentTabChanges = () => {
     if (!initialFormData) return;
 
+    // Activar bandera para evitar detección de cambios durante descarte
+    setIsDiscardingChanges(true);
+
     switch (activeTab) {
       case "ficha":
         const fichaFields = ['nombre', 'codigoArticulo', 'codigoModelo', 'codigoBarra', 'descripcion', 'idTipoArticulo', 'idGrupo', 'idImpuesto', 'manejaLote', 'manejaSerial', 'suspendido'];
@@ -1978,6 +1995,11 @@ const ArticuloForm: React.FC = () => {
       ...prev,
       [activeTab]: false
     }));
+
+    // Desactivar bandera después de un pequeño delay para asegurar que se complete la actualización
+    setTimeout(() => {
+      setIsDiscardingChanges(false);
+    }, 100);
   };
 
   // Función para cambiar de tab con verificación de cambios
